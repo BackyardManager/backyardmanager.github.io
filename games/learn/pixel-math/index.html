@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>像素數學村</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&display=swap">
+<style>
+html,body{margin:0}body{font-size:14px}
+
+/* Layout: one centered 720px "game cabinet"; home -> semester -> map of exam zones -> level -> result */
+:root{--bg:#161a33;--panel:#262c57;--panel2:#323a70;--ink:#f6f3ff;--mute:#a9b0e0;--gold:#ffd23f;--green:#3ddc84;--red:#ff4d6d;--blue:#4cc9f0;--line:#0b0d1f;--px:'Press Start 2P',monospace;--jp:'DotGothic16','Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;--tx:'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--tx);padding-block:12px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background-image:linear-gradient(var(--bg),var(--bg))}
+#app{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3,.jp{font-family:var(--jp);font-weight:400;margin:0}
+svg{image-rendering:pixelated;display:block}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.crumb{font-family:var(--jp);font-size:15px;color:var(--mute)}
+.btn{font-family:var(--jp);font-size:18px;color:var(--ink);background:var(--panel2);border:4px solid var(--line);box-shadow:0 4px 0 var(--line),inset 0 -4px 0 rgba(0,0,0,.25),inset 0 4px 0 rgba(255,255,255,.12);padding:10px 16px;cursor:pointer;min-height:48px;border-radius:0;text-align:left}
+.btn:hover{background:#3d4690}.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.btn:focus-visible,.choice:focus-visible{outline:4px solid var(--gold);outline-offset:2px}
+.btn.go{background:var(--green);color:#06210f}.btn.go:hover{background:#63eba0}
+.btn.sm{min-height:40px;font-size:15px;padding:6px 12px}
+.panel{background:var(--panel);border:4px solid var(--line);box-shadow:0 4px 0 var(--line);padding:16px}
+.title{text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;padding-top:8px}
+.title h1{font-size:clamp(34px,9vw,52px);color:var(--gold);text-shadow:4px 4px 0 var(--line);letter-spacing:2px}
+.title p{margin:0;color:var(--mute);font-size:15px}
+.scene{display:flex;gap:18px;align-items:flex-end;justify-content:center;padding:10px 0}
+.hop{animation:hop 1s steps(2) infinite}@keyframes hop{50%{transform:translateY(-8px)}}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.card{display:flex;flex-direction:column;gap:6px;align-items:flex-start;padding:16px}
+.card b{font-family:var(--jp);font-size:26px;font-weight:400}.card small{color:var(--mute);font-size:14px;line-height:1.5}
+.zone{display:flex;flex-direction:column;gap:12px}
+.zone h2{font-size:22px;color:var(--gold)}.zone .wk{font-size:13px;color:var(--mute);margin-top:2px}
+.units{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.unit{display:flex;flex-direction:column;gap:6px;align-items:flex-start;width:100%}
+.unit .no{font-family:var(--px);font-size:10px;color:var(--blue)}
+.unit .nm{font-size:18px;line-height:1.3}
+.stars{display:flex;gap:2px}
+.boss{background:#4a2457}.boss:hover{background:#5d2e6d}
+.hud{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hearts,.prog{display:flex;gap:4px;align-items:center}
+.pbar{font-family:var(--px);font-size:11px;color:var(--mute)}
+.arena{display:flex;align-items:flex-end;justify-content:space-between;padding:6px 12px;gap:8px;background:#1d2247;border:4px solid var(--line)}
+.hpwrap{flex:1;max-width:220px;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.hp{width:100%;height:14px;background:var(--line);border:3px solid var(--line);outline:2px solid #5a63a8}.hp i{display:block;height:100%;background:var(--red);transition:width .4s steps(6)}
+.shake{animation:shake .35s steps(4)}@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.lunge{animation:lunge .35s steps(3)}@keyframes lunge{50%{transform:translateX(40px)}}
+.qbox{display:flex;flex-direction:column;gap:14px}
+.qt{font-size:clamp(21px,5.2vw,28px);font-weight:700;line-height:1.5}
+.vis{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center;background:#1d2247;border:4px solid var(--line);padding:12px;min-height:60px}
+.row{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
+.grp{display:flex;flex-wrap:wrap;gap:4px;padding:8px;border:3px dashed #5a63a8;max-width:100%;justify-content:center}
+.op{font-family:var(--px);font-size:24px;color:var(--gold)}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.choice{font-family:var(--tx);font-weight:700;font-size:clamp(20px,5vw,26px);text-align:center;justify-content:center;min-height:62px}
+.choice.ok{background:var(--green);color:#06210f}.choice.no{background:var(--red);color:#2b0610}
+.fb{padding:12px 14px;border:4px solid var(--line);font-size:18px;line-height:1.6;background:var(--panel2)}
+.fb.ok{border-color:var(--green)}.fb.no{border-color:var(--red)}
+.tipbox{display:flex;gap:14px;align-items:flex-start}.tipbox p{margin:0;font-size:19px;line-height:1.7}
+.tag{font-family:var(--jp);font-size:14px;color:#06210f;background:var(--gold);padding:2px 8px;display:inline-block}
+.res{text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
+.res h2{font-size:34px;color:var(--gold)}.bigstars{display:flex;gap:8px}
+.actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.bar{display:flex;align-items:center;gap:8px;width:100%}.bar b{font-family:var(--px);font-size:14px;width:28px}.bar i{display:block;height:22px;background:var(--blue);border:3px solid var(--line)}
+.vbars{display:flex;gap:30px;align-items:flex-end;height:150px}.vbars div{display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end}.vbars i{display:block;width:44px;background:var(--blue);border:3px solid var(--line)}
+.tens{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:flex-end}
+.ten{display:grid;grid-template-columns:repeat(2,14px);gap:2px;padding:3px;border:3px solid var(--line);background:#5a63a8}
+.ten i,.one{display:block;width:14px;height:14px;background:var(--gold);outline:2px solid var(--line)}
+.ones{display:flex;gap:3px;flex-wrap:wrap;max-width:140px}
+.coin{display:grid;place-items:center;border-radius:50%;border:4px solid var(--line);font-family:var(--jp);font-size:18px;color:#2b1a00}
+.cell{width:26px;height:26px;border:2px solid var(--line);background:#2a3166}.cell.on{background:var(--green)}
+.gridv{display:grid;gap:0;border:3px solid var(--line)}
+.fr{display:flex;border:4px solid var(--line)}.fr i{display:block;width:34px;height:34px;border-right:3px solid var(--line);background:#2a3166}.fr i.on{background:var(--gold)}.fr i:last-child{border-right:0}
+table.tb{border-collapse:collapse;font-size:19px}.tb th,.tb td{border:3px solid var(--line);padding:6px 14px;text-align:center;background:var(--panel)}.tb th{background:var(--panel2)}
+.shp{display:flex;flex-direction:column;align-items:center;gap:2px;font-family:var(--px);font-size:12px;color:var(--gold)}
+.foot{font-size:13px;color:var(--mute);line-height:1.7}
+.zy{display:inline-flex;align-items:center;vertical-align:middle;margin-inline:.03em}
+.zp{display:inline-flex;align-items:center;font-size:.52em;line-height:1.08;margin-left:.12em;font-weight:400;font-family:var(--tx);letter-spacing:0;color:var(--gold)}
+.zs{display:flex;flex-direction:column;align-items:center}.zs i{font-style:normal;display:block}.zq{font-size:.8em;line-height:.7}.zt{font-weight:400;align-self:center;margin-left:.04em}
+.tag+.qt{margin-top:-4px}.tags{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.tag.k{background:var(--blue)}
+.claim{font-size:clamp(20px,5vw,26px);font-weight:700;padding:12px;border:4px dashed #5a63a8;text-align:center;line-height:1.7}
+.fillrow{display:flex;align-items:center;gap:10px;justify-content:center;font-size:30px;font-weight:700;flex-wrap:wrap}
+.inp{min-width:150px;min-height:56px;padding:4px 14px;background:#10132b;border:4px solid var(--gold);font-family:var(--px);font-size:24px;display:grid;place-items:center;letter-spacing:2px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:360px;margin:0 auto;width:100%}
+.key{font-family:var(--px);font-size:22px;text-align:center;justify-content:center;padding:8px;min-height:56px}
+.sub{align-self:center;font-size:22px;min-width:200px;text-align:center}
+.vert{display:flex;flex-direction:column;align-items:flex-end;font-family:var(--px);font-size:24px;gap:6px;padding:4px 14px}
+.vert .l2{border-bottom:4px solid var(--ink);padding-bottom:6px;width:100%;text-align:right}.vert i{font-style:normal;color:var(--gold);margin-right:14px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:74px;position:relative;text-align:center}
+.tile.sel{background:#5a63c8;outline:4px solid var(--gold)}.tile.ok{background:var(--green);color:#06210f}.tile.no{background:var(--red);color:#2b0610}.tile.miss{outline:4px dashed var(--green)}
+.badge{position:absolute;top:-10px;left:-10px;background:var(--gold);color:#2b1a00;font-family:var(--px);font-size:12px;padding:6px 8px;border:3px solid var(--line)}
+.mcols{display:grid;grid-template-columns:1fr 1fr;gap:12px 28px}.mcol{display:flex;flex-direction:column;gap:10px}
+.mt{justify-content:center;min-height:84px;text-align:center;font-size:22px;font-weight:700;align-items:center;display:flex;font-family:var(--tx)}.mt.sel{outline:4px solid var(--gold);background:#5a63c8}
+.mt.m0{background:#2f7d5a}.mt.m1{background:#8a5fb8}.mt.m2{background:#b8782f}.mt.m3{background:#2f7aa8}
+.rmgrid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.rm{padding:6px;min-height:0;position:relative}.rm.gone{opacity:.3}.rm.gone::after{content:"✕";position:absolute;inset:0;display:grid;place-items:center;font-size:34px;color:var(--red);font-family:var(--px)}
+.exam{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#f6f3ff;color:#161a33;border:4px solid var(--line);padding:8px 14px;font-size:16px;flex-wrap:wrap}.exam .score{font-family:var(--jp);color:#d11d3d;font-size:20px}.exam .zp{color:#a1263f}
+.stamp{font-family:var(--px);font-size:42px;color:var(--red);border:6px solid var(--red);padding:12px 18px;transform:rotate(-6deg);background:#f6f3ff}
+#app.zyon{line-height:1.8}.zyon .foot,.zyon .crumb,.zyon .wk,.zyon .card small,.zyon .title p{font-size:16px}.zyon .pbar{font-family:var(--jp);font-size:15px}.zyon .hpwrap>span{font-size:16px!important}.zyon .tag{font-size:17px}.zyon .btn.sm{font-size:17px}.zyon .qt{font-size:clamp(24px,6.2vw,30px);line-height:1.95}.zyon .choice{font-size:clamp(22px,5.5vw,28px)}.zyon .unit .nm{font-size:20px;line-height:1.9}.zyon .fb{font-size:19px;line-height:1.9}.zyon .tipbox p{font-size:20px;line-height:2}.zyon .mt{font-size:22px}
+@media (max-width:420px){.mcols{gap:10px 14px}.inp{min-width:120px}}
+@media (prefers-reduced-motion:reduce){.hop,.shake,.lunge{animation:none}.hp i{transition:none}}
+</style>
+</head>
+<body>
+
+<div id="bk" style="max-width:720px;margin:0 auto 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><a href="../../../index.html#learn" style="padding:8px 12px;background:#ffd23f;color:#0b0d1f;border:3px solid #0b0d1f;box-shadow:2px 2px #0b0d1f;font:700 14px/1 system-ui,'Noto Sans TC',sans-serif;text-decoration:none">🏠 回後院</a><span id="pt"></span></div>
+<div id="app"></div>
+<script>
+const $=s=>document.querySelector(s);
+const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick=a=>a[R(0,a.length-1)];
+const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=R(0,i);[a[i],a[j]]=[a[j],a[i]]}return a};
+const PAL={r:'#ff4d6d',g:'#3ddc84',y:'#ffd23f',b:'#4cc9f0',w:'#ffffff',k:'#0b0d1f',o:'#ff9f1c',p:'#b388ff',n:'#8d5a2b',s:'#ffcf9f'};
+const SPR={
+apple:['...ng...','..rnrr..','.rrrrrr.','.rwrrrr.','.rwrrrr.','.rrrrrr.','..rrrr..','........'],
+star:['...yy...','...yy...','yyyyyyyy','.yyyyyy.','..yyyy..','.yyyyyy.','.yy..yy.','yy....yy'],
+coin:['..oooo..','.oyyyyo.','oyywyyyo','oyyyyyyo','oyyyyyyo','oyyyyyyo','.oyyyyo.','..oooo..'],
+heart:['.rr..rr.','rrrrrrrr','rwrrrrrr','rrrrrrrr','.rrrrrr.','..rrrr..','...rr...','........'],
+dim:['.kk..kk.','kkkkkkkk','kkkkkkkk','kkkkkkkk','.kkkkkk.','..kkkk..','...kk...','........'],
+slime:['........','..gggg..','.gggggg.','.gkggkg.','gggggggg','gggggggg','g.g..g.g','........'],
+hero:['..rrrr..','.rrrrrr.','..ssss..','..sksk..','..ssss..','.bbbbbb.','.b.bb.b.','..n..n..'],
+boss:['p.pppp.p','pppppppp','pwkppkwp','pppppppp','pwpwpwpp','.pppppp.','.pp..pp.','yy....yy']};
+function spr(n,s=32){let r='';SPR[n].forEach((row,y)=>[...row].forEach((c,x)=>{if(c!=='.')r+=`<rect x="${x}" y="${y}" width="1" height="1" fill="${PAL[c]}"/>`}));
+ return `<svg viewBox="0 0 8 8" width="${s}" height="${s}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`}
+const sprs=(n,k,s=30)=>`<div class="row">${Array(k).fill(spr(n,s)).join('')}</div>`;
+const grp=(n,k,s=30)=>`<div class="grp">${Array(k).fill(spr(n,s)).join('')}</div>`;
+const NAME={apple:'蘋果',star:'星星',coin:'金幣',heart:'愛心',slime:'史萊姆',hero:'小勇者'};
+/* question builders */
+function Q(t,v,ans,wrongs,e){wrongs=[...new Set(wrongs.map(String))].filter(x=>x!==String(ans)).slice(0,3);
+ const all=sh([String(ans),...wrongs]);return{t,v:v||'',c:all,a:all.indexOf(String(ans)),e:e||''}}
+function NQ(t,v,ans,e,o={}){const f=o.f||(x=>x),st=o.step||1,min=o.min??0,max=o.max??1e9,rd=x=>Math.round(x*100)/100;
+ let pool=[1,-1,2,-2,3,-3,4,-4,5,-5].map(k=>rd(ans+k*st)).filter(x=>x>=min&&x<=max&&x!==ans);
+ let ex=o.near||[];pool=[...ex.filter(x=>x!==ans&&x>=min&&x<=max),...sh(pool)];
+ return Q(t,v,f(ans),pool.slice(0,6).map(f),e)}
+/* visuals */
+const bar=(l,lab)=>`<div class="bar"><b>${lab}</b><i style="width:${l*9}%"></i></div>`;
+const vbars=a=>`<div class="vbars">${a.map((h,i)=>`<div><i style="height:${h*14}px"></i><b class="jp">${'ABC'[i]}</b></div>`).join('')}</div>`;
+function tens(t,o){return `<div class="tens">${Array(t).fill('<div class="ten">'+'<i></i>'.repeat(10)+'</div>').join('')}<div class="ones">${'<span class="one"></span>'.repeat(o)}</div></div>`}
+function clock(h,m){const ha=((h%12)+m/60)*30,ma=m*6,P=(a,l)=>`${50+l*Math.sin(a*Math.PI/180)},${50-l*Math.cos(a*Math.PI/180)}`;
+ let t='';for(let i=0;i<12;i++){const a=i*30;t+=`<line x1="${P(a,40).split(',')[0]}" y1="${P(a,40).split(',')[1]}" x2="${P(a,45).split(',')[0]}" y2="${P(a,45).split(',')[1]}" stroke="#fff" stroke-width="3"/>`}
+ return `<svg viewBox="0 0 100 100" width="170" height="170" shape-rendering="crispEdges"><circle cx="50" cy="50" r="47" fill="#f6f3ff" stroke="#0b0d1f" stroke-width="5"/>${[[12,50,17],[3,83,54],[6,50,90],[9,17,54]].map(x=>`<text x="${x[1]}" y="${x[2]}" text-anchor="middle" font-family="Press Start 2P" font-size="9" fill="#0b0d1f">${x[0]}</text>`).join('')}<polyline points="50,50 ${P(ma,36)}" stroke="#4cc9f0" stroke-width="4" fill="none" stroke-linecap="square"/><polyline points="50,50 ${P(ha,24)}" stroke="#ff4d6d" stroke-width="6" fill="none" stroke-linecap="square"/><rect x="47" y="47" width="6" height="6" fill="#0b0d1f"/></svg>`}
+function angle(d,W=190,H=160){const r=d*Math.PI/180,x=20+85*Math.cos(r),y=85-85*Math.sin(r);
+ return `<svg viewBox="0 0 120 100" width="${W}" height="${H}" shape-rendering="crispEdges"><polyline points="108,85 20,85 ${x},${y}" fill="none" stroke="#ffd23f" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter"/>${d==90?'<polyline points="20,70 35,70 35,85" fill="none" stroke="#fff" stroke-width="3"/>':`<path d="M42 85 A22 22 0 0 0 ${20+22*Math.cos(r)} ${85-22*Math.sin(r)}" fill="none" stroke="#fff" stroke-width="3"/>`}<rect x="17" y="82" width="6" height="6" fill="#ff4d6d"/></svg>`}
+function gridv(w,h,on=()=>true){let c='';for(let r=0;r<h;r++)for(let k=0;k<w;k++)c+=`<span class="cell ${on(r,k)?'on':''}" ${on(r,k)?'':'style="opacity:.0;border-color:transparent;background:transparent"'}></span>`;
+ return `<div class="gridv" style="grid-template-columns:repeat(${w},26px);border-color:transparent">${c}</div>`}
+const fr=(n,d)=>`<div class="fr">${Array.from({length:d},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('')}</div>`;
+const COIN={1:['#d9a066',34],5:['#c8c8d8',38],10:['#ffd23f',44],50:['#e8e8f2',52],100:['#ff9f1c',60]};
+const coin=v=>`<span class="coin" style="width:${COIN[v][1]}px;height:${COIN[v][1]}px;background:${COIN[v][0]}">${v}</span>`;
+const tbl=(h,rows)=>`<div style="overflow-x:auto;max-width:100%"><table class="tb"><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</table></div>`;
+function shape(t,c='#4cc9f0',s=44){const m={sq:`<rect x="6" y="6" width="38" height="38"/>`,ci:`<circle cx="25" cy="25" r="20"/>`,tri:`<polygon points="25,5 46,44 4,44"/>`,re:`<rect x="3" y="12" width="44" height="26"/>`};
+ return `<svg viewBox="0 0 50 50" width="${s}" height="${s}" fill="${c}" stroke="#0b0d1f" stroke-width="4" shape-rendering="crispEdges">${m[t]}</svg>`}
+const dot=(n)=>n;
+/* sound */
+let SND=true,AC=null;function beep(f,d=.1,type='square'){if(!SND)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;g.gain.value=.05;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+const sfx={ok(){beep(660,.09);setTimeout(()=>beep(880,.14),90)},no(){beep(180,.25,'sawtooth')},win(){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.14),i*110))}};
+const U=(n,tip,gen)=>({n,tip,gen});
+const WK=['日','一','二','三','四','五','六'];
+/* ===== 一年級 上學期（康軒第1冊） ===== */
+const g1u1=U('10以內的數','數東西時，一個指一個，不重複、不漏掉。最後數到的那個數，就是全部的數量。0 表示什麼都沒有。',()=>{const t=R(0,2);
+ if(t==0){const n=R(1,10),s=pick(['apple','star','coin','heart']);return NQ('數數看，有幾個？',sprs(s,n),n,'一個一個數，最後數到的就是答案：'+n+'。',{max:10})}
+ const n=R(2,9);return t==1?NQ(`比 ${n} 多 1 的數是多少？`,'',n+1,`${n} 後面的下一個數是 ${n+1}。`,{max:10}):NQ(`比 ${n} 少 1 的數是多少？`,'',n-1,`${n} 前面的一個數是 ${n-1}。`,{max:10})});
+const g1u2=U('比長短','把兩條線的一頭對齊，伸出比較多的就是比較長的。高矮、厚薄也用同樣的方法比。',()=>{let a=R(2,9),b=R(2,9);while(a==b)b=R(2,9);const lg=R(0,1);
+ if(lg)return Q('哪一條比較長？',bar(a,'A')+bar(b,'B'),a>b?'A':'B',['A','B'],'一頭對齊，伸出去比較多的比較長。');
+ return Q('哪一條比較短？',bar(a,'A')+bar(b,'B'),a<b?'A':'B',['A','B'],'一頭對齊，伸出去比較少的比較短。')});
+const g1u3=U('排順序、比多少','「第幾個」是看位置，要先說從哪裡開始數。比多少時，可以把兩種東西一一配對，剩下的就是比較多的。',()=>{const t=R(0,2);
+ if(t==0){const L=sh(Object.keys(NAME)).slice(0,5),k=R(1,5);return Q(`從左邊數過來，第 ${k} 個是什麼？`,`<div class="row">${L.map(x=>spr(x,40)).join('')}</div>`,NAME[L[k-1]],L.map(x=>NAME[x]),`從左邊開始數到第 ${k} 個，就是${NAME[L[k-1]]}。`)}
+ let a=R(1,9),b=R(1,9);while(a==b)b=R(1,9);
+ if(t==1)return Q('蘋果和星星，哪一種比較多？',grp('apple',a,26)+grp('star',b,26),a>b?'蘋果':'星星',['蘋果','星星'],'一個配一個，剩下的那種比較多。');
+ const m=Math.max(a,b),n=Math.min(a,b);return NQ('蘋果比星星多幾個？',grp('apple',m,26)+grp('star',n,26),m-n,'先配對，剩下的就是多出來的個數。',{max:10,min:1})});
+const g1u4=U('分與合','把一個數分成兩個數叫「分」，把兩個數合起來叫「合」。10 可以分成 1 和 9、2 和 8、3 和 7、4 和 6、5 和 5。',()=>{const t=R(0,2);
+ if(t==0){const n=R(3,10),a=R(1,n-1);return NQ(`${n} 可以分成 ${a} 和 □`,sprs('star',n,26),n-a,`${n} 分成 ${a} 和 ${n-a}。`,{max:10,min:0})}
+ if(t==1){const a=R(1,6),b=R(1,10-a);return NQ(`${a} 和 ${b} 合起來是多少？`,grp('apple',a,26)+'<span class="op">+</span>'+grp('apple',b,26),a+b,`${a} 和 ${b} 合起來是 ${a+b}。`,{max:10})}
+ const a=R(1,9);return NQ(`10 可以分成 ${a} 和 □`,'',10-a,`${a} 和 ${10-a} 合起來是 10。`,{max:10})});
+const g1u5=U('方盒、圓罐、球','方盒有平平的面，可以堆高；圓罐可以堆高也可以滾；球只會滾，不能堆高。',()=>{const L=[['骰子','方盒'],['牛奶盒','方盒'],['魔術方塊','方盒'],['鞋盒','方盒'],['罐頭','圓罐'],['水桶','圓罐'],['鼓','圓罐'],['衛生紙捲','圓罐'],['籃球','球'],['彈珠','球'],['地球儀','球'],['乒乓球','球']],t=R(0,3);
+ if(t==3)return Q('哪一種形狀只會滾，不能堆高？','','球',['方盒','圓罐','球'],'球沒有平面，所以不能穩穩堆高。');
+ if(t==2)return Q('哪一種形狀可以堆高，也可以滾？','','圓罐',['方盒','圓罐','球'],'圓罐上下是平的可以堆，側面是圓的可以滾。');
+ const x=pick(L);return Q(`「${x[0]}」像哪一種形狀？`,'',x[1],['方盒','圓罐','球'],`${x[0]}的形狀像${x[1]}。`)});
+const g1u6=U('30以內的數','10 個一是一捆，叫「一個十」。23 就是 2 個十和 3 個一。數到 29，再多 1 個就是 30。',()=>{const t=R(0,2);
+ if(t==0){const a=R(1,2),b=R(0,9);return NQ('一共有多少個？',tens(a,b),a*10+b,`${a} 個十是 ${a*10}，再加 ${b} 個一，就是 ${a*10+b}。`,{max:30})}
+ if(t==1){const n=R(10,28);return NQ(`${n} 後面的下一個數是多少？`,'',n+1,`${n} 再多 1 就是 ${n+1}。`,{max:30})}
+ let a=R(10,30),b=R(10,30);while(a==b)b=R(10,30);return Q(`${a} 和 ${b}，哪一個比較大？`,'',Math.max(a,b),[a,b],'先比十位，十位一樣大再比個位。')});
+const g1u7=U('10以內的加法','把兩堆東西合起來，用加法。算式「3 + 2 = 5」讀作「3 加 2 等於 5」。任何數加 0，答案還是原來的數。',()=>{const t=R(0,2);
+ if(t==0){const a=R(1,8),b=R(1,10-a);return NQ(`${a} + ${b} = ?`,grp('apple',a,26)+'<span class="op">+</span>'+grp('star',b,26),a+b,`${a} 加 ${b} 等於 ${a+b}。`,{max:10})}
+ if(t==1){const a=R(1,7),b=R(1,10-a);return NQ(`小明有 ${a} 顆糖，媽媽又給他 ${b} 顆，現在一共有幾顆？`,'',a+b,`合起來用加法：${a} + ${b} = ${a+b}。`,{max:10})}
+ const a=R(1,10);return NQ(`${a} + 0 = ?`,'',a,'加 0 就是沒有增加，答案還是原來的數。',{max:10})});
+const g1u8=U('10以內的減法','從一堆東西拿走一些，看還剩多少，用減法。算式「5 − 2 = 3」讀作「5 減 2 等於 3」。',()=>{const t=R(0,2),a=R(3,10),b=R(1,a-1);
+ if(t==0)return NQ(`有 ${a} 顆星星，拿走 ${b} 顆，還剩幾顆？`,sprs('star',a,26),a-b,`${a} − ${b} = ${a-b}。`,{max:10});
+ if(t==1)return NQ(`${a} − ${b} = ?`,'',a-b,`從 ${a} 拿走 ${b}，剩 ${a-b}。`,{max:10});
+ return NQ(`樹上有 ${a} 隻鳥，飛走 ${b} 隻，還剩幾隻？`,'',a-b,`飛走了用減法：${a} − ${b} = ${a-b}。`,{max:10})});
+const g1u9=U('幾點鐘','短針指著幾，就是幾點。長針指到 12 是整點，長針指到 6 是半點（幾點半）。',()=>{const h=R(1,12),hf=R(0,1);
+ return Q('現在是幾點？',clock(h,hf?30:0),hf?`${h}點半`:`${h}點`,[hf?`${h}點`:`${h}點半`,`${h%12+1}點`,`${(h+10)%12+1}點`],hf?'長針指著 6，是半點。':'長針指著 12，是整點。')});
+/* ===== 一年級 下學期（康軒第2冊） ===== */
+const g1d1=U('50以內的數','10 個一捆是一個十。數很多東西時，可以 2 個 2 個、5 個 5 個、10 個 10 個地數，比較快。',()=>{const t=R(0,2);
+ if(t==0){const a=R(1,4),b=R(0,9);return NQ('一共有多少個？',tens(a,b),a*10+b,`${a} 個十是 ${a*10}，加 ${b} 是 ${a*10+b}。`,{max:50})}
+ if(t==1){const s=pick([2,5,10]),k=R(1,3),L=[0,1,2,3].map(i=>s*(k+i));return NQ(`${s} 個 ${s} 個地數：${L.slice(0,3).join('、')}、□`,'',L[3],`每次多 ${s}，所以是 ${L[3]}。`,{step:s,max:50})}
+ let a=R(10,49),b=R(10,49);while(a==b)b=R(10,49);return Q(`${a} 和 ${b}，哪一個比較小？`,'',Math.min(a,b),[a,b],'先比十位，再比個位。')});
+const g1d2=U('18以內的加法','加法可以「湊十」：9 + 5，先把 5 分成 1 和 4，9 + 1 = 10，再 10 + 4 = 14。兩個數交換位置，答案一樣。',()=>{const t=R(0,2),a=R(2,9),b=R(Math.max(2,11-a),9);
+ if(t==0)return NQ(`${a} + ${b} = ?`,'',a+b,`先湊十：${a} 再加 ${10-a} 是 10，剩下 ${b-(10-a)}，所以是 ${a+b}。`,{max:18});
+ if(t==1)return NQ(`${a} + ${b} = ${b} + □`,'',a,'加法交換位置，答案一樣。',{max:18});
+ return NQ(`籃子裡有 ${a} 顆蘋果，又放進 ${b} 顆，一共有幾顆？`,'',a+b,`${a} + ${b} = ${a+b}。`,{max:18})});
+const g1d3=U('圖形與分類','圖形可以依形狀、顏色、大小來分類。三角形有 3 個邊，正方形有 4 個一樣長的邊，圓形沒有角。',()=>{const t=R(0,1);
+ if(t==0){const T=['sq','ci','tri'],L=Array.from({length:R(6,9)},()=>pick(T)),x=pick(T),nm={sq:'正方形',ci:'圓形',tri:'三角形'},n=L.filter(y=>y==x).length;
+  return NQ(`有幾個${nm[x]}？`,`<div class="row">${L.map(y=>shape(y,{sq:'#ff4d6d',ci:'#ffd23f',tri:'#3ddc84'}[y],40)).join('')}</div>`,n,`把${nm[x]}一個一個數，共 ${n} 個。`,{max:9,min:0})}
+ const T=['sq','ci','re'],o=pick(T),a=sh(['A','B','C','D']),i=R(0,3);
+ const nm={sq:'正方形',ci:'圓形',re:'長方形'};const odd=pick(T.filter(y=>y!=o));
+ return Q(`哪一個和別人不同類？`,a.map((l,j)=>`<div class="shp">${shape(j==i?odd:o,'#4cc9f0',50)}${l}</div>`).join(''),a[i],a,'三個形狀一樣，只有一個不一樣。')});
+const g1d4=U('18以內的減法','減法可以「先減到 10」：14 − 6，先 14 − 4 = 10，再 10 − 2 = 8。「比多幾個」「比少幾個」也是用減法。',()=>{const t=R(0,2),a=R(11,18),b=R(Math.max(2,a-9),9);
+ if(t==0)return NQ(`${a} − ${b} = ?`,'',a-b,`先減到 10，再減剩下的：答案是 ${a-b}。`,{max:18});
+ if(t==1)return NQ(`小美有 ${a} 張貼紙，比小華多 ${b} 張，小華有幾張？`,'',a-b,`小美比較多，要減掉多的：${a} − ${b} = ${a-b}。`,{max:18});
+ return NQ(`小華有 ${a-b} 張貼紙，小美比小華多 ${b} 張，小美有幾張？`,'',a,`多的要加上去：${a-b} + ${b} = ${a}。`,{max:18})});
+const g1d5=U('有多長','不能直接比時，可以用一樣大的小東西（例如迴紋針）一個接一個量。量的時候要從頭開始、不留空、不重疊。',()=>{const t=R(0,2),a=R(3,9),b=R(2,8);
+ const blk=n=>`<div class="row">${Array(n).fill('<span class="one" style="width:26px;height:26px;background:#b388ff"></span>').join('')}</div>`;
+ if(t==0)return NQ('鉛筆有幾個紫色方塊長？',blk(a),a,`一個方塊接一個方塊數，共 ${a} 個。`,{min:1,max:12});
+ if(t==1)return NQ(`紅線長 ${a} 個單位，藍線長 ${b} 個單位，接起來共長幾個單位？`,'',a+b,`接起來用加法：${a} + ${b} = ${a+b}。`,{max:20});
+ const m=Math.max(a,b+1),n=Math.min(a,b);return NQ(`A 長 ${m} 個單位，B 長 ${n} 個單位，A 比 B 長幾個單位？`,'',m-n,`比長多少用減法：${m} − ${n} = ${m-n}。`,{min:0,max:20})});
+const g1d6=U('100以內的數','兩位數的左邊是十位，右邊是個位。45 是 4 個十和 5 個一。100 是 10 個十。',()=>{const t=R(0,3),n=R(21,98);
+ if(t==0){const a=R(2,9),b=R(0,9);return NQ('一共有多少個？',tens(a,b),a*10+b,`${a} 個十是 ${a*10}，加 ${b} 是 ${a*10+b}。`,{max:99})}
+ if(t==1)return NQ(`${n} 的十位數字是多少？`,'',Math.floor(n/10),`${n} 的左邊那個數字是十位。`,{max:9});
+ if(t==2){const m=R(11,89);return NQ(`百數表中，${m} 正下面的格子是多少？`,'',m+10,'往下一格，就是多 10。',{step:10,max:100})}
+ const a=R(10,99);let b=R(10,99);while(a==b)b=R(10,99);return Q(`${a} 和 ${b}，哪一個比較大？`,'',Math.max(a,b),[a,b],'先比十位，十位一樣大再比個位。')});
+const g1d7=U('認識錢幣','錢有 1 元、5 元、10 元、50 元、100 元。1 個 10 元可以換 2 個 5 元；1 個 50 元可以換 5 個 10 元。',()=>{const t=R(0,2);
+ if(t==0){const V=[1,5,10,50],L=Array.from({length:R(2,4)},()=>pick(V)),s=L.reduce((x,y)=>x+y,0);return NQ('這些錢一共是多少元？',`<div class="row" style="align-items:center">${L.map(coin).join('')}</div>`,s,`把錢加起來：${L.join(' + ')} = ${s}。`,{step:pick([1,5,10]),min:1})}
+ if(t==1){const x=pick([[50,10,5],[10,5,2],[100,10,10],[50,5,10]]);return NQ(`1 個 ${x[0]} 元可以換幾個 ${x[1]} 元？`,`<div class="row">${coin(x[0])}</div>`,x[2],`${x[0]} 裡面有 ${x[2]} 個 ${x[1]}。`,{min:1,max:12})}
+ const p=pick([20,30,40]),pay=50;return NQ(`一個橡皮擦 ${p} 元，付 50 元，要找多少元？`,`<div class="row">${coin(50)}</div>`,pay-p,`50 − ${p} = ${pay-p}。`,{step:10,min:0})});
+const g1d8=U('二位數的加減','兩位數加減，十位和十位算，個位和個位算。個位不夠減時，要向十位「借 1 個十」；個位加起來滿 10 時，要「進 1」到十位。',()=>{const t=R(0,3);let a,b,ao,bo;
+ if(t==0){ao=R(0,8);b=R(1,9-ao);a=R(1,6)*10+ao;return NQ(`${a} + ${b} = ?`,tens(Math.floor(a/10),a%10),a+b,`個位 ${a%10} + ${b} = ${a%10+b}，十位不變：${a+b}。`,{max:99})}
+ if(t==1){ao=R(1,9);bo=R(10-ao,9);a=R(1,6)*10+ao;b=R(1,2)*10+bo;return NQ(`${a} + ${b} = ?`,'',a+b,'個位相加滿 10，要進 1 到十位。',{max:99})}
+ if(t==2){ao=R(1,9);b=R(1,ao);a=R(3,8)*10+ao;return NQ(`${a} − ${b} = ?`,'',a-b,`個位 ${a%10} − ${b} = ${a%10-b}，十位不變。`,{max:99})}
+ ao=R(0,8);bo=R(ao+1,9);a=R(4,9)*10+ao;b=R(1,2)*10+bo;return NQ(`${a} − ${b} = ?`,'',a-b,'個位不夠減，向十位借 1 個十再減。',{max:99})});
+const g1d9=U('幾月幾日 星期幾','一個星期有 7 天：日、一、二、三、四、五、六，然後又從日開始。「今天」的後一天是「明天」，前一天是「昨天」。',()=>{const t=R(0,3),d=R(0,6);
+ if(t==0)return Q(`今天是星期${WK[d]}，明天是星期幾？`,'',`星期${WK[(d+1)%7]}`,[1,2,6,3].map(k=>`星期${WK[(d+k)%7]}`),'明天是今天的後一天。');
+ if(t==1)return Q(`今天是星期${WK[d]}，昨天是星期幾？`,'',`星期${WK[(d+6)%7]}`,[1,2,5,3].map(k=>`星期${WK[(d+k)%7]}`),'昨天是今天的前一天。');
+ if(t==2)return NQ('一個星期有幾天？','',7,'日、一、二、三、四、五、六，共 7 天。',{min:5,max:10});
+ const m=R(1,12),x=R(5,25);return NQ(`${m}月${x}日的後一天是幾月幾日？ 請選日期的「日」`,'',x+1,`${x} 的下一個數是 ${x+1}，所以是 ${m}月${x+1}日。`,{max:30,f:v=>v+'日'})});
+const GRADE1={name:'一年級',book:'康軒 第 1、2 冊',sems:[
+ {name:'上學期',vol:'第1冊',zones:[
+  {name:'第一次段考（期中）',wk:'第 1～10 週',units:[g1u1,g1u2,g1u3,g1u4,g1u5]},
+  {name:'第二次段考（期末）',wk:'第 11～21 週',units:[g1u6,g1u7,g1u8,g1u9]}]},
+ {name:'下學期',vol:'第2冊',zones:[
+  {name:'第一次段考（期中）',wk:'第 1～9 週',units:[g1d1,g1d2,g1d3,g1d4]},
+  {name:'第二次段考（期末）',wk:'第 10～21 週',units:[g1d5,g1d6,g1d7,g1d8,g1d9]}]}]};
+/* ===== 三年級 上學期（康軒第5冊） ===== */
+const fz=(n,d)=>`${d}分之${n}`;
+const g3u1=U('10000以內的數','四位數由千位、百位、十位、個位組成。4325 就是 4 個千、3 個百、2 個十、5 個一。比大小時，從最左邊的千位開始比。',()=>{const t=R(0,3);
+ if(t==0){const a=R(1,9),b=R(0,9),c=R(0,9),d=R(0,9),n=a*1000+b*100+c*10+d;return NQ(`${a} 個千、${b} 個百、${c} 個十、${d} 個一，合起來是多少？`,'',n,`${a*1000} + ${b*100} + ${c*10} + ${d} = ${n}。`,{step:pick([1,10,100]),min:1000,max:9999})}
+ if(t==1){const n=R(1000,9999),p=R(0,2),nm=['千','百','十'][p];return Q(`${n} 的${nm}位數字是多少？`,'',String(n)[p],[0,1,2,3,4,5,6,7,8,9],`${n} 從左邊數過來，第 ${p+1} 個數字是${nm}位。`)}
+ if(t==2){let a=R(1000,9999),b=R(1000,9999);while(a==b)b=R(1000,9999);return Q(`${a} 和 ${b}，哪一個比較大？`,'',Math.max(a,b),[a,b],'從最左邊的千位開始比，先不一樣的那一位決定大小。')}
+ const n=R(1000,9998)*1;return NQ(`${n} 的後面一個數是多少？`,'',n+1,`${n} 加 1 是 ${n+1}。`,{min:1000,max:10000})});
+const g3u2=U('四位數的加減','直式計算要「個位對個位、十位對十位」。加法滿 10 要進位；減法不夠減要退位。估算時，先把數看成最接近的整百，再算。',()=>{const t=R(0,2);
+ if(t==0){const a=R(1200,6500),b=R(1100,3400);return NQ(`${a} + ${b} = ?`,'',a+b,'從個位開始，一位一位加，滿 10 就進位。',{step:pick([10,100,1000]),max:9999})}
+ if(t==1){const a=R(3000,9500),b=R(1100,a-500);return NQ(`${a} − ${b} = ?`,'',a-b,'從個位開始減，不夠減就向左邊借 1。',{step:pick([10,100,1000]),min:0})}
+ const a=R(210,890),b=R(110,690),r=x=>Math.round(x/100)*100;return NQ(`用整百估算：${a} + ${b} 大約是多少？`,'',r(a)+r(b),`${a} 約 ${r(a)}，${b} 約 ${r(b)}，加起來約 ${r(a)+r(b)}。`,{step:100,min:100})});
+const g3u3=U('毫米','1 公分 = 10 毫米。毫米很小，量很細的東西（鉛筆芯、硬幣厚度）用毫米；課本、桌子用公分；教室、操場用公尺。',()=>{const t=R(0,2);
+ if(t==0){const a=R(1,9),b=R(1,9);return NQ(`${a} 公分 ${b} 毫米 = □ 毫米`,'',a*10+b,`${a} 公分是 ${a*10} 毫米，再加 ${b} 毫米，共 ${a*10+b} 毫米。`,{step:pick([1,10]),min:1})}
+ if(t==1){const a=R(2,20);return NQ(`${a*10} 毫米 = □ 公分`,'',a,`每 10 毫米是 1 公分，${a*10} ÷ 10 = ${a}。`,{min:1})}
+ const L=[['鉛筆芯的粗細','毫米'],['迴紋針的厚度','毫米'],['橡皮擦的長度','公分'],['課本的寬度','公分'],['教室的長度','公尺'],['操場跑道一圈','公尺']],x=pick(L);return Q(`${x[0]}適合用哪一個單位？`,'',x[1],['毫米','公分','公尺'],`${x[0]}大約是${x[1]}的大小。`)});
+const g3u4=U('乘法','乘法是「一樣多的合起來」。算多位數乘一位數時，從個位開始乘，滿 10 要進位到前一位。連乘題要分兩步，一步一步算。',()=>{const t=R(0,2);
+ if(t==0){const a=R(12,98),b=R(2,9);return NQ(`${a} × ${b} = ?`,'',a*b,`個位先乘、十位再乘，記得進位：${a*b}。`,{step:pick([1,10]),min:1})}
+ if(t==1){const a=R(101,499),b=R(2,4);return NQ(`${a} × ${b} = ?`,'',a*b,`從個位開始，一位一位乘：${a*b}。`,{step:pick([10,100]),min:1})}
+ const a=R(2,5),b=R(3,8),c=R(2,4);return NQ(`每箱有 ${a} 盒，每盒有 ${b} 個，${c} 箱一共有幾個？`,'',a*b*c,`先算一箱：${a} × ${b} = ${a*b}，再算 ${c} 箱：${a*b} × ${c} = ${a*b*c}。`,{step:pick([a,b]),min:1})});
+const g3u5=U('角','兩條直線從一點出發，就形成角。剛好像書本的角叫直角；比直角小叫銳角；比直角大叫鈍角。正方形和長方形的 4 個角都是直角。',()=>{const t=R(0,3);
+ if(t<=1){const k=pick(['銳角','直角','鈍角']),d={銳角:R(2,7)*10,直角:90,鈍角:R(10,16)*10}[k];return Q('這是什麼角？',angle(d),k,['銳角','直角','鈍角'],{銳角:'比直角小，是銳角。',直角:'剛好是直角，圖上有小方塊記號。',鈍角:'比直角大，是鈍角。'}[k])}
+ if(t==2)return NQ('正方形有幾個直角？','',4,'正方形的 4 個角都是直角。',{min:0,max:6});
+ return Q('下面哪一個角最大？','',pick(['鈍角']),['銳角','直角','鈍角'],'鈍角 > 直角 > 銳角。')});
+const g3u6=U('面積','面積是「一個面有多大」。用邊長 1 公分的小正方形去數，每一格是 1 平方公分。把圖形切開再拼起來，面積不會變。',()=>{const t=R(0,2),w=R(3,7),h=R(2,5);
+ if(t==0)return NQ('每一格是 1 平方公分，面積是多少？',gridv(w,h),w*h,`每列 ${w} 格，共 ${h} 列：${w} × ${h} = ${w*h}。`,{min:1,f:x=>x+' 平方公分'});
+ if(t==1){const cw=R(1,2),ch=R(1,2),ans=w*h-cw*ch;return NQ('每一格是 1 平方公分，這個圖形的面積是多少？',gridv(w,h,(r,c)=>!(r<ch&&c>=w-cw)),ans,`全部 ${w*h} 格，缺了 ${cw*ch} 格，剩 ${ans} 格。`,{min:1,f:x=>x+' 平方公分'})}
+ return NQ(`一個長方形每列 ${w} 格，共 ${h} 列，面積是幾平方公分？`,'',w*h,`${w} × ${h} = ${w*h}。`,{min:1})});
+const g3u7=U('除法','除法是「平分」或「一份一份分」。算不完時剩下的叫餘數，餘數一定比除數小。驗算：商 × 除數 + 餘數 = 被除數。',()=>{const t=R(0,2),b=R(2,9),q=R(3,12),r=R(0,b-1),a=b*q+r;
+ if(t==0)return NQ(`${a} ÷ ${b} 的商是多少？`,'',q,`${b} × ${q} = ${b*q}，沒有超過 ${a}，而 ${b}×${q+1} 會超過。`,{min:1});
+ if(t==1&&r>0)return NQ(`${a} ÷ ${b} = ${q} …… □`,'',r,`${a} − ${b} × ${q} = ${r}，餘數是 ${r}。`,{min:0,max:b-1});
+ return NQ(`有 ${b*q} 顆糖，每人分 ${b} 顆，可以分給幾個人？`,'',q,`${b*q} ÷ ${b} = ${q}。`,{min:1})});
+const g3u8=U('公升和毫升','1 公升 = 1000 毫升。水壺、水桶常用公升；小杯子、藥水用毫升。算加減時，先把單位換成一樣再算。',()=>{const t=R(0,2);
+ if(t==0){const a=R(1,9);return NQ(`${a} 公升 = □ 毫升`,'',a*1000,`1 公升是 1000 毫升，${a} 公升是 ${a*1000} 毫升。`,{step:1000,min:1000})}
+ if(t==1){const a=R(1,9);return NQ(`${a*1000} 毫升 = □ 公升`,'',a,`每 1000 毫升是 1 公升。`,{min:1})}
+ const a=R(2,9)*100,b=R(1,9)*100;return NQ(`水壺有 ${a} 毫升的水，再倒入 ${b} 毫升，一共有幾毫升？`,'',a+b,`${a} + ${b} = ${a+b}。`,{step:100,min:100})});
+const g3u9=U('分數','把一個東西平分成幾份，其中的幾份就是「幾分之幾」。上面的數是取的份數，下面的數是平分的份數。分母一樣時，分子大的比較大。',()=>{const t=R(0,2),d=R(3,9);
+ if(t==0){const n=R(1,d-1);return Q('塗色的部分是全部的幾分之幾？',fr(n,d),fz(n,d),[fz(d-n,d),fz(n,d+1),fz(Math.min(d-1,n+1),d),fz(n+1,d)],`平分成 ${d} 份，塗了 ${n} 份。`)}
+ if(t==1){let a=R(1,d-1),b=R(1,d-1);while(a==b)b=R(1,d-1);return Q(`${fz(a,d)} 和 ${fz(b,d)}，哪一個比較大？`,fr(a,d)+fr(b,d),fz(Math.max(a,b),d),[fz(a,d),fz(b,d)],'分母一樣，分子大的比較大。')}
+ const n=R(1,d-1);return Q(`把一個披薩平分成 ${d} 份，吃了 ${n} 份，吃了全部的幾分之幾？`,'',fz(n,d),[fz(d,n),fz(n,d+1),fz(d-n,d)],`平分成 ${d} 份是分母，吃了 ${n} 份是分子。`)});
+/* ===== 三年級 下學期（康軒第6冊） ===== */
+const g3d1=U('分數的加減','分母一樣的分數相加減，分母不變，只算分子。分子加到跟分母一樣大時，就是 1 個完整的 1。',()=>{const t=R(0,2),d=R(4,11);
+ const show=(n)=>n==d?'1':fz(n,d);
+ if(t==0){const a=R(1,d-2),b=R(1,d-1-a);return Q(`${fz(a,d)} + ${fz(b,d)} = ?`,fr(a,d)+'<span class="op">+</span>'+fr(b,d),fz(a+b,d),[fz(a+b+1,d),fz(a+b-1,d),fz(a+b,d*2)].filter(x=>x!=fz(a+b,d)),`分母不變，分子相加：${a} + ${b} = ${a+b}。`)}
+ if(t==1){const a=R(2,d-1),b=R(1,a-1);return Q(`${fz(a,d)} − ${fz(b,d)} = ?`,'',fz(a-b,d),[fz(a-b+1,d),fz(a-b-1<1?a-b+2:a-b-1,d),fz(a+b,d)],`分母不變，分子相減：${a} − ${b} = ${a-b}。`)}
+ const a=R(1,d-1);return Q(`${fz(a,d)} + □ = 1`,'',fz(d-a,d),[fz(a,d),fz(d-a+1>d-1?d-a-1:d-a+1,d),fz(d,a)],`${d} 份是 1 個完整的 1，所以還要 ${d-a} 份。`)});
+const g3d2=U('除法','三位數除以一位數，從最高位開始除，除不完的數字要和下一位合起來繼續除。加與除的兩步驟題，要先算括號裡面的。',()=>{const t=R(0,2),b=R(2,9);
+ if(t==0){const q=R(21,99),a=b*q+R(0,b-1);return NQ(`${a} ÷ ${b} 的商是多少？`,'',q,`${b} × ${q} = ${b*q}，用商 × 除數驗算。`,{min:10})}
+ if(t==1){const q=R(5,15),c=R(2,6),a=b*q-c;return NQ(`(${a} + ${c}) ÷ ${b} = ?`,'',q,`先算括號：${a} + ${c} = ${a+c}，再除以 ${b}。`,{min:1})}
+ const q=R(15,60);return NQ(`有 ${b*q} 本書，平分給 ${b} 位同學，每人幾本？`,'',q,`${b*q} ÷ ${b} = ${q}。`,{min:1})});
+const g3d3=U('尋找規律','規律就是「一直重複」或「一直照同樣的方法變」。奇數個位是 1、3、5、7、9；偶數個位是 0、2、4、6、8，可以兩兩配對。',()=>{const t=R(0,2);
+ if(t==0){const a=R(1,20),d=R(2,9),L=[0,1,2,3].map(i=>a+d*i);return NQ(`找規律：${L.join('、')}、□`,'',a+d*4,`每次都加 ${d}。`,{step:d,min:1})}
+ if(t==1){const k=R(2,3),P=sh(['apple','star','coin','heart']).slice(0,k),L=Array.from({length:7},(_,i)=>P[i%k]),nx=P[7%k];return Q('接下來是什麼？',`<div class="row">${L.map(x=>spr(x,34)).join('')}<span class="op">?</span></div>`,NAME[nx],Object.values(NAME),`每 ${k} 個一組重複，下一個是${NAME[nx]}。`)}
+ const odd=R(0,1),good=odd?R(10,99)*1|1:R(5,49)*2,ok=odd?[good]:[good];const oth=[];while(oth.length<3){const x=R(10,99);if((x%2==0)!==!!odd&&!oth.includes(x))oth.push(x)}
+ return Q(`下面哪一個是${odd?'奇數':'偶數'}？`,'',good,oth,odd?'奇數的個位是 1、3、5、7、9。':'偶數的個位是 0、2、4、6、8。')});
+const g3d4=U('公斤和公克','1 公斤 = 1000 公克。秤輕的東西用公克，秤重的東西用公斤。加減重量時，單位要先換成一樣。',()=>{const t=R(0,2);
+ if(t==0){const a=R(1,9);return NQ(`${a} 公斤 = □ 公克`,'',a*1000,`1 公斤是 1000 公克。`,{step:1000,min:1000})}
+ if(t==1){const a=R(1,5),b=R(1,9)*100;return NQ(`${a} 公斤 ${b} 公克 = □ 公克`,'',a*1000+b,`${a*1000} + ${b} = ${a*1000+b}。`,{step:100,min:1000})}
+ const a=R(2,9)*100,b=R(2,9)*100;return NQ(`蘋果重 ${a} 公克，橘子重 ${b} 公克，一共重幾公克？`,'',a+b,`${a} + ${b} = ${a+b}。`,{step:100,min:100})});
+const g3d5=U('小數','把 1 平分成 10 份，每一份是 0.1（一位小數）。1 毫米 = 0.1 公分。小數點右邊第一位叫十分位。比小數大小，先比整數，再比十分位。',()=>{const t=R(0,3),f=x=>x.toFixed(1);
+ if(t==0){const a=R(1,9);return NQ(`${a} 毫米 = □ 公分`,'',a/10,`1 毫米是 0.1 公分，${a} 毫米是 ${f(a/10)} 公分。`,{step:.1,min:.1,f:f})}
+ if(t==1){const a=R(1,6),b=R(1,9-a);return NQ(`0.${a} + 0.${b} = ?`,fr(a,10)+'<span class="op">+</span>'+fr(b,10),(a+b)/10,`${a} 個 0.1 加 ${b} 個 0.1，共 ${a+b} 個 0.1。`,{step:.1,min:.1,f:f})}
+ if(t==2){let a=R(11,99)/10,b=R(11,99)/10;while(a==b)b=R(11,99)/10;return Q(`${f(a)} 和 ${f(b)}，哪一個比較大？`,'',f(Math.max(a,b)),[f(a),f(b)],'先比整數部分，一樣再比小數點後面。')}
+ const a=R(11,99);return NQ(`${a} 個 0.1 是多少？`,'',a/10,`${a} 個 0.1 就是 ${f(a/10)}。`,{step:.1,min:.1,f:f})});
+const g3d6=U('圓','圓上每一點到圓心的距離都一樣長。圓心到圓上的線段叫半徑，通過圓心連接圓上兩點的線段叫直徑。直徑是半徑的 2 倍。',()=>{const t=R(0,3),r=R(2,12);
+ if(t==0)return NQ(`圓的半徑是 ${r} 公分，直徑是幾公分？`,'',r*2,`直徑是半徑的 2 倍：${r} × 2 = ${r*2}。`,{min:1});
+ if(t==1)return NQ(`圓的直徑是 ${r*2} 公分，半徑是幾公分？`,'',r,`半徑是直徑的一半：${r*2} ÷ 2 = ${r}。`,{min:1});
+ if(t==2)return Q('圓上每一點到哪裡的距離都一樣長？','','圓心',['圓心','直徑','圓周'].concat(['半徑']).slice(0,3),'圓上每一點到圓心一樣遠。');
+ return NQ(`用圓規畫半徑 ${r} 公分的圓，圓規兩腳要張開幾公分？`,'',r,'兩腳的距離就是半徑。',{min:1})});
+const g3d7=U('乘法與除法','乘法和除法是「相反」的算法：3 × 4 = 12，12 ÷ 4 = 3。所以算「□ × 4 = 12」，就是算 12 ÷ 4；用它還可以驗算。',()=>{const t=R(0,3),a=R(3,9),b=R(3,12),c=a*b;
+ if(t==0)return NQ(`□ × ${a} = ${c}`,'',b,`${c} ÷ ${a} = ${b}。`,{min:1});
+ if(t==1)return NQ(`${c} ÷ □ = ${a}`,'',b,`${c} ÷ ${a} = ${b}。`,{min:1});
+ if(t==2)return NQ(`每盒裝 ${a} 個，共有 ${c} 個，需要幾盒？`,'',b,`${c} ÷ ${a} = ${b}。`,{min:1});
+ return NQ(`已知 ${a} × ${b} = ${c}，那麼 ${c} ÷ ${b} = ?`,'',a,'乘法和除法相反，除回去就是原來的數。',{min:1})});
+const g3d8=U('時間','一天有 24 小時，1 小時 = 60 分，1 分 = 60 秒。24 時制：下午 1 時就是 13 時。算時間要先看「時」再看「分」，滿 60 分進 1 小時。',()=>{const t=R(0,3);
+ if(t==0){const h=R(1,11);return NQ(`下午 ${h} 時，用 24 時制說是幾時？`,'',h+12,`下午要加 12：${h} + 12 = ${h+12}。`,{min:13,max:24})}
+ if(t==1){const d=R(1,3),h=R(1,12);return NQ(`${d} 日 ${h} 時 = □ 時`,'',d*24+h,`1 日是 24 時，${d} 日是 ${d*24} 時，再加 ${h} 時。`,{step:pick([1,24]),min:1})}
+ if(t==2){const x=R(2,9);return NQ(`${x} 分 = □ 秒`,'',x*60,'1 分是 60 秒。',{step:60,min:60})}
+ const H=R(7,10),M=R(0,5)*10,x=R(25,55),T=H*60+M+x,f=m=>`${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`;
+ return Q(`現在是 ${f(H*60+M)}，過 ${x} 分鐘後是幾時幾分？`,clock(H,M),f(T),[f(T+10),f(T-10),f(T+60),f(T-5)],`${M} + ${x} = ${M+x} 分${M+x>=60?'，滿 60 分進 1 小時':''}。`)});
+const g3d9=U('統計表','統計表把資料整理成表格，一眼就能比多少。看表時，先看每一欄是什麼，再找出數字。算「全部」要把每一格加起來。',()=>{const t=R(0,2),N=['蘋果','香蕉','西瓜','葡萄'],V=sh([3,4,5,6,7,8,9,10,12]).slice(0,4),tb=tbl(['水果','人數'],N.map((n,i)=>[n,V[i]]));
+ if(t==0){const m=V.indexOf(Math.max(...V));return Q('最多人喜歡哪一種水果？',tb,N[m],N,`人數最多的是 ${V[m]} 人。`)}
+ if(t==1){const s=V.reduce((x,y)=>x+y,0);return NQ('全部一共有幾個人？',tb,s,`${V.join(' + ')} = ${s}。`,{min:1})}
+ const i=R(0,3);let j=(i+R(1,3))%4;return NQ(`喜歡${N[i]}的人，比喜歡${N[j]}的人多（或少）幾人？ 請選相差的人數`,tb,Math.abs(V[i]-V[j]),`${Math.max(V[i],V[j])} − ${Math.min(V[i],V[j])} = ${Math.abs(V[i]-V[j])}。`,{min:1})});
+const GRADE3={name:'三年級',book:'康軒 第 5、6 冊',sems:[
+ {name:'上學期',vol:'第5冊',zones:[
+  {name:'第一次段考（期中）',wk:'第 1～11 週',units:[g3u1,g3u2,g3u3,g3u4,g3u5]},
+  {name:'第二次段考（期末）',wk:'第 12～21 週',units:[g3u6,g3u7,g3u8,g3u9]}]},
+ {name:'下學期',vol:'第6冊',zones:[
+  {name:'第一次段考（期中）',wk:'第 1～9 週',units:[g3d1,g3d2,g3d3,g3d4]},
+  {name:'第二次段考（期末）',wk:'第 10～21 週',units:[g3d5,g3d6,g3d7,g3d8,g3d9]}]}]};
+/* ===== 額外題型：圈圈看、排排看、連連看、寫出算式和答案、點一點 ===== */
+const uniq=(L,f)=>{const s=new Set();return L.filter(x=>{const k=f(x);if(s.has(k))return false;s.add(k);return true})};
+const expAdd=(v,mx)=>{const a=R(Math.max(0,v-mx),Math.min(v,mx));return{s:`${a} + ${v-a}`,v}};
+const expSub=(v,lo,hi,mx)=>{const bl=Math.max(1,lo-v),bh=Math.min(mx,hi-v),b=R(bl,Math.max(bl,bh));return{s:`${v+b} − ${b}`,v}};
+const expMul=v=>{const f=[];for(let a=2;a<=9;a++)if(v%a==0&&v/a<=12&&v/a>=2)f.push(a);const a=f.length?pick(f):1;return{s:`${a} × ${v/a}`,v}};
+const expDiv=v=>{const b=R(2,9);return{s:`${v*b} ÷ ${b}`,v}};
+/* 算式型：cfg={vals:[lo,hi], mk:(v)=>{s,v}} */
+function exprKinds(cfg){const [lo,hi]=cfg.vals,pickV=()=>R(lo,hi);
+ const tile=e=>({h:`<b class="jp" style="font-size:22px">${e.s}</b>`,v:e.v,s:e.s});
+ const mkN=n=>{let L=[],g=0;while(L.length<n&&g++<200){const e=cfg.mk(pickV());L.push(e);L=uniq(L,x=>x.v)}return L};
+ return{
+ multi(){const N=pickV(),k=R(2,3);let ok=[],g=0;while(ok.length<k&&g++<200)ok=uniq([...ok,cfg.mk(N)],x=>x.s);
+  let no=[];g=0;while(no.length<6-ok.length&&g++<300){const e=cfg.mk(pickV());if(e.v!==N)no=uniq([...no,e],x=>x.s)}
+  const tiles=sh([...ok.map(e=>({...tile(e),k:true})),...no.map(e=>({...tile(e),k:false}))]);
+  return{kind:'multi',t:`把答案是 ${N} 的算式全部圈起來。`,tiles,e:`答案是 ${N} 的有：${ok.map(e=>e.s).join('、')}。`}},
+ sort(){const L=mkN(4),asc=R(0,1),ord=L.slice().sort((a,b)=>asc?a.v-b.v:b.v-a.v);
+  return{kind:'sort',t:`先算出答案，再把算式由${asc?'小到大':'大到小'}依序點一點。`,tiles:sh(L.map(tile)),order:ord.map(e=>e.s),e:ord.map(e=>`${e.s} = ${e.v}`).join('，')+'。'}},
+ match(){const L=mkN(4);return{kind:'match',t:'算式和答案連連看。',pairs:L.map(e=>[`<b class="jp" style="font-size:22px">${e.s}</b>`,String(e.v)]),e:L.map(e=>`${e.s} = ${e.v}`).join('，')+'。'}}}}
+/* 數字型 */
+function numKinds(lo,hi,o={}){const f=o.f||(x=>x),dv=o.dv||1,rn=()=>R(lo,hi);
+ const tile=n=>({h:`<b class="jp" style="font-size:22px">${f(n/dv)}</b>`,v:n});
+ return{
+ multi(){const N=R(lo+3,hi-3),big=R(0,1),k=R(2,3);const pool=big?Array.from({length:hi-N},(_,i)=>N+1+i):Array.from({length:N-lo},(_,i)=>lo+i);
+  const ok=sh(pool).slice(0,k),rest=big?Array.from({length:N-lo},(_,i)=>lo+i):Array.from({length:hi-N},(_,i)=>N+1+i);
+  const no=sh(rest).slice(0,6-ok.length),tiles=sh([...ok.map(n=>({...tile(n),k:true})),...no.map(n=>({...tile(n),k:false}))]);
+  return{kind:'multi',t:`把比 ${f(N/dv)} ${big?'大':'小'}的數全部圈起來。`,tiles,e:`比 ${f(N/dv)} ${big?'大':'小'}的有：${ok.map(n=>f(n/dv)).join('、')}。`}},
+ sort(){let s=new Set();while(s.size<4)s.add(rn());const L=[...s],asc=R(0,1),ord=L.slice().sort((a,b)=>asc?a-b:b-a);
+  return{kind:'sort',t:`把數字由${asc?'小到大':'大到小'}依序點一點。`,tiles:sh(L.map(tile)),order:ord.map(n=>f(n/dv)),e:`排好是：${ord.map(n=>f(n/dv)).join('、')}。`}}}}
+/* 應用題：先選算式，再寫答案 */
+const NM=['小明','小美','小華','小安','小玉','小傑'],TH=[['蘋果','顆'],['糖果','顆'],['鉛筆','枝'],['貼紙','張'],['氣球','個'],['書','本'],['餅乾','片']];
+const eqAdd=(lo,hi)=>()=>{const n=pick(NM),[th,u]=pick(TH),s=R(lo,hi),a=R(Math.max(1,s-9>lo?s-9:1),s-1),b=s-a;
+ return{kind:'eq',t:`${n}有 ${a} ${u}${th}，又得到 ${b} ${u}，現在一共有幾${u}？`,eqs:[`${a} + ${b}`,`${Math.max(a,b)} − ${Math.min(a,b)}`,`${a} + ${b+1}`],ans:s,unit:u,e:`合起來用加法：${a} + ${b} = ${s}。`}};
+const eqSub=(lo,hi)=>()=>{const n=pick(NM),[th,u]=pick(TH),a=R(lo,hi),b=R(1,Math.min(9,a-1));
+ return{kind:'eq',t:`${n}有 ${a} ${u}${th}，送給朋友 ${b} ${u}，還剩幾${u}？`,eqs:[`${a} − ${b}`,`${a} + ${b}`,`${a} − ${b+1}`],ans:a-b,unit:u,e:`送出去用減法：${a} − ${b} = ${a-b}。`}};
+const eqCmp=(lo,hi)=>()=>{const[n1,n2]=sh(NM).slice(0,2),[th,u]=pick(TH),a=R(lo,hi),b=R(1,Math.min(9,a-1));
+ return{kind:'eq',t:`${n1}有 ${a} ${u}${th}，${n2}有 ${b} ${u}，${n1}比${n2}多幾${u}？`,eqs:[`${a} − ${b}`,`${a} + ${b}`,`${b} + ${a-b+1}`],ans:a-b,unit:u,e:`比多少用減法：${a} − ${b} = ${a-b}。`}};
+const eqMul=()=>{const n=pick(NM),[th,u]=pick(TH),a=R(3,9),b=R(2,9);
+ return{kind:'eq',t:`${n}每盒裝 ${a} ${u}${th}，買了 ${b} 盒，一共有幾${u}？`,eqs:[`${a} × ${b}`,`${a} + ${b}`,`${a*b} ÷ ${b}`],ans:a*b,unit:u,e:`每盒一樣多，用乘法：${a} × ${b} = ${a*b}。`}};
+const eqDiv=()=>{const[th,u]=pick(TH),b=R(2,9),q=R(3,12);
+ return{kind:'eq',t:`有 ${b*q} ${u}${th}，平分給 ${b} 個人，每人幾${u}？`,eqs:[`${b*q} ÷ ${b}`,`${b*q} × ${b}`,`${b*q} − ${b}`],ans:q,unit:u,e:`平分用除法：${b*q} ÷ ${b} = ${q}。`}};
+/* 點一點：把多出來的點掉 */
+const rmv=()=>{const sp=pick(['apple','star','coin','heart']),a=R(5,12),b=R(2,a-1),nm=NAME[sp];
+ return{kind:'remove',t:`有 ${a} 個${nm}和 ${b} 個盤子，一個盤子放一個${nm}。把多出來的${nm}點掉。`,sp,total:a,need:a-b,e:`${a} − ${b} = ${a-b}，多出來 ${a-b} 個。`}};
+/* 連連看：圖像型 */
+const clockMatch=()=>{const hs=sh([1,2,3,4,5,6,7,8,9,10,11,12]).slice(0,4);return{kind:'match',t:'時鐘和時間連連看。',pairs:hs.map(h=>{const hf=R(0,1);return[clock(h,hf?30:0).replace('width="170" height="170"','width="96" height="96"'),hf?`${h}點半`:`${h}點`]}),e:'短針指幾就是幾點，長針指 6 是半點。'}};
+const coinMatch=()=>{const V=[1,5,10,50],used=new Set(),pr=[];let g=0;while(pr.length<3&&g++<100){const L=Array.from({length:R(2,3)},()=>pick(V)),s=L.reduce((x,y)=>x+y,0);if(!used.has(s)){used.add(s);pr.push([`<span class="row" style="align-items:center">${L.map(coin).join('')}</span>`,`${s} 元`])}}
+ return{kind:'match',t:'錢幣和錢數連連看。',pairs:pr,e:'把每一枚錢幣的錢數加起來。'}};
+const tensMatch=(lo,hi)=>()=>{const used=new Set(),pr=[];while(pr.length<3){const n=R(lo,hi);if(!used.has(n)){used.add(n);pr.push([tens(Math.floor(n/10),n%10),String(n)])}}return{kind:'match',t:'數量和數字連連看。',pairs:pr,e:'幾個十就是幾十，再加上個位的一。'}};
+const fracMatch=()=>{const d=R(5,9),ns=sh(Array.from({length:d-1},(_,i)=>i+1)).slice(0,4);return{kind:'match',t:'塗色部分和分數連連看。',pairs:ns.map(n=>[fr(n,d),fz(n,d)]),e:`平分成 ${d} 份，塗了幾份就是 ${d} 分之幾。`}};
+const fracSort=()=>{const d=R(5,9),ns=sh(Array.from({length:d-1},(_,i)=>i+1)).slice(0,4),asc=R(0,1),o=ns.slice().sort((a,b)=>asc?a-b:b-a);
+ return{kind:'sort',t:`分母都是 ${d}，把分數由${asc?'小到大':'大到小'}依序點一點。`,tiles:sh(ns.map(n=>({h:`<b class="jp" style="font-size:20px">${fz(n,d)}</b>`,v:n}))),order:o.map(n=>fz(n,d)),e:'分母一樣，分子大的比較大。'}};
+const shapeMulti=()=>{const T=['sq','ci','tri'],nm={sq:'正方形',ci:'圓形',tri:'三角形'},col={sq:'#ff4d6d',ci:'#ffd23f',tri:'#3ddc84'},x=pick(T),k=R(2,3),L=[...Array(k).fill(x),...Array.from({length:6-k},()=>pick(T.filter(y=>y!=x)))];
+ return{kind:'multi',t:`把所有的${nm[x]}圈起來。`,tiles:sh(L.map(y=>({h:shape(y,col[y],46),k:y==x}))),e:`${nm[x]}一共有 ${k} 個。`}};
+const angMulti=()=>{const k=pick(['鈍角','銳角']),n=R(2,3),mk=t=>t=='鈍角'?R(10,16)*10:R(2,7)*10,o=k=='鈍角'?'銳角':'直角',
+ L=[...Array.from({length:n},()=>({d:mk(k),k:true})),...Array.from({length:6-n},()=>({d:o=='直角'?90:mk(o),k:false}))];
+ return{kind:'multi',t:`把所有的${k}圈起來。`,tiles:sh(L).map(x=>({h:angle(x.d,96,80),k:x.k})),e:`${k}${k=='鈍角'?'比直角大':'比直角小'}。`}};
+/* 掛到各單元 */
+g1u1.ex={...numKinds(0,10),remove:rmv};
+g1u3.ex={remove:rmv};
+g1u6.ex={...numKinds(10,30),match:tensMatch(11,29)};
+g1u7.ex={...exprKinds({vals:[2,10],mk:v=>expAdd(v,v)}),eq:eqAdd(4,10)};
+g1u8.ex={...exprKinds({vals:[1,8],mk:v=>expSub(v,v,10,10-v)}),eq:eqSub(4,10),remove:rmv};
+g1u9.ex={match:clockMatch};
+g1d1.ex={...numKinds(10,49),match:tensMatch(11,49)};
+g1d2.ex={...exprKinds({vals:[11,18],mk:v=>expAdd(v,9)}),eq:eqAdd(11,18)};
+g1d3.ex={multi:shapeMulti};
+g1d4.ex={...exprKinds({vals:[3,9],mk:v=>expSub(v,11,18,9)}),eq:eqCmp(11,18),remove:rmv};
+g1d6.ex={...numKinds(21,99),match:tensMatch(21,99)};
+g1d7.ex={match:coinMatch};
+g1d8.ex={eq:()=>R(0,1)?eqAdd(21,70)():eqSub(31,90)(),match:undefined};delete g1d8.ex.match;
+g3u1.ex={...numKinds(1000,9999)};
+g3u2.ex={eq:()=>eqAdd(30,99)()};
+g3u4.ex={...exprKinds({vals:[12,72],mk:expMul}),eq:eqMul};
+g3u5.ex={multi:angMulti};
+g3u7.ex={...exprKinds({vals:[3,12],mk:expDiv}),eq:eqDiv};
+g3u9.ex={match:fracMatch,sort:fracSort};
+g3d2.ex={eq:eqDiv};
+g3d5.ex={...numKinds(11,99,{f:x=>x.toFixed(1),dv:10})};
+g3d7.ex={...exprKinds({vals:[3,12],mk:expDiv}),eq:()=>R(0,1)?eqMul():eqDiv()};
+const ZR={"一": "ㄧ", "一份一份分": "ㄧˊ ㄈㄣˋ ㄧˊ ㄈㄣˋ ㄈㄣ", "一位一位乘": "ㄧˊ ㄨㄟˋ ㄧˊ ㄨㄟˋ ㄔㄥˊ", "一位一位加": "ㄧˊ ㄨㄟˋ ㄧˊ ㄨㄟˋ ㄐㄧㄚ", "一位小數": "ㄧˊ ㄨㄟˋ ㄒㄧㄠˇ ㄕㄨˋ", "一個一個數": "ㄧˊ ˙ㄍㄜ ㄧˊ ˙ㄍㄜ ㄕㄨˇ", "一個十": "ㄧˊ ˙ㄍㄜ ㄕˊ", "一個指一個": "ㄧˊ ˙ㄍㄜ ㄓˇ ㄧˊ ˙ㄍㄜ", "一個接一個量": "ㄧˊ ˙ㄍㄜ ㄐㄧㄝ ㄧˊ ˙ㄍㄜ ㄌㄧㄤˋ", "一個方塊接一個方塊數": "ㄧˊ ˙ㄍㄜ ㄈㄤ ㄎㄨㄞˋ ㄐㄧㄝ ㄧˊ ˙ㄍㄜ ㄈㄤ ㄎㄨㄞˋ ㄕㄨˇ", "一個星期有": "ㄧˊ ˙ㄍㄜ ㄒㄧㄥ ㄑㄧ ㄧㄡˇ", "一個星期有幾天": "ㄧˊ ˙ㄍㄜ ㄒㄧㄥ ㄑㄧ ㄧㄡˇ ㄐㄧˇ ㄊㄧㄢ", "一個橡皮擦": "ㄧˊ ˙ㄍㄜ ㄒㄧㄤˋ ㄆㄧˊ ㄘㄚ", "一個盤子放一個": "ㄧˊ ˙ㄍㄜ ㄆㄢˊ ˙ㄗ ㄈㄤˋ ㄧˊ ˙ㄍㄜ", "一個配一個": "ㄧˊ ˙ㄍㄜ ㄆㄟˋ ㄧˊ ˙ㄍㄜ", "一個長方形每列": "ㄧˊ ˙ㄍㄜ ㄔㄤˊ ㄈㄤ ㄒㄧㄥˊ ㄇㄟˇ ㄌㄧㄝˋ", "一個面有多大": "ㄧˊ ˙ㄍㄜ ㄇㄧㄢˋ ㄧㄡˇ ㄉㄨㄛ ㄉㄚˋ", "一共有": "ㄧˊ ㄍㄨㄥˋ ㄧㄡˇ", "一共有多少個": "ㄧˊ ㄍㄨㄥˋ ㄧㄡˇ ㄉㄨㄛ ㄕㄠˇ ˙ㄍㄜ", "一共有幾": "ㄧˊ ㄍㄨㄥˋ ㄧㄡˇ ㄐㄧˇ", "一共有幾毫升": "ㄧˊ ㄍㄨㄥˋ ㄧㄡˇ ㄐㄧˇ ㄏㄠˊ ㄕㄥ", "一共有幾顆": "ㄧˊ ㄍㄨㄥˋ ㄧㄡˇ ㄐㄧˇ ㄎㄜ", "一共重幾公克": "ㄧˊ ㄍㄨㄥˋ ㄓㄨㄥˋ ㄐㄧˇ ㄍㄨㄥ ㄎㄜˋ", "一天有": "ㄧˋ ㄊㄧㄢ ㄧㄡˇ", "一年級": "ㄧ ㄋㄧㄢˊ ㄐㄧˊ", "一樣再比小數點後面": "ㄧˊ ㄧㄤˋ ㄗㄞˋ ㄅㄧˇ ㄒㄧㄠˇ ㄕㄨˋ ㄉㄧㄢˇ ㄏㄡˋ ㄇㄧㄢˋ", "一樣多的合起來": "ㄧˊ ㄧㄤˋ ㄉㄨㄛ ˙ㄉㄜ ㄏㄜˊ ㄑㄧˇ ㄌㄞˊ", "一步一步算": "ㄧˊ ㄅㄨˋ ㄧˊ ㄅㄨˋ ㄙㄨㄢˋ", "一直照同樣的方法變": "ㄧˋ ㄓˊ ㄓㄠˋ ㄊㄨㄥˊ ㄧㄤˋ ˙ㄉㄜ ㄈㄤ ㄈㄚˇ ㄅㄧㄢˋ", "一直重複": "ㄧˋ ㄓˊ ㄔㄨㄥˊ ㄈㄨˋ", "一眼就能比多少": "ㄧˋ ㄧㄢˇ ㄐㄧㄡˋ ㄋㄥˊ ㄅㄧˇ ㄉㄨㄛ ㄕㄠˇ", "一關一關學會課本的單元": "ㄧˋ ㄍㄨㄢ ㄧˋ ㄍㄨㄢ ㄒㄩㄝˊ ㄏㄨㄟˋ ㄎㄜˋ ㄅㄣˇ ˙ㄉㄜ ㄉㄢ ㄩㄢˊ", "一頭對齊": "ㄧˋ ㄊㄡˊ ㄉㄨㄟˋ ㄑㄧˊ", "三": "ㄙㄢ", "三位數除以一位數": "ㄙㄢ ㄨㄟˋ ㄕㄨˋ ㄔㄨˊ ㄧˇ ㄧˊ ㄨㄟˋ ㄕㄨˋ", "三個形狀一樣": "ㄙㄢ ˙ㄍㄜ ㄒㄧㄥˊ ㄓㄨㄤˋ ㄧˊ ㄧㄤˋ", "三年級": "ㄙㄢ ㄋㄧㄢˊ ㄐㄧˊ", "三角形": "ㄙㄢ ㄐㄧㄠˇ ㄒㄧㄥˊ", "三角形有": "ㄙㄢ ㄐㄧㄠˇ ㄒㄧㄥˊ ㄧㄡˇ", "上": "ㄕㄤˋ", "上學期": "ㄕㄤˋ ㄒㄩㄝˊ ㄑㄧ", "上面的數是取的份數": "ㄕㄤˋ ㄇㄧㄢˋ ˙ㄉㄜ ㄕㄨˋ ㄕˋ ㄑㄩˇ ˙ㄉㄜ ㄈㄣˋ ㄕㄨˋ", "下一個是": "ㄒㄧㄚˋ ㄧˊ ˙ㄍㄜ ㄕˋ", "下一關": "ㄒㄧㄚˋ ㄧˋ ㄍㄨㄢ", "下一題": "ㄒㄧㄚˋ ㄧˋ ㄊㄧˊ", "下午": "ㄒㄧㄚˋ ㄨˇ", "下午要加": "ㄒㄧㄚˋ ㄨˇ ㄧㄠˋ ㄐㄧㄚ", "下學期": "ㄒㄧㄚˋ ㄒㄩㄝˊ ㄑㄧ", "下學期各": "ㄒㄧㄚˋ ㄒㄩㄝˊ ㄑㄧ ㄍㄜˋ", "下面哪一個是": "ㄒㄧㄚˋ ㄇㄧㄢˋ ㄋㄚˇ ㄧˊ ˙ㄍㄜ ㄕˋ", "下面哪一個角最大": "ㄒㄧㄚˋ ㄇㄧㄢˋ ㄋㄚˇ ㄧˊ ˙ㄍㄜ ㄐㄧㄠˇ ㄗㄨㄟˋ ㄉㄚˋ", "下面的數是平分的份數": "ㄒㄧㄚˋ ㄇㄧㄢˋ ˙ㄉㄜ ㄕㄨˋ ㄕˋ ㄆㄧㄥˊ ㄈㄣ ˙ㄉㄜ ㄈㄣˋ ㄕㄨˋ", "不夠減就向左邊借": "ㄅㄨˊ ㄍㄡˋ ㄐㄧㄢˇ ㄐㄧㄡˋ ㄒㄧㄤˋ ㄗㄨㄛˇ ㄅㄧㄢ ㄐㄧㄝˋ", "不漏掉": "ㄅㄨˊ ㄌㄡˋ ㄉㄧㄠˋ", "不留空": "ㄅㄨˋ ㄌㄧㄡˊ ㄎㄨㄥˋ", "不能堆高": "ㄅㄨˋ ㄋㄥˊ ㄉㄨㄟ ㄍㄠ", "不能直接比時": "ㄅㄨˋ ㄋㄥˊ ㄓˊ ㄐㄧㄝ ㄅㄧˇ ㄕˊ", "不重疊": "ㄅㄨˋ ㄔㄨㄥˊ ㄉㄧㄝˊ", "不重複": "ㄅㄨˋ ㄔㄨㄥˊ ㄈㄨˋ", "乒乓球": "ㄆㄧㄥ ㄆㄤ ㄑㄧㄡˊ", "乘法": "ㄔㄥˊ ㄈㄚˇ", "乘法和除法是": "ㄔㄥˊ ㄈㄚˇ ㄏㄢˋ ㄔㄨˊ ㄈㄚˇ ㄕˋ", "乘法和除法相反": "ㄔㄥˊ ㄈㄚˇ ㄏㄢˋ ㄔㄨˊ ㄈㄚˇ ㄒㄧㄤ ㄈㄢˇ", "乘法是": "ㄔㄥˊ ㄈㄚˇ ㄕˋ", "乘法與除法": "ㄔㄥˊ ㄈㄚˇ ㄩˇ ㄔㄨˊ ㄈㄚˇ", "也可以滾": "ㄧㄝˇ ㄎㄜˇ ㄧˇ ㄍㄨㄣˇ", "也是用減法": "ㄧㄝˇ ㄕˋ ㄩㄥˋ ㄐㄧㄢˇ ㄈㄚˇ", "二": "ㄦˋ", "二位數的加減": "ㄦˋ ㄨㄟˋ ㄕㄨˋ ˙ㄉㄜ ㄐㄧㄚ ㄐㄧㄢˇ", "五": "ㄨˇ", "人": "ㄖㄣˊ", "人數": "ㄖㄣˊ ㄕㄨˋ", "人數最多的是": "ㄖㄣˊ ㄕㄨˋ ㄗㄨㄟˋ ㄉㄨㄛ ˙ㄉㄜ ㄕˋ", "今天": "ㄐㄧㄣ ㄊㄧㄢ", "今天是星期": "ㄐㄧㄣ ㄊㄧㄢ ㄕˋ ㄒㄧㄥ ㄑㄧ", "付": "ㄈㄨˋ", "以內的加法": "ㄧˇ ㄋㄟˋ ˙ㄉㄜ ㄐㄧㄚ ㄈㄚˇ", "以內的數": "ㄧˇ ㄋㄟˋ ˙ㄉㄜ ㄕㄨˋ", "以內的減法": "ㄧˇ ㄋㄟˋ ˙ㄉㄜ ㄐㄧㄢˇ ㄈㄚˇ", "任何數加": "ㄖㄣˋ ㄏㄜˊ ㄕㄨˋ ㄐㄧㄚ", "份": "ㄈㄣˋ", "份是": "ㄈㄣˋ ㄕˋ", "份是分子": "ㄈㄣˋ ㄕˋ ㄈㄣˋ ㄗˇ", "份是分母": "ㄈㄣˋ ㄕˋ ㄈㄣ ㄇㄨˇ", "估算時": "ㄍㄨ ㄙㄨㄢˋ ㄕˊ", "伸出去比較多的比較長": "ㄕㄣ ㄔㄨ ㄑㄩˋ ㄅㄧˇ ㄐㄧㄠˋ ㄉㄨㄛ ˙ㄉㄜ ㄅㄧˇ ㄐㄧㄠˋ ㄔㄤˊ", "伸出去比較少的比較短": "ㄕㄣ ㄔㄨ ㄑㄩˋ ㄅㄧˇ ㄐㄧㄠˋ ㄕㄠˇ ˙ㄉㄜ ㄅㄧˇ ㄐㄧㄠˋ ㄉㄨㄢˇ", "伸出比較多的就是比較長的": "ㄕㄣ ㄔㄨ ㄅㄧˇ ㄐㄧㄠˋ ㄉㄨㄛ ˙ㄉㄜ ㄐㄧㄡˋ ㄕˋ ㄅㄧˇ ㄐㄧㄠˋ ㄔㄤˊ ˙ㄉㄜ", "位": "ㄨㄟˋ", "位同學": "ㄨㄟˋ ㄊㄨㄥˊ ㄒㄩㄝˊ", "位數字是多少": "ㄨㄟˋ ㄕㄨˋ ㄗˋ ㄕˋ ㄉㄨㄛ ㄕㄠˇ", "例如迴紋針": "ㄌㄧˋ ㄖㄨˊ ㄏㄨㄟˊ ㄨㄣˊ ㄓㄣ", "依序點一點": "ㄧ ㄒㄩˋ ㄉㄧㄢˇ ㄧˋ ㄉㄧㄢˇ", "個": "˙ㄍㄜ", "個一": "˙ㄍㄜ ㄧ", "個一捆是一個十": "˙ㄍㄜ ㄧˋ ㄎㄨㄣˇ ㄕˋ ㄧˊ ˙ㄍㄜ ㄕˊ", "個一是一捆": "˙ㄍㄜ ㄧˊ ㄕˋ ㄧˋ ㄎㄨㄣˇ", "個一樣長的邊": "˙ㄍㄜ ㄧˊ ㄧㄤˋ ㄔㄤˊ ˙ㄉㄜ ㄅㄧㄢ", "個一組重複": "˙ㄍㄜ ㄧˋ ㄗㄨˇ ㄔㄨㄥˊ ㄈㄨˋ", "個人": "˙ㄍㄜ ㄖㄣˊ", "個位": "ㄍㄜˋ ㄨㄟˋ", "個位不夠減": "ㄍㄜˋ ㄨㄟˋ ㄅㄨˊ ㄍㄡˋ ㄐㄧㄢˇ", "個位不夠減時": "ㄍㄜˋ ㄨㄟˋ ㄅㄨˊ ㄍㄡˋ ㄐㄧㄢˇ ㄕˊ", "個位先乘": "ㄍㄜˋ ㄨㄟˋ ㄒㄧㄢ ㄔㄥˊ", "個位加起來滿": "ㄍㄜˋ ㄨㄟˋ ㄐㄧㄚ ㄑㄧˇ ㄌㄞˊ ㄇㄢˇ", "個位和個位算": "ㄍㄜˋ ㄨㄟˋ ㄏㄢˋ ㄍㄜˋ ㄨㄟˋ ㄙㄨㄢˋ", "個位對個位": "ㄍㄜˋ ㄨㄟˋ ㄉㄨㄟˋ ㄍㄜˋ ㄨㄟˋ", "個位相加滿": "ㄍㄜˋ ㄨㄟˋ ㄒㄧㄤ ㄐㄧㄚ ㄇㄢˇ", "個位組成": "ㄍㄜˋ ㄨㄟˋ ㄗㄨˇ ㄔㄥˊ", "個十": "˙ㄍㄜ ㄕˊ", "個十再減": "˙ㄍㄜ ㄕˊ ㄗㄞˋ ㄐㄧㄢˇ", "個十和": "˙ㄍㄜ ㄕˊ ㄏㄢˋ", "個十是": "˙ㄍㄜ ㄕˊ ㄕˋ", "個千": "˙ㄍㄜ ㄑㄧㄢ", "個單位": "˙ㄍㄜ ㄉㄢ ㄨㄟˋ", "個單元": "˙ㄍㄜ ㄉㄢ ㄩㄢˊ", "個地數": "˙ㄍㄜ ˙ㄉㄜ ㄕㄨˇ", "個完整的": "˙ㄍㄜ ㄨㄢˊ ㄓㄥˇ ˙ㄉㄜ", "個就是": "˙ㄍㄜ ㄐㄧㄡˋ ㄕˋ", "個數字是": "ㄍㄜˋ ㄕㄨˋ ㄗˋ ㄕˋ", "個是什麼": "˙ㄍㄜ ㄕˋ ㄕㄣˊ ˙ㄇㄜ", "個百": "˙ㄍㄜ ㄅㄞˇ", "個盤子": "˙ㄍㄜ ㄆㄢˊ ˙ㄗ", "個角都是直角": "˙ㄍㄜ ㄐㄧㄠˇ ㄉㄡ ㄕˋ ㄓˊ ㄐㄧㄠˇ", "個邊": "˙ㄍㄜ ㄅㄧㄢ", "倍": "ㄅㄟˋ", "借": "ㄐㄧㄝˋ", "側面是圓的可以滾": "ㄘㄜˋ ㄇㄧㄢˋ ㄕˋ ㄩㄢˊ ˙ㄉㄜ ㄎㄜˇ ㄧˇ ㄍㄨㄣˇ", "偶數": "ㄡˇ ㄕㄨˋ", "偶數個位是": "ㄡˇ ㄕㄨˋ ㄍㄜˋ ㄨㄟˋ ㄕˋ", "偶數的個位是": "ㄡˇ ㄕㄨˋ ˙ㄉㄜ ㄍㄜˋ ㄨㄟˋ ㄕˋ", "像哪一種形狀": "ㄒㄧㄤˋ ㄋㄚˇ ㄧˋ ㄓㄨㄥˇ ㄒㄧㄥˊ ㄓㄨㄤˋ", "像素數學村": "ㄒㄧㄤˋ ㄙㄨˋ ㄕㄨˋ ㄒㄩㄝˊ ㄘㄨㄣ", "元": "ㄩㄢˊ", "元可以換": "ㄩㄢˊ ㄎㄜˇ ㄧˇ ㄏㄨㄢˋ", "元可以換幾個": "ㄩㄢˊ ㄎㄜˇ ㄧˇ ㄏㄨㄢˋ ㄐㄧˇ ˙ㄍㄜ", "先": "ㄒㄧㄢ", "先不一樣的那一位決定大小": "ㄒㄧㄢ ㄅㄨˋ ㄧˊ ㄧㄤˋ ˙ㄉㄜ ㄋㄚˋ ㄧˊ ㄨㄟˋ ㄐㄩㄝˊ ㄉㄧㄥˋ ㄉㄚˋ ㄒㄧㄠˇ", "先把": "ㄒㄧㄢ ㄅㄚˇ", "先把單位換成一樣再算": "ㄒㄧㄢ ㄅㄚˇ ㄉㄢ ㄨㄟˋ ㄏㄨㄢˋ ㄔㄥˊ ㄧˊ ㄧㄤˋ ㄗㄞˋ ㄙㄨㄢˋ", "先把數看成最接近的整百": "ㄒㄧㄢ ㄅㄚˇ ㄕㄨˋ ㄎㄢˋ ㄔㄥˊ ㄗㄨㄟˋ ㄐㄧㄝ ㄐㄧㄣˋ ˙ㄉㄜ ㄓㄥˇ ㄅㄞˇ", "先比十位": "ㄒㄧㄢ ㄅㄧˇ ㄕˊ ㄨㄟˋ", "先比整數": "ㄒㄧㄢ ㄅㄧˇ ㄓㄥˇ ㄕㄨˋ", "先比整數部分": "ㄒㄧㄢ ㄅㄧˇ ㄓㄥˇ ㄕㄨˋ ㄅㄨˋ ㄈㄣˋ", "先減到": "ㄒㄧㄢ ㄐㄧㄢˇ ㄉㄠˋ", "先湊十": "ㄒㄧㄢ ㄘㄡˋ ㄕˊ", "先看每一欄是什麼": "ㄒㄧㄢ ㄎㄢˋ ㄇㄟˇ ㄧˋ ㄌㄢˊ ㄕˋ ㄕㄣˊ ˙ㄇㄜ", "先算一箱": "ㄒㄧㄢ ㄙㄨㄢˋ ㄧˋ ㄒㄧㄤ", "先算出答案": "ㄒㄧㄢ ㄙㄨㄢˋ ㄔㄨ ㄉㄚˊ ㄢˋ", "先算括號": "ㄒㄧㄢ ㄙㄨㄢˋ ㄎㄨㄛˋ ㄏㄠˋ", "先選算式": "ㄒㄧㄢ ㄒㄩㄢˇ ㄙㄨㄢˋ ㄕˋ", "先配對": "ㄒㄧㄢ ㄆㄟˋ ㄉㄨㄟˋ", "全對": "ㄑㄩㄢˊ ㄉㄨㄟˋ", "全對可以拿": "ㄑㄩㄢˊ ㄉㄨㄟˋ ㄎㄜˇ ㄧˇ ㄋㄚˊ", "全部": "ㄑㄩㄢˊ ㄅㄨˋ", "全部一共有幾個人": "ㄑㄩㄢˊ ㄅㄨˋ ㄧˊ ㄍㄨㄥˋ ㄧㄡˇ ㄐㄧˇ ˙ㄍㄜ ㄖㄣˊ", "兩位數加減": "ㄌㄧㄤˇ ㄨㄟˋ ㄕㄨˋ ㄐㄧㄚ ㄐㄧㄢˇ", "兩位數的左邊是十位": "ㄌㄧㄤˇ ㄨㄟˋ ㄕㄨˋ ˙ㄉㄜ ㄗㄨㄛˇ ㄅㄧㄢ ㄕˋ ㄕˊ ㄨㄟˋ", "兩個數交換位置": "ㄌㄧㄤˇ ㄍㄜˋ ㄕㄨˋ ㄐㄧㄠ ㄏㄨㄢˋ ㄨㄟˋ ㄓˋ", "兩區": "ㄌㄧㄤˇ ㄑㄩ", "兩條直線從一點出發": "ㄌㄧㄤˇ ㄊㄧㄠˊ ㄓˊ ㄒㄧㄢˋ ㄘㄨㄥˊ ㄧˋ ㄉㄧㄢˇ ㄔㄨ ㄈㄚ", "兩腳的距離就是半徑": "ㄌㄧㄤˇ ㄐㄧㄠˇ ˙ㄉㄜ ㄐㄩˋ ㄌㄧˊ ㄐㄧㄡˋ ㄕˋ ㄅㄢˋ ㄐㄧㄥˋ", "公克": "ㄍㄨㄥ ㄎㄜˋ", "公分": "ㄍㄨㄥ ㄈㄣ", "公分是": "ㄍㄨㄥ ㄈㄣ ㄕˋ", "公分的圓": "ㄍㄨㄥ ㄈㄣ ˙ㄉㄜ ㄩㄢˊ", "公分的小正方形去數": "ㄍㄨㄥ ㄈㄣ ˙ㄉㄜ ㄒㄧㄠˇ ㄓㄥˋ ㄈㄤ ㄒㄧㄥˊ ㄑㄩˋ ㄕㄨˇ", "公升": "ㄍㄨㄥ ㄕㄥ", "公升和毫升": "ㄍㄨㄥ ㄕㄥ ㄏㄢˋ ㄏㄠˊ ㄕㄥ", "公升是": "ㄍㄨㄥ ㄕㄥ ㄕˋ", "公尺": "ㄍㄨㄥ ㄔˇ", "公斤": "ㄍㄨㄥ ㄐㄧㄣ", "公斤和公克": "ㄍㄨㄥ ㄐㄧㄣ ㄏㄢˋ ㄍㄨㄥ ㄎㄜˋ", "公斤是": "ㄍㄨㄥ ㄐㄧㄣ ㄕˋ", "六": "ㄌㄧㄡˋ", "共": "ㄍㄨㄥˋ", "共有": "ㄍㄨㄥˋ ㄧㄡˇ", "其中的幾份就是": "ㄑㄧˊ ㄓㄨㄥ ˙ㄉㄜ ㄐㄧˇ ㄈㄣˋ ㄐㄧㄡˋ ㄕˋ", "冊": "ㄘㄜˋ", "再": "ㄗㄞˋ", "再倒入": "ㄗㄞˋ ㄉㄠˋ ㄖㄨˋ", "再加": "ㄗㄞˋ ㄐㄧㄚ", "再加上個位的一": "ㄗㄞˋ ㄐㄧㄚ ㄕㄤˋ ㄍㄜˋ ㄨㄟˋ ˙ㄉㄜ ㄧ", "再多": "ㄗㄞˋ ㄉㄨㄛ", "再寫答案": "ㄗㄞˋ ㄒㄧㄝˇ ㄉㄚˊ ㄢˋ", "再想想看": "ㄗㄞˋ ㄒㄧㄤˇ ㄒㄧㄤˇ ㄎㄢˋ", "再找出數字": "ㄗㄞˋ ㄓㄠˇ ㄔㄨ ㄕㄨˋ ㄗˋ", "再把算式由": "ㄗㄞˋ ㄅㄚˇ ㄙㄨㄢˋ ㄕˋ ㄧㄡˊ", "再挑戰一次吧": "ㄗㄞˋ ㄊㄧㄠ ㄓㄢˋ ㄧˊ ㄘˋ ˙ㄅㄚ", "再比個位": "ㄗㄞˋ ㄅㄧˇ ㄍㄜˋ ㄨㄟˋ", "再比十分位": "ㄗㄞˋ ㄅㄧˇ ㄕˊ ㄈㄣ ㄨㄟˋ", "再減剩下的": "ㄗㄞˋ ㄐㄧㄢˇ ㄕㄥˋ ㄒㄧㄚˋ ˙ㄉㄜ", "再玩一次": "ㄗㄞˋ ㄨㄢˊ ㄧˊ ㄘˋ", "再看": "ㄗㄞˋ ㄎㄢˋ", "再算": "ㄗㄞˋ ㄙㄨㄢˋ", "再除以": "ㄗㄞˋ ㄔㄨˊ ㄧˇ", "出題": "ㄔㄨ ㄊㄧˊ", "分": "ㄈㄣ", "分之": "ㄈㄣ ㄓ", "分之幾": "ㄈㄣ ㄓ ㄐㄧˇ", "分以上拿": "ㄈㄣ ㄧˇ ㄕㄤˋ ㄋㄚˊ", "分子加到跟分母一樣大時": "ㄈㄣˋ ㄗˇ ㄐㄧㄚ ㄉㄠˋ ㄍㄣ ㄈㄣ ㄇㄨˇ ㄧˊ ㄧㄤˋ ㄉㄚˋ ㄕˊ", "分子大的比較大": "ㄈㄣˋ ㄗˇ ㄉㄚˋ ˙ㄉㄜ ㄅㄧˇ ㄐㄧㄠˋ ㄉㄚˋ", "分子相加": "ㄈㄣˋ ㄗˇ ㄒㄧㄤ ㄐㄧㄚ", "分子相減": "ㄈㄣˋ ㄗˇ ㄒㄧㄤ ㄐㄧㄢˇ", "分成": "ㄈㄣ ㄔㄥˊ", "分數": "ㄈㄣ ㄕㄨˋ", "分數的加減": "ㄈㄣ ㄕㄨˋ ˙ㄉㄜ ㄐㄧㄚ ㄐㄧㄢˇ", "分是": "ㄈㄣ ㄕˋ", "分母一樣": "ㄈㄣ ㄇㄨˇ ㄧˊ ㄧㄤˋ", "分母一樣時": "ㄈㄣ ㄇㄨˇ ㄧˊ ㄧㄤˋ ㄕˊ", "分母一樣的分數相加減": "ㄈㄣ ㄇㄨˇ ㄧˊ ㄧㄤˋ ˙ㄉㄜ ㄈㄣ ㄕㄨˋ ㄒㄧㄤ ㄐㄧㄚ ㄐㄧㄢˇ", "分母不變": "ㄈㄣ ㄇㄨˇ ㄅㄨˊ ㄅㄧㄢˋ", "分母都是": "ㄈㄣ ㄇㄨˇ ㄉㄡ ㄕˋ", "分與合": "ㄈㄣ ㄩˇ ㄏㄜˊ", "分進": "ㄈㄣ ㄐㄧㄣˋ", "分過關": "ㄈㄣ ㄍㄨㄛˋ ㄍㄨㄢ", "分鐘後是幾時幾分": "ㄈㄣ ㄓㄨㄥ ㄏㄡˋ ㄕˋ ㄐㄧˇ ㄕˊ ㄐㄧˇ ㄈㄣ", "列": "ㄌㄧㄝˋ", "刪除": "ㄕㄢ ㄔㄨˊ", "到十位": "ㄉㄠˋ ㄕˊ ㄨㄟˋ", "前一天是": "ㄑㄧㄢˊ ㄧˋ ㄊㄧㄢ ㄕˋ", "前面的一個數是": "ㄑㄧㄢˊ ㄇㄧㄢˋ ˙ㄉㄜ ㄧˊ ㄍㄜˋ ㄕㄨˋ ㄕˋ", "剛好像書本的角叫直角": "ㄍㄤ ㄏㄠˇ ㄒㄧㄤˋ ㄕㄨ ㄅㄣˇ ˙ㄉㄜ ㄐㄧㄠˇ ㄐㄧㄠˋ ㄓˊ ㄐㄧㄠˇ", "剛好是直角": "ㄍㄤ ㄏㄠˇ ㄕˋ ㄓˊ ㄐㄧㄠˇ", "剩": "ㄕㄥˋ", "剩下": "ㄕㄥˋ ㄒㄧㄚˋ", "剩下的就是多出來的個數": "ㄕㄥˋ ㄒㄧㄚˋ ˙ㄉㄜ ㄐㄧㄡˋ ㄕˋ ㄉㄨㄛ ㄔㄨ ㄌㄞˊ ˙ㄉㄜ ㄍㄜˋ ㄕㄨˋ", "剩下的就是比較多的": "ㄕㄥˋ ㄒㄧㄚˋ ˙ㄉㄜ ㄐㄧㄡˋ ㄕˋ ㄅㄧˇ ㄐㄧㄠˋ ㄉㄨㄛ ˙ㄉㄜ", "剩下的那種比較多": "ㄕㄥˋ ㄒㄧㄚˋ ˙ㄉㄜ ㄋㄚˋ ㄓㄨㄥˇ ㄅㄧˇ ㄐㄧㄠˋ ㄉㄨㄛ", "加": "ㄐㄧㄚ", "加法交換位置": "ㄐㄧㄚ ㄈㄚˇ ㄐㄧㄠ ㄏㄨㄢˋ ㄨㄟˋ ㄓˋ", "加法可以": "ㄐㄧㄚ ㄈㄚˇ ㄎㄜˇ ㄧˇ", "加法滿": "ㄐㄧㄚ ㄈㄚˇ ㄇㄢˇ", "加減重量時": "ㄐㄧㄚ ㄐㄧㄢˇ ㄓㄨㄥˋ ㄌㄧㄤˋ ㄕˊ", "加與除的兩步驟題": "ㄐㄧㄚ ㄩˇ ㄔㄨˊ ˙ㄉㄜ ㄌㄧㄤˇ ㄅㄨˋ ㄓㄡˋ ㄊㄧˊ", "加起來約": "ㄐㄧㄚ ㄑㄧˇ ㄌㄞˊ ㄩㄝ", "十": "ㄕˊ", "十位": "ㄕˊ ㄨㄟˋ", "十位一樣大再比個位": "ㄕˊ ㄨㄟˋ ㄧˊ ㄧㄤˋ ㄉㄚˋ ㄗㄞˋ ㄅㄧˇ ㄍㄜˋ ㄨㄟˋ", "十位不變": "ㄕˊ ㄨㄟˋ ㄅㄨˊ ㄅㄧㄢˋ", "十位再乘": "ㄕˊ ㄨㄟˋ ㄗㄞˋ ㄔㄥˊ", "十位和十位算": "ㄕˊ ㄨㄟˋ ㄏㄢˋ ㄕˊ ㄨㄟˋ ㄙㄨㄢˋ", "十位對十位": "ㄕˊ ㄨㄟˋ ㄉㄨㄟˋ ㄕˊ ㄨㄟˋ", "千": "ㄑㄧㄢ", "半徑": "ㄅㄢˋ ㄐㄧㄥˋ", "半徑是幾公分": "ㄅㄢˋ ㄐㄧㄥˋ ㄕˋ ㄐㄧˇ ㄍㄨㄥ ㄈㄣ", "半徑是直徑的一半": "ㄅㄢˋ ㄐㄧㄥˋ ㄕˋ ㄓˊ ㄐㄧㄥˋ ˙ㄉㄜ ㄧˊ ㄅㄢˋ", "厚薄也用同樣的方法比": "ㄏㄡˋ ㄅㄛˊ ㄧㄝˇ ㄩㄥˋ ㄊㄨㄥˊ ㄧㄤˋ ˙ㄉㄜ ㄈㄤ ㄈㄚˇ ㄅㄧˇ", "又得到": "ㄧㄡˋ ㄉㄜˊ ㄉㄠˋ", "又放進": "ㄧㄡˋ ㄈㄤˋ ㄐㄧㄣˋ", "只有一個不一樣": "ㄓˇ ㄧㄡˇ ㄧˊ ˙ㄍㄜ ㄅㄨˋ ㄧˊ ㄧㄤˋ", "只算分子": "ㄓˇ ㄙㄨㄢˋ ㄈㄣˋ ㄗˇ", "叫": "ㄐㄧㄠˋ", "可以": "ㄎㄜˇ ㄧˇ", "可以兩兩配對": "ㄎㄜˇ ㄧˇ ㄌㄧㄤˇ ㄌㄧㄤˇ ㄆㄟˋ ㄉㄨㄟˋ", "可以分成": "ㄎㄜˇ ㄧˇ ㄈㄣ ㄔㄥˊ", "可以分給幾個人": "ㄎㄜˇ ㄧˇ ㄈㄣ ㄍㄟˇ ㄐㄧˇ ˙ㄍㄜ ㄖㄣˊ", "可以堆高": "ㄎㄜˇ ㄧˇ ㄉㄨㄟ ㄍㄠ", "可以把兩種東西一一配對": "ㄎㄜˇ ㄧˇ ㄅㄚˇ ㄌㄧㄤˇ ㄓㄨㄥˇ ㄉㄨㄥ ㄒㄧ ㄧˋ ㄧˊ ㄆㄟˋ ㄉㄨㄟˋ", "可以用一樣大的小東西": "ㄎㄜˇ ㄧˇ ㄩㄥˋ ㄧˊ ㄧㄤˋ ㄉㄚˋ ˙ㄉㄜ ㄒㄧㄠˇ ㄉㄨㄥ ㄒㄧ", "右邊是個位": "ㄧㄡˋ ㄅㄧㄢ ㄕˋ ㄍㄜˋ ㄨㄟˋ", "吃了": "ㄔ ˙ㄌㄜ", "吃了全部的幾分之幾": "ㄔ ˙ㄌㄜ ㄑㄩㄢˊ ㄅㄨˋ ˙ㄉㄜ ㄐㄧˇ ㄈㄣ ㄓ ㄐㄧˇ", "各題型": "ㄍㄜˋ ㄊㄧˊ ㄒㄧㄥˊ", "合": "ㄏㄜˊ", "合起來是": "ㄏㄜˊ ㄑㄧˇ ㄌㄞˊ ㄕˋ", "合起來是多少": "ㄏㄜˊ ㄑㄧˇ ㄌㄞˊ ㄕˋ ㄉㄨㄛ ㄕㄠˇ", "合起來用加法": "ㄏㄜˊ ㄑㄧˇ ㄌㄞˊ ㄩㄥˋ ㄐㄧㄚ ㄈㄚˇ", "向十位借": "ㄒㄧㄤˋ ㄕˊ ㄨㄟˋ ㄐㄧㄝˋ", "和": "ㄏㄢˋ", "哪一個和別人不同類": "ㄋㄚˇ ㄧˊ ˙ㄍㄜ ㄏㄢˋ ㄅㄧㄝˊ ㄖㄣˊ ㄅㄨˋ ㄊㄨㄥˊ ㄌㄟˋ", "哪一個比較大": "ㄋㄚˇ ㄧˊ ˙ㄍㄜ ㄅㄧˇ ㄐㄧㄠˋ ㄉㄚˋ", "哪一個比較小": "ㄋㄚˇ ㄧˊ ˙ㄍㄜ ㄅㄧˇ ㄐㄧㄠˋ ㄒㄧㄠˇ", "哪一條比較短": "ㄋㄚˇ ㄧˋ ㄊㄧㄠˊ ㄅㄧˇ ㄐㄧㄠˋ ㄉㄨㄢˇ", "哪一條比較長": "ㄋㄚˇ ㄧˋ ㄊㄧㄠˊ ㄅㄧˇ ㄐㄧㄠˋ ㄔㄤˊ", "哪一種形狀只會滾": "ㄋㄚˇ ㄧˋ ㄓㄨㄥˇ ㄒㄧㄥˊ ㄓㄨㄤˋ ㄓˇ ㄏㄨㄟˋ ㄍㄨㄣˇ", "哪一種形狀可以堆高": "ㄋㄚˇ ㄧˋ ㄓㄨㄥˇ ㄒㄧㄥˊ ㄓㄨㄤˋ ㄎㄜˇ ㄧˇ ㄉㄨㄟ ㄍㄠ", "哪一種比較多": "ㄋㄚˇ ㄧˋ ㄓㄨㄥˇ ㄅㄧˇ ㄐㄧㄠˋ ㄉㄨㄛ", "商": "ㄕㄤ", "喜歡": "ㄒㄧˇ ㄏㄨㄢ", "單位要先換成一樣": "ㄉㄢ ㄨㄟˋ ㄧㄠˋ ㄒㄧㄢ ㄏㄨㄢˋ ㄔㄥˊ ㄧˊ ㄧㄤˋ", "單元依康軒版": "ㄉㄢ ㄩㄢˊ ㄧ ㄎㄤ ㄒㄩㄢ ㄅㄢˇ", "四": "ㄙˋ", "四位數由千位": "ㄙˋ ㄨㄟˋ ㄕㄨˋ ㄧㄡˊ ㄑㄧㄢ ㄨㄟˋ", "四位數的加減": "ㄙˋ ㄨㄟˋ ㄕㄨˋ ˙ㄉㄜ ㄐㄧㄚ ㄐㄧㄢˇ", "回地圖": "ㄏㄨㄟˊ ㄉㄧˋ ㄊㄨˊ", "回首頁": "ㄏㄨㄟˊ ㄕㄡˇ ㄧㄝˋ", "圈圈看": "ㄑㄩㄢ ㄑㄩㄢ ㄎㄢˋ", "圈起來": "ㄑㄩㄢ ㄑㄧˇ ㄌㄞˊ", "圓": "ㄩㄢˊ", "圓上每一點到哪裡的距離都一樣長": "ㄩㄢˊ ㄕㄤˋ ㄇㄟˇ ㄧˋ ㄉㄧㄢˇ ㄉㄠˋ ㄋㄚˇ ㄌㄧˇ ˙ㄉㄜ ㄐㄩˋ ㄌㄧˊ ㄉㄡ ㄧˊ ㄧㄤˋ ㄔㄤˊ", "圓上每一點到圓心一樣遠": "ㄩㄢˊ ㄕㄤˋ ㄇㄟˇ ㄧˋ ㄉㄧㄢˇ ㄉㄠˋ ㄩㄢˊ ㄒㄧㄣ ㄧˊ ㄧㄤˋ ㄩㄢˇ", "圓上每一點到圓心的距離都一樣長": "ㄩㄢˊ ㄕㄤˋ ㄇㄟˇ ㄧˋ ㄉㄧㄢˇ ㄉㄠˋ ㄩㄢˊ ㄒㄧㄣ ˙ㄉㄜ ㄐㄩˋ ㄌㄧˊ ㄉㄡ ㄧˊ ㄧㄤˋ ㄔㄤˊ", "圓周": "ㄩㄢˊ ㄓㄡ", "圓形": "ㄩㄢˊ ㄒㄧㄥˊ", "圓形沒有角": "ㄩㄢˊ ㄒㄧㄥˊ ㄇㄟˊ ㄧㄡˇ ㄐㄧㄠˇ", "圓心": "ㄩㄢˊ ㄒㄧㄣ", "圓心到圓上的線段叫半徑": "ㄩㄢˊ ㄒㄧㄣ ㄉㄠˋ ㄩㄢˊ ㄕㄤˋ ˙ㄉㄜ ㄒㄧㄢˋ ㄉㄨㄢˋ ㄐㄧㄠˋ ㄅㄢˋ ㄐㄧㄥˋ", "圓的半徑是": "ㄩㄢˊ ˙ㄉㄜ ㄅㄢˋ ㄐㄧㄥˋ ㄕˋ", "圓的直徑是": "ㄩㄢˊ ˙ㄉㄜ ㄓˊ ㄐㄧㄥˋ ㄕˋ", "圓罐": "ㄩㄢˊ ㄍㄨㄢˋ", "圓罐上下是平的可以堆": "ㄩㄢˊ ㄍㄨㄢˋ ㄕㄤˋ ㄒㄧㄚˋ ㄕˋ ㄆㄧㄥˊ ˙ㄉㄜ ㄎㄜˇ ㄧˇ ㄉㄨㄟ", "圓罐可以堆高也可以滾": "ㄩㄢˊ ㄍㄨㄢˋ ㄎㄜˇ ㄧˇ ㄉㄨㄟ ㄍㄠ ㄧㄝˇ ㄎㄜˇ ㄧˇ ㄍㄨㄣˇ", "圓規兩腳要張開幾公分": "ㄩㄢˊ ㄍㄨㄟ ㄌㄧㄤˇ ㄐㄧㄠˇ ㄧㄠˋ ㄓㄤ ㄎㄞ ㄐㄧˇ ㄍㄨㄥ ㄈㄣ", "圖上有小方塊記號": "ㄊㄨˊ ㄕㄤˋ ㄧㄡˇ ㄒㄧㄠˇ ㄈㄤ ㄎㄨㄞˋ ㄐㄧˋ ㄏㄠˋ", "圖像型": "ㄊㄨˊ ㄒㄧㄤˋ ㄒㄧㄥˊ", "圖形可以依形狀": "ㄊㄨˊ ㄒㄧㄥˊ ㄎㄜˇ ㄧˇ ㄧ ㄒㄧㄥˊ ㄓㄨㄤˋ", "圖形與分類": "ㄊㄨˊ ㄒㄧㄥˊ ㄩˇ ㄈㄣ ㄌㄟˋ", "地球儀": "ㄉㄧˋ ㄑㄧㄡˊ ㄧˊ", "場段考魔王": "ㄔㄤˇ ㄉㄨㄢˋ ㄎㄠˇ ㄇㄛˊ ㄨㄤˊ", "塗了": "ㄊㄨˊ ˙ㄌㄜ", "塗了幾份就是": "ㄊㄨˊ ˙ㄌㄜ ㄐㄧˇ ㄈㄣˋ ㄐㄧㄡˋ ㄕˋ", "塗色的部分是全部的幾分之幾": "ㄊㄨˊ ㄙㄜˋ ˙ㄉㄜ ㄅㄨˋ ㄈㄣˋ ㄕˋ ㄑㄩㄢˊ ㄅㄨˋ ˙ㄉㄜ ㄐㄧˇ ㄈㄣ ㄓ ㄐㄧˇ", "塗色部分和分數連連看": "ㄊㄨˊ ㄙㄜˋ ㄅㄨˋ ㄈㄣˋ ㄏㄢˋ ㄈㄣ ㄕㄨˋ ㄌㄧㄢˊ ㄌㄧㄢˊ ㄎㄢˋ", "填填看": "ㄊㄧㄢˊ ㄊㄧㄢˊ ㄎㄢˋ", "多": "ㄉㄨㄛ", "多出來": "ㄉㄨㄛ ㄔㄨ ㄌㄞˊ", "多幾": "ㄉㄨㄛ ㄐㄧˇ", "多的要加上去": "ㄉㄨㄛ ˙ㄉㄜ ㄧㄠˋ ㄐㄧㄚ ㄕㄤˋ ㄑㄩˋ", "大": "ㄉㄚˋ", "大到小": "ㄉㄚˋ ㄉㄠˋ ㄒㄧㄠˇ", "大小來分類": "ㄉㄚˋ ㄒㄧㄠˇ ㄌㄞˊ ㄈㄣ ㄌㄟˋ", "大約是": "ㄉㄚˋ ㄩㄝ ㄕˋ", "大約是多少": "ㄉㄚˋ ㄩㄝ ㄕˋ ㄉㄨㄛ ㄕㄠˇ", "天": "ㄊㄧㄢ", "太厲害了": "ㄊㄞˋ ㄌㄧˋ ㄏㄞˋ ˙ㄌㄜ", "奇數": "ㄐㄧ ㄕㄨˋ", "奇數個位是": "ㄐㄧ ㄕㄨˋ ㄍㄜˋ ㄨㄟˋ ㄕˋ", "奇數的個位是": "ㄐㄧ ㄕㄨˋ ˙ㄉㄜ ㄍㄜˋ ㄨㄟˋ ㄕˋ", "媽媽又給他": "ㄇㄚ ㄇㄚ ㄧㄡˋ ㄍㄟˇ ㄊㄚ", "學年度": "ㄒㄩㄝˊ ㄋㄧㄢˊ ㄉㄨˋ", "學年度教科書編排": "ㄒㄩㄝˊ ㄋㄧㄢˊ ㄉㄨˋ ㄐㄧㄠˋ ㄎㄜ ㄕㄨ ㄅㄧㄢ ㄆㄞˊ", "學習小卡": "ㄒㄩㄝˊ ㄒㄧˊ ㄒㄧㄠˇ ㄎㄚˇ", "寫出算式和答案": "ㄒㄧㄝˇ ㄔㄨ ㄙㄨㄢˋ ㄕˋ ㄏㄢˋ ㄉㄚˊ ㄢˋ", "尋找規律": "ㄒㄩㄣˊ ㄓㄠˇ ㄍㄨㄟ ㄌㄩˋ", "對": "ㄉㄨㄟˋ", "小": "ㄒㄧㄠˇ", "小傑": "ㄒㄧㄠˇ ㄐㄧㄝˊ", "小到大": "ㄒㄧㄠˇ ㄉㄠˋ ㄉㄚˋ", "小安": "ㄒㄧㄠˇ ㄢ", "小數": "ㄒㄧㄠˇ ㄕㄨˋ", "小數點右邊第一位叫十分位": "ㄒㄧㄠˇ ㄕㄨˋ ㄉㄧㄢˇ ㄧㄡˋ ㄅㄧㄢ ㄉㄧˋ ㄧ ㄨㄟˋ ㄐㄧㄠˋ ㄕˊ ㄈㄣ ㄨㄟˋ", "小明": "ㄒㄧㄠˇ ㄇㄧㄥˊ", "小明有": "ㄒㄧㄠˇ ㄇㄧㄥˊ ㄧㄡˇ", "小時": "ㄒㄧㄠˇ ㄕˊ", "小杯子": "ㄒㄧㄠˇ ㄅㄟ ˙ㄗ", "小玉": "ㄒㄧㄠˇ ㄩˋ", "小美": "ㄒㄧㄠˇ ㄇㄟˇ", "小美有": "ㄒㄧㄠˇ ㄇㄟˇ ㄧㄡˇ", "小美有幾張": "ㄒㄧㄠˇ ㄇㄟˇ ㄧㄡˇ ㄐㄧˇ ㄓㄤ", "小美比小華多": "ㄒㄧㄠˇ ㄇㄟˇ ㄅㄧˇ ㄒㄧㄠˇ ㄏㄨㄚˊ ㄉㄨㄛ", "小美比較多": "ㄒㄧㄠˇ ㄇㄟˇ ㄅㄧˇ ㄐㄧㄠˋ ㄉㄨㄛ", "小華": "ㄒㄧㄠˇ ㄏㄨㄚˊ", "小華有": "ㄒㄧㄠˇ ㄏㄨㄚˊ ㄧㄡˇ", "小華有幾張": "ㄒㄧㄠˇ ㄏㄨㄚˊ ㄧㄡˇ ㄐㄧˇ ㄓㄤ", "少": "ㄕㄠˇ", "就形成角": "ㄐㄧㄡˋ ㄒㄧㄥˊ ㄔㄥˊ ㄐㄧㄠˇ", "就是": "ㄐㄧㄡˋ ㄕˋ", "就是全部的數量": "ㄐㄧㄡˋ ㄕˋ ㄑㄩㄢˊ ㄅㄨˋ ˙ㄉㄜ ㄕㄨˋ ㄌㄧㄤˋ", "就是多": "ㄐㄧㄡˋ ㄕˋ ㄉㄨㄛ", "就是幾點": "ㄐㄧㄡˋ ㄕˋ ㄐㄧˇ ㄉㄧㄢˇ", "就是沒有增加": "ㄐㄧㄡˋ ㄕˋ ㄇㄟˊ ㄧㄡˇ ㄗㄥ ㄐㄧㄚ", "就是算": "ㄐㄧㄡˋ ㄕˋ ㄙㄨㄢˋ", "就進位": "ㄐㄧㄡˋ ㄐㄧㄣˋ ㄨㄟˋ", "已知": "ㄧˇ ㄓ", "已點掉": "ㄧˇ ㄉㄧㄢˇ ㄉㄧㄠˋ", "平分": "ㄆㄧㄥˊ ㄈㄣ", "平分成": "ㄆㄧㄥˊ ㄈㄣ ㄔㄥˊ", "平分用除法": "ㄆㄧㄥˊ ㄈㄣ ㄩㄥˋ ㄔㄨˊ ㄈㄚˇ", "平分給": "ㄆㄧㄥˊ ㄈㄣ ㄍㄟˇ", "平方公分": "ㄆㄧㄥˊ ㄈㄤ ㄍㄨㄥ ㄈㄣ", "幾人": "ㄐㄧˇ ㄖㄣˊ", "幾個十就是幾十": "ㄐㄧˇ ˙ㄍㄜ ㄕˊ ㄐㄧㄡˋ ㄕˋ ㄐㄧˇ ㄕˊ", "幾分之幾": "ㄐㄧˇ ㄈㄣ ㄓ ㄐㄧˇ", "幾月幾日": "ㄐㄧˇ ㄩㄝˋ ㄐㄧˇ ㄖˋ", "幾點半": "ㄐㄧˇ ㄉㄧㄢˇ ㄅㄢˋ", "幾點鐘": "ㄐㄧˇ ㄉㄧㄢˇ ㄓㄨㄥ", "康軒": "ㄎㄤ ㄒㄩㄢ", "康軒第": "ㄎㄤ ㄒㄩㄢ ㄉㄧˋ", "張": "ㄓㄤ", "張貼紙": "ㄓㄤ ㄊㄧㄝ ㄓˇ", "彈珠": "ㄉㄢˋ ㄓㄨ", "往下一格": "ㄨㄤˇ ㄒㄧㄚˋ ㄧˋ ㄍㄜˊ", "後面的下一個數是": "ㄏㄡˋ ㄇㄧㄢˋ ˙ㄉㄜ ㄒㄧㄚˋ ㄧˊ ㄍㄜˋ ㄕㄨˋ ㄕˋ", "後面的下一個數是多少": "ㄏㄡˋ ㄇㄧㄢˋ ˙ㄉㄜ ㄒㄧㄚˋ ㄧˊ ㄍㄜˋ ㄕㄨˋ ㄕˋ ㄉㄨㄛ ㄕㄠˇ", "得分": "ㄉㄜˊ ㄈㄣ", "從": "ㄘㄨㄥˊ", "從一堆東西拿走一些": "ㄘㄨㄥˊ ㄧˋ ㄉㄨㄟ ㄉㄨㄥ ㄒㄧ ㄋㄚˊ ㄗㄡˇ ㄧˋ ㄒㄧㄝ", "從個位開始": "ㄘㄨㄥˊ ㄍㄜˋ ㄨㄟˋ ㄎㄞ ㄕˇ", "從個位開始乘": "ㄘㄨㄥˊ ㄍㄜˋ ㄨㄟˋ ㄎㄞ ㄕˇ ㄔㄥˊ", "從個位開始減": "ㄘㄨㄥˊ ㄍㄜˋ ㄨㄟˋ ㄎㄞ ㄕˇ ㄐㄧㄢˇ", "從左邊數過來": "ㄘㄨㄥˊ ㄗㄨㄛˇ ㄅㄧㄢ ㄕㄨˇ ㄍㄨㄛˋ ㄌㄞˊ", "從左邊開始數到第": "ㄘㄨㄥˊ ㄗㄨㄛˇ ㄅㄧㄢ ㄎㄞ ㄕˇ ㄕㄨˇ ㄉㄠˋ ㄉㄧˋ", "從最左邊的千位開始比": "ㄘㄨㄥˊ ㄗㄨㄟˋ ㄗㄨㄛˇ ㄅㄧㄢ ˙ㄉㄜ ㄑㄧㄢ ㄨㄟˋ ㄎㄞ ㄕˇ ㄅㄧˇ", "從最高位開始除": "ㄘㄨㄥˊ ㄗㄨㄟˋ ㄍㄠ ㄨㄟˋ ㄎㄞ ㄕˇ ㄔㄨˊ", "愛心用完了": "ㄞˋ ㄒㄧㄣ ㄩㄥˋ ㄨㄢˊ ˙ㄌㄜ", "應用題": "ㄧㄥ ㄩㄥˋ ㄊㄧˊ", "或": "ㄏㄨㄛˋ", "或少": "ㄏㄨㄛˋ ㄕㄠˇ", "所以不能穩穩堆高": "ㄙㄨㄛˇ ㄧˇ ㄅㄨˋ ㄋㄥˊ ㄨㄣˇ ㄨㄣˇ ㄉㄨㄟ ㄍㄠ", "所以是": "ㄙㄨㄛˇ ㄧˇ ㄕˋ", "所以算": "ㄙㄨㄛˇ ㄧˇ ㄙㄨㄢˋ", "所以還要": "ㄙㄨㄛˇ ㄧˇ ㄏㄞˊ ㄧㄠˋ", "打倒數學怪物": "ㄉㄚˇ ㄉㄠˇ ㄕㄨˋ ㄒㄩㄝˊ ㄍㄨㄞˋ ㄨˋ", "打倒魔王": "ㄉㄚˇ ㄉㄠˇ ㄇㄛˊ ㄨㄤˊ", "找規律": "ㄓㄠˇ ㄍㄨㄟ ㄌㄩˋ", "把": "ㄅㄚˇ", "把一個披薩平分成": "ㄅㄚˇ ㄧˊ ˙ㄍㄜ ㄆㄧ ㄙㄚˋ ㄆㄧㄥˊ ㄈㄣ ㄔㄥˊ", "把一個數分成兩個數叫": "ㄅㄚˇ ㄧˊ ㄍㄜˋ ㄕㄨˋ ㄈㄣ ㄔㄥˊ ㄌㄧㄤˇ ㄍㄜˋ ㄕㄨˋ ㄐㄧㄠˋ", "把一個東西平分成幾份": "ㄅㄚˇ ㄧˊ ˙ㄍㄜ ㄉㄨㄥ ㄒㄧ ㄆㄧㄥˊ ㄈㄣ ㄔㄥˊ ㄐㄧˇ ㄈㄣˋ", "把兩個數合起來叫": "ㄅㄚˇ ㄌㄧㄤˇ ㄍㄜˋ ㄕㄨˋ ㄏㄜˊ ㄑㄧˇ ㄌㄞˊ ㄐㄧㄠˋ", "把兩堆東西合起來": "ㄅㄚˇ ㄌㄧㄤˇ ㄉㄨㄟ ㄉㄨㄥ ㄒㄧ ㄏㄜˊ ㄑㄧˇ ㄌㄞˊ", "把兩條線的一頭對齊": "ㄅㄚˇ ㄌㄧㄤˇ ㄊㄧㄠˊ ㄒㄧㄢˋ ˙ㄉㄜ ㄧˋ ㄊㄡˊ ㄉㄨㄟˋ ㄑㄧˊ", "把分數由": "ㄅㄚˇ ㄈㄣ ㄕㄨˋ ㄧㄡˊ", "把圖形切開再拼起來": "ㄅㄚˇ ㄊㄨˊ ㄒㄧㄥˊ ㄑㄧㄝˋ ㄎㄞ ㄗㄞˋ ㄆㄧㄣ ㄑㄧˇ ㄌㄞˊ", "把多出來的": "ㄅㄚˇ ㄉㄨㄛ ㄔㄨ ㄌㄞˊ ˙ㄉㄜ", "把多出來的點掉": "ㄅㄚˇ ㄉㄨㄛ ㄔㄨ ㄌㄞˊ ˙ㄉㄜ ㄉㄧㄢˇ ㄉㄧㄠˋ", "把所有的": "ㄅㄚˇ ㄙㄨㄛˇ ㄧㄡˇ ˙ㄉㄜ", "把數字由": "ㄅㄚˇ ㄕㄨˋ ㄗˋ ㄧㄡˊ", "把每一枚錢幣的錢數加起來": "ㄅㄚˇ ㄇㄟˇ ㄧˋ ㄇㄟˊ ㄑㄧㄢˊ ㄅㄧˋ ˙ㄉㄜ ㄑㄧㄢˊ ㄕㄨˋ ㄐㄧㄚ ㄑㄧˇ ㄌㄞˊ", "把比": "ㄅㄚˇ ㄅㄧˇ", "把答案是": "ㄅㄚˇ ㄉㄚˊ ㄢˋ ㄕˋ", "把錢加起來": "ㄅㄚˇ ㄑㄧㄢˊ ㄐㄧㄚ ㄑㄧˇ ㄌㄞˊ", "拿走": "ㄋㄚˊ ㄗㄡˇ", "挑戰失敗": "ㄊㄧㄠ ㄓㄢˋ ㄕ ㄅㄞˋ", "挑戰題": "ㄊㄧㄠ ㄓㄢˋ ㄊㄧˊ", "排好是": "ㄆㄞˊ ㄏㄠˇ ㄕˋ", "排排看": "ㄆㄞˊ ㄆㄞˊ ㄎㄢˋ", "排順序": "ㄆㄞˊ ㄕㄨㄣˋ ㄒㄩˋ", "掛到各單元": "ㄍㄨㄚˋ ㄉㄠˋ ㄍㄜˋ ㄉㄢ ㄩㄢˊ", "接下來是什麼": "ㄐㄧㄝ ㄒㄧㄚˋ ㄌㄞˊ ㄕˋ ㄕㄣˊ ˙ㄇㄜ", "接起來共長幾個單位": "ㄐㄧㄝ ㄑㄧˇ ㄌㄞˊ ㄍㄨㄥˋ ㄔㄤˊ ㄐㄧˇ ˙ㄍㄜ ㄉㄢ ㄨㄟˋ", "接起來用加法": "ㄐㄧㄝ ㄑㄧˇ ㄌㄞˊ ㄩㄥˋ ㄐㄧㄚ ㄈㄚˇ", "操場用公尺": "ㄘㄠ ㄔㄤˇ ㄩㄥˋ ㄍㄨㄥ ㄔˇ", "操場跑道一圈": "ㄘㄠ ㄔㄤˇ ㄆㄠˇ ㄉㄠˋ ㄧˋ ㄑㄩㄢ", "教室": "ㄐㄧㄠˋ ㄕˋ", "教室的長度": "ㄐㄧㄠˋ ㄕˋ ˙ㄉㄜ ㄔㄤˊ ㄉㄨˋ", "數到": "ㄕㄨˇ ㄉㄠˋ", "數字型": "ㄕㄨˋ ㄗˋ ㄒㄧㄥˊ", "數學": "ㄕㄨˋ ㄒㄩㄝˊ", "數學史萊姆": "ㄕㄨˋ ㄒㄩㄝˊ ㄕˇ ㄌㄞˊ ㄇㄨˇ", "數學試卷": "ㄕㄨˋ ㄒㄩㄝˊ ㄕˋ ㄐㄩㄢˋ", "數很多東西時": "ㄕㄨˇ ㄏㄣˇ ㄉㄨㄛ ㄉㄨㄥ ㄒㄧ ㄕˊ", "數數看": "ㄕㄨˇ ㄕㄨˇ ㄎㄢˋ", "數東西時": "ㄕㄨˇ ㄉㄨㄥ ㄒㄧ ㄕˊ", "數量和數字連連看": "ㄕㄨˋ ㄌㄧㄤˋ ㄏㄢˋ ㄕㄨˋ ㄗˋ ㄌㄧㄢˊ ㄌㄧㄢˊ ㄎㄢˋ", "方盒": "ㄈㄤ ㄏㄜˊ", "方盒有平平的面": "ㄈㄤ ㄏㄜˊ ㄧㄡˇ ㄆㄧㄥˊ ㄆㄧㄥˊ ˙ㄉㄜ ㄇㄧㄢˋ", "日": "ㄖˋ", "日是": "ㄖˋ ㄕˋ", "日的後一天是幾月幾日": "ㄖˋ ˙ㄉㄜ ㄏㄡˋ ㄧˋ ㄊㄧㄢ ㄕˋ ㄐㄧˇ ㄩㄝˋ ㄐㄧˇ ㄖˋ", "明天": "ㄇㄧㄥˊ ㄊㄧㄢ", "明天是今天的後一天": "ㄇㄧㄥˊ ㄊㄧㄢ ㄕˋ ㄐㄧㄣ ㄊㄧㄢ ˙ㄉㄜ ㄏㄡˋ ㄧˋ ㄊㄧㄢ", "明天是星期幾": "ㄇㄧㄥˊ ㄊㄧㄢ ㄕˋ ㄒㄧㄥ ㄑㄧ ㄐㄧˇ", "星星": "ㄒㄧㄥ ㄒㄧㄥ", "星期": "ㄒㄧㄥ ㄑㄧ", "星期幾": "ㄒㄧㄥ ㄑㄧ ㄐㄧˇ", "昨天": "ㄗㄨㄛˊ ㄊㄧㄢ", "昨天是今天的前一天": "ㄗㄨㄛˊ ㄊㄧㄢ ㄕˋ ㄐㄧㄣ ㄊㄧㄢ ˙ㄉㄜ ㄑㄧㄢˊ ㄧˋ ㄊㄧㄢ", "昨天是星期幾": "ㄗㄨㄛˊ ㄊㄧㄢ ㄕˋ ㄒㄧㄥ ㄑㄧ ㄐㄧˇ", "是": "ㄕˋ", "是半點": "ㄕˋ ㄅㄢˋ ㄉㄧㄢˇ", "是多少": "ㄕˋ ㄉㄨㄛ ㄕㄠˇ", "是整點": "ㄕˋ ㄓㄥˇ ㄉㄧㄢˇ", "是看位置": "ㄕˋ ㄎㄢˋ ㄨㄟˋ ㄓˋ", "是鈍角": "ㄕˋ ㄉㄨㄣˋ ㄐㄧㄠˇ", "是銳角": "ㄕˋ ㄖㄨㄟˋ ㄐㄧㄠˇ", "是非": "ㄕˋ ㄈㄟ", "是非題": "ㄕˋ ㄈㄟ ㄊㄧˊ", "時": "ㄕˊ", "時制": "ㄕˊ ㄓˋ", "時制說是幾時": "ㄕˊ ㄓˋ ㄕㄨㄛ ㄕˋ ㄐㄧˇ ㄕˊ", "時就是": "ㄕˊ ㄐㄧㄡˋ ㄕˋ", "時鐘和時間連連看": "ㄕˊ ㄓㄨㄥ ㄏㄢˋ ㄕˊ ㄐㄧㄢ ㄌㄧㄢˊ ㄌㄧㄢˊ ㄎㄢˋ", "時間": "ㄕˊ ㄐㄧㄢ", "書": "ㄕㄨ", "最多人喜歡哪一種水果": "ㄗㄨㄟˋ ㄉㄨㄛ ㄖㄣˊ ㄒㄧˇ ㄏㄨㄢ ㄋㄚˇ ㄧˋ ㄓㄨㄥˇ ㄕㄨㄟˇ ㄍㄨㄛˇ", "最後數到的就是答案": "ㄗㄨㄟˋ ㄏㄡˋ ㄕㄨˇ ㄉㄠˋ ˙ㄉㄜ ㄐㄧㄡˋ ㄕˋ ㄉㄚˊ ㄢˋ", "最後數到的那個數": "ㄗㄨㄟˋ ㄏㄡˋ ㄕㄨˇ ㄉㄠˋ ˙ㄉㄜ ㄋㄚˋ ㄍㄜˋ ㄕㄨˋ", "會超過": "ㄏㄨㄟˋ ㄔㄠ ㄍㄨㄛˋ", "月": "ㄩㄝˋ", "有": "ㄧㄡˇ", "有多長": "ㄧㄡˇ ㄉㄨㄛ ㄔㄤˊ", "有幾個": "ㄧㄡˇ ㄐㄧˇ ˙ㄍㄜ", "期中": "ㄑㄧ ㄓㄨㄥ", "期末": "ㄑㄧ ㄇㄛˋ", "本": "ㄅㄣˇ", "本書": "ㄅㄣˇ ㄕㄨ", "枝": "ㄓ", "格": "ㄍㄜˊ", "桌子用公分": "ㄓㄨㄛ ˙ㄗ ㄩㄥˋ ㄍㄨㄥ ㄈㄣ", "樹上有": "ㄕㄨˋ ㄕㄤˋ ㄧㄡˇ", "橘子重": "ㄐㄩˊ ˙ㄗ ㄓㄨㄥˋ", "橡皮擦的長度": "ㄒㄧㄤˋ ㄆㄧˊ ㄘㄚ ˙ㄉㄜ ㄔㄤˊ ㄉㄨˋ", "正下面的格子是多少": "ㄓㄥˋ ㄒㄧㄚˋ ㄇㄧㄢˋ ˙ㄉㄜ ㄍㄜˊ ˙ㄗ ㄕˋ ㄉㄨㄛ ㄕㄠˇ", "正方形": "ㄓㄥˋ ㄈㄤ ㄒㄧㄥˊ", "正方形和長方形的": "ㄓㄥˋ ㄈㄤ ㄒㄧㄥˊ ㄏㄢˋ ㄔㄤˊ ㄈㄤ ㄒㄧㄥˊ ˙ㄉㄜ", "正方形有": "ㄓㄥˋ ㄈㄤ ㄒㄧㄥˊ ㄧㄡˇ", "正方形有幾個直角": "ㄓㄥˋ ㄈㄤ ㄒㄧㄥˊ ㄧㄡˇ ㄐㄧˇ ˙ㄍㄜ ㄓˊ ㄐㄧㄠˇ", "正方形的": "ㄓㄥˋ ㄈㄤ ㄒㄧㄥˊ ˙ㄉㄜ", "正確答案是": "ㄓㄥˋ ㄑㄩㄝˋ ㄉㄚˊ ㄢˋ ㄕˋ", "段考範圍依各校進度不同": "ㄉㄨㄢˋ ㄎㄠˇ ㄈㄢˋ ㄨㄟˊ ㄧ ㄍㄜˋ ㄒㄧㄠˋ ㄐㄧㄣˋ ㄉㄨˋ ㄅㄨˋ ㄊㄨㄥˊ", "段考魔王": "ㄉㄨㄢˋ ㄎㄠˇ ㄇㄛˊ ㄨㄤˊ", "每": "ㄇㄟˇ", "每一份是": "ㄇㄟˇ ㄧˊ ㄈㄣˋ ㄕˋ", "每一格是": "ㄇㄟˇ ㄧˋ ㄍㄜˊ ㄕˋ", "每人分": "ㄇㄟˇ ㄖㄣˊ ㄈㄣ", "每人幾": "ㄇㄟˇ ㄖㄣˊ ㄐㄧˇ", "每人幾本": "ㄇㄟˇ ㄖㄣˊ ㄐㄧˇ ㄅㄣˇ", "每列": "ㄇㄟˇ ㄌㄧㄝˋ", "每次多": "ㄇㄟˇ ㄘˋ ㄉㄨㄛ", "每次都加": "ㄇㄟˇ ㄘˋ ㄉㄡ ㄐㄧㄚ", "每盒一樣多": "ㄇㄟˇ ㄏㄜˊ ㄧˊ ㄧㄤˋ ㄉㄨㄛ", "每盒有": "ㄇㄟˇ ㄏㄜˊ ㄧㄡˇ", "每盒裝": "ㄇㄟˇ ㄏㄜˊ ㄓㄨㄤ", "每箱有": "ㄇㄟˇ ㄒㄧㄤ ㄧㄡˇ", "每題": "ㄇㄟˇ ㄊㄧˊ", "比": "ㄅㄧˇ", "比喜歡": "ㄅㄧˇ ㄒㄧˇ ㄏㄨㄢ", "比多少": "ㄅㄧˇ ㄉㄨㄛ ㄕㄠˇ", "比多少時": "ㄅㄧˇ ㄉㄨㄛ ㄕㄠˇ ㄕˊ", "比多少用減法": "ㄅㄧˇ ㄉㄨㄛ ㄕㄠˇ ㄩㄥˋ ㄐㄧㄢˇ ㄈㄚˇ", "比多幾個": "ㄅㄧˇ ㄉㄨㄛ ㄐㄧˇ ˙ㄍㄜ", "比大小時": "ㄅㄧˇ ㄉㄚˋ ㄒㄧㄠˇ ㄕˊ", "比小數大小": "ㄅㄧˇ ㄒㄧㄠˇ ㄕㄨˋ ㄉㄚˋ ㄒㄧㄠˇ", "比小華多": "ㄅㄧˇ ㄒㄧㄠˇ ㄏㄨㄚˊ ㄉㄨㄛ", "比少幾個": "ㄅㄧˇ ㄕㄠˇ ㄐㄧˇ ˙ㄍㄜ", "比直角大": "ㄅㄧˇ ㄓˊ ㄐㄧㄠˇ ㄉㄚˋ", "比直角大叫鈍角": "ㄅㄧˇ ㄓˊ ㄐㄧㄠˇ ㄉㄚˋ ㄐㄧㄠˋ ㄉㄨㄣˋ ㄐㄧㄠˇ", "比直角小": "ㄅㄧˇ ㄓˊ ㄐㄧㄠˇ ㄒㄧㄠˇ", "比直角小叫銳角": "ㄅㄧˇ ㄓˊ ㄐㄧㄠˇ ㄒㄧㄠˇ ㄐㄧㄠˋ ㄖㄨㄟˋ ㄐㄧㄠˇ", "比較快": "ㄅㄧˇ ㄐㄧㄠˋ ㄎㄨㄞˋ", "比長多少用減法": "ㄅㄧˇ ㄔㄤˊ ㄉㄨㄛ ㄕㄠˇ ㄩㄥˋ ㄐㄧㄢˇ ㄈㄚˇ", "比長短": "ㄅㄧˇ ㄔㄤˊ ㄉㄨㄢˇ", "毫升": "ㄏㄠˊ ㄕㄥ", "毫升是": "ㄏㄠˊ ㄕㄥ ㄕˋ", "毫升的水": "ㄏㄠˊ ㄕㄥ ˙ㄉㄜ ㄕㄨㄟˇ", "毫米": "ㄏㄠˊ ㄇㄧˇ", "毫米很小": "ㄏㄠˊ ㄇㄧˇ ㄏㄣˇ ㄒㄧㄠˇ", "毫米是": "ㄏㄠˊ ㄇㄧˇ ㄕˋ", "氣球": "ㄑㄧˋ ㄑㄧㄡˊ", "水壺": "ㄕㄨㄟˇ ㄏㄨˊ", "水壺有": "ㄕㄨㄟˇ ㄏㄨˊ ㄧㄡˇ", "水果": "ㄕㄨㄟˇ ㄍㄨㄛˇ", "水桶": "ㄕㄨㄟˇ ㄊㄨㄥˇ", "水桶常用公升": "ㄕㄨㄟˇ ㄊㄨㄥˇ ㄔㄤˊ ㄩㄥˋ ㄍㄨㄥ ㄕㄥ", "沒有超過": "ㄇㄟˊ ㄧㄡˇ ㄔㄠ ㄍㄨㄛˋ", "注音": "ㄓㄨˋ ㄧㄣ", "注音開關": "ㄓㄨˋ ㄧㄣ ㄎㄞ ㄍㄨㄢ", "注音音效開關": "ㄓㄨˋ ㄧㄣ ㄧㄣ ㄒㄧㄠˋ ㄎㄞ ㄍㄨㄢ", "減": "ㄐㄧㄢˇ", "減法不夠減要退位": "ㄐㄧㄢˇ ㄈㄚˇ ㄅㄨˊ ㄍㄡˋ ㄐㄧㄢˇ ㄧㄠˋ ㄊㄨㄟˋ ㄨㄟˋ", "減法可以": "ㄐㄧㄢˇ ㄈㄚˇ ㄎㄜˇ ㄧˇ", "湊十": "ㄘㄡˋ ㄕˊ", "滿": "ㄇㄢˇ", "然後又從日開始": "ㄖㄢˊ ㄏㄡˋ ㄧㄡˋ ㄘㄨㄥˊ ㄖˋ ㄎㄞ ㄕˇ", "片": "ㄆㄧㄢˋ", "牛奶盒": "ㄋㄧㄡˊ ㄋㄞˇ ㄏㄜˊ", "狀態": "ㄓㄨㄤˋ ㄊㄞˋ", "現在一共有幾": "ㄒㄧㄢˋ ㄗㄞˋ ㄧˊ ㄍㄨㄥˋ ㄧㄡˇ ㄐㄧˇ", "現在一共有幾顆": "ㄒㄧㄢˋ ㄗㄞˋ ㄧˊ ㄍㄨㄥˋ ㄧㄡˇ ㄐㄧˇ ㄎㄜ", "現在是": "ㄒㄧㄢˋ ㄗㄞˋ ㄕˋ", "現在是幾點": "ㄒㄧㄢˋ ㄗㄞˋ ㄕˋ ㄐㄧˇ ㄉㄧㄢˇ", "球": "ㄑㄧㄡˊ", "球只會滾": "ㄑㄧㄡˊ ㄓˇ ㄏㄨㄟˋ ㄍㄨㄣˇ", "球沒有平面": "ㄑㄧㄡˊ ㄇㄟˊ ㄧㄡˇ ㄆㄧㄥˊ ㄇㄧㄢˋ", "用": "ㄩㄥˋ", "用乘法": "ㄩㄥˋ ㄔㄥˊ ㄈㄚˇ", "用加法": "ㄩㄥˋ ㄐㄧㄚ ㄈㄚˇ", "用商": "ㄩㄥˋ ㄕㄤ", "用圓規畫半徑": "ㄩㄥˋ ㄩㄢˊ ㄍㄨㄟ ㄏㄨㄚˋ ㄅㄢˋ ㄐㄧㄥˋ", "用它還可以驗算": "ㄩㄥˋ ㄊㄚ ㄏㄞˊ ㄎㄜˇ ㄧˇ ㄧㄢˋ ㄙㄨㄢˋ", "用整百估算": "ㄩㄥˋ ㄓㄥˇ ㄅㄞˇ ㄍㄨ ㄙㄨㄢˋ", "用毫米": "ㄩㄥˋ ㄏㄠˊ ㄇㄧˇ", "用減法": "ㄩㄥˋ ㄐㄧㄢˇ ㄈㄚˇ", "用邊長": "ㄩㄥˋ ㄅㄧㄢ ㄔㄤˊ", "百": "ㄅㄞˇ", "百位": "ㄅㄞˇ ㄨㄟˋ", "百數表中": "ㄅㄞˇ ㄕㄨˋ ㄅㄧㄠˇ ㄓㄨㄥ", "的": "˙ㄉㄜ", "的下一個數是": "˙ㄉㄜ ㄒㄧㄚˋ ㄧˊ ㄍㄜˋ ㄕㄨˋ ㄕˋ", "的人": "˙ㄉㄜ ㄖㄣˊ", "的人多": "˙ㄉㄜ ㄖㄣˊ ㄉㄨㄛ", "的十位數字是多少": "˙ㄉㄜ ㄕˊ ㄨㄟˋ ㄕㄨˋ ㄗˋ ㄕˋ ㄉㄨㄛ ㄕㄠˇ", "的商是多少": "˙ㄉㄜ ㄕㄤ ㄕˋ ㄉㄨㄛ ㄕㄠˇ", "的大小": "˙ㄉㄜ ㄉㄚˋ ㄒㄧㄠˇ", "的左邊那個數字是十位": "˙ㄉㄜ ㄗㄨㄛˇ ㄅㄧㄢ ㄋㄚˋ ㄍㄜˋ ㄕㄨˋ ㄗˋ ㄕˋ ㄕˊ ㄨㄟˋ", "的形狀像": "˙ㄉㄜ ㄒㄧㄥˊ ㄓㄨㄤˋ ㄒㄧㄤˋ", "的後一天是": "˙ㄉㄜ ㄏㄡˋ ㄧˋ ㄊㄧㄢ ㄕˋ", "的後面一個數是多少": "˙ㄉㄜ ㄏㄡˋ ㄇㄧㄢˋ ㄧˊ ㄍㄜˋ ㄕㄨˋ ㄕˋ ㄉㄨㄛ ㄕㄠˇ", "的數全部圈起來": "˙ㄉㄜ ㄕㄨˋ ㄑㄩㄢˊ ㄅㄨˋ ㄑㄩㄢ ㄑㄧˇ ㄌㄞˊ", "的數是多少": "˙ㄉㄜ ㄕㄨˋ ㄕˋ ㄉㄨㄛ ㄕㄠˇ", "的有": "˙ㄉㄜ ㄧㄡˇ", "的算式全部圈起來": "˙ㄉㄜ ㄙㄨㄢˋ ㄕˋ ㄑㄩㄢˊ ㄅㄨˋ ㄑㄩㄢ ㄑㄧˇ ㄌㄞˊ", "的算法": "˙ㄉㄜ ㄙㄨㄢˋ ㄈㄚˇ", "盒": "ㄏㄜˊ", "直式計算要": "ㄓˊ ㄕˋ ㄐㄧˋ ㄙㄨㄢˋ ㄧㄠˋ", "直徑": "ㄓˊ ㄐㄧㄥˋ", "直徑是半徑的": "ㄓˊ ㄐㄧㄥˋ ㄕˋ ㄅㄢˋ ㄐㄧㄥˋ ˙ㄉㄜ", "直徑是幾公分": "ㄓˊ ㄐㄧㄥˋ ㄕˋ ㄐㄧˇ ㄍㄨㄥ ㄈㄣ", "直角": "ㄓˊ ㄐㄧㄠˇ", "相反": "ㄒㄧㄤ ㄈㄢˇ", "看看學習小卡": "ㄎㄢˋ ㄎㄢˋ ㄒㄩㄝˊ ㄒㄧˊ ㄒㄧㄠˇ ㄎㄚˇ", "看結果": "ㄎㄢˋ ㄐㄧㄝˊ ㄍㄨㄛˇ", "看表時": "ㄎㄢˋ ㄅㄧㄠˇ ㄕˊ", "看還剩多少": "ㄎㄢˋ ㄏㄞˊ ㄕㄥˋ ㄉㄨㄛ ㄕㄠˇ", "短針指幾就是幾點": "ㄉㄨㄢˇ ㄓㄣ ㄓˇ ㄐㄧˇ ㄐㄧㄡˋ ㄕˋ ㄐㄧˇ ㄉㄧㄢˇ", "短針指著幾": "ㄉㄨㄢˇ ㄓㄣ ㄓˇ ˙ㄓㄜ ㄐㄧˇ", "硬幣厚度": "ㄧㄥˋ ㄅㄧˋ ㄏㄡˋ ㄉㄨˋ", "確認": "ㄑㄩㄝˋ ㄖㄣˋ", "確認答案": "ㄑㄩㄝˋ ㄖㄣˋ ㄉㄚˊ ㄢˋ", "秒": "ㄇㄧㄠˇ", "秤輕的東西用公克": "ㄔㄥˋ ㄑㄧㄥ ˙ㄉㄜ ㄉㄨㄥ ㄒㄧ ㄩㄥˋ ㄍㄨㄥ ㄎㄜˋ", "秤重的東西用公斤": "ㄔㄥˋ ㄓㄨㄥˋ ˙ㄉㄜ ㄉㄨㄥ ㄒㄧ ㄩㄥˋ ㄍㄨㄥ ㄐㄧㄣ", "第": "ㄉㄧˋ", "第一次段考": "ㄉㄧˋ ㄧ ㄘˋ ㄉㄨㄢˋ ㄎㄠˇ", "第一步": "ㄉㄧˋ ㄧ ㄅㄨˋ", "第二次段考": "ㄉㄧˋ ㄦˋ ㄘˋ ㄉㄨㄢˋ ㄎㄠˇ", "第二步": "ㄉㄧˋ ㄦˋ ㄅㄨˋ", "第幾個": "ㄉㄧˋ ㄐㄧˇ ˙ㄍㄜ", "等於": "ㄉㄥˇ ㄩˊ", "答對": "ㄉㄚˊ ㄉㄨㄟˋ", "答對了": "ㄉㄚˊ ㄉㄨㄟˋ ˙ㄌㄜ", "答案一樣": "ㄉㄚˊ ㄢˋ ㄧˊ ㄧㄤˋ", "答案是": "ㄉㄚˊ ㄢˋ ㄕˋ", "答案還是原來的數": "ㄉㄚˊ ㄢˋ ㄏㄞˊ ㄕˋ ㄩㄢˊ ㄌㄞˊ ˙ㄉㄜ ㄕㄨˋ", "答錯": "ㄉㄚˊ ㄘㄨㄛˋ", "答題畫面與各種題型": "ㄉㄚˊ ㄊㄧˊ ㄏㄨㄚˋ ㄇㄧㄢˋ ㄩˇ ㄍㄜˋ ㄓㄨㄥˇ ㄊㄧˊ ㄒㄧㄥˊ", "算": "ㄙㄨㄢˋ", "算不完時剩下的叫餘數": "ㄙㄨㄢˋ ㄅㄨˋ ㄨㄢˊ ㄕˊ ㄕㄥˋ ㄒㄧㄚˋ ˙ㄉㄜ ㄐㄧㄠˋ ㄩˊ ㄕㄨˋ", "算出答案": "ㄙㄨㄢˋ ㄔㄨ ㄉㄚˊ ㄢˋ", "算加減時": "ㄙㄨㄢˋ ㄐㄧㄚ ㄐㄧㄢˇ ㄕˊ", "算多位數乘一位數時": "ㄙㄨㄢˋ ㄉㄨㄛ ㄨㄟˋ ㄕㄨˋ ㄔㄥˊ ㄧˊ ㄨㄟˋ ㄕㄨˋ ㄕˊ", "算式": "ㄙㄨㄢˋ ㄕˋ", "算式和答案連連看": "ㄙㄨㄢˋ ㄕˋ ㄏㄢˋ ㄉㄚˊ ㄢˋ ㄌㄧㄢˊ ㄌㄧㄢˊ ㄎㄢˋ", "算式型": "ㄙㄨㄢˋ ㄕˋ ㄒㄧㄥˊ", "算時間要先看": "ㄙㄨㄢˋ ㄕˊ ㄐㄧㄢ ㄧㄠˋ ㄒㄧㄢ ㄎㄢˋ", "箱": "ㄒㄧㄤ", "箱一共有幾個": "ㄒㄧㄤ ㄧˊ ㄍㄨㄥˋ ㄧㄡˇ ㄐㄧˇ ˙ㄍㄜ", "籃子裡有": "ㄌㄢˊ ˙ㄗ ㄌㄧˇ ㄧㄡˇ", "籃球": "ㄌㄢˊ ㄑㄧㄡˊ", "糖果": "ㄊㄤˊ ㄍㄨㄛˇ", "約": "ㄩㄝ", "紅線長": "ㄏㄨㄥˊ ㄒㄧㄢˋ ㄔㄤˊ", "統計表": "ㄊㄨㄥˇ ㄐㄧˋ ㄅㄧㄠˇ", "統計表把資料整理成表格": "ㄊㄨㄥˇ ㄐㄧˋ ㄅㄧㄠˇ ㄅㄚˇ ㄗ ㄌㄧㄠˋ ㄓㄥˇ ㄌㄧˇ ㄔㄥˊ ㄅㄧㄠˇ ㄍㄜˊ", "缺了": "ㄑㄩㄝ ˙ㄌㄜ", "罐頭": "ㄍㄨㄢˋ ㄊㄡˊ", "考卷": "ㄎㄠˇ ㄐㄩㄢˋ", "考魔王": "ㄎㄠˇ ㄇㄛˊ ㄨㄤˊ", "而": "ㄦˊ", "葡萄": "ㄆㄨˊ ㄊㄠˊ", "藍線長": "ㄌㄢˊ ㄒㄧㄢˋ ㄔㄤˊ", "藥水用毫升": "ㄧㄠˋ ㄕㄨㄟˇ ㄩㄥˋ ㄏㄠˊ ㄕㄥ", "蘋果": "ㄆㄧㄥˊ ㄍㄨㄛˇ", "蘋果和星星": "ㄆㄧㄥˊ ㄍㄨㄛˇ ㄏㄢˋ ㄒㄧㄥ ㄒㄧㄥ", "蘋果比星星多幾個": "ㄆㄧㄥˊ ㄍㄨㄛˇ ㄅㄧˇ ㄒㄧㄥ ㄒㄧㄥ ㄉㄨㄛ ㄐㄧˇ ˙ㄍㄜ", "蘋果重": "ㄆㄧㄥˊ ㄍㄨㄛˇ ㄓㄨㄥˋ", "衛生紙捲": "ㄨㄟˋ ㄕㄥ ㄓˇ ㄐㄩㄢˇ", "表示什麼都沒有": "ㄅㄧㄠˇ ㄕˋ ㄕㄣˊ ˙ㄇㄜ ㄉㄡ ㄇㄟˊ ㄧㄡˇ", "被除數": "ㄅㄟˋ ㄔㄨˊ ㄕㄨˋ", "裡面有": "ㄌㄧˇ ㄇㄧㄢˋ ㄧㄡˇ", "西瓜": "ㄒㄧ ㄍㄨㄚ", "要": "ㄧㄠˋ", "要先算括號裡面的": "ㄧㄠˋ ㄒㄧㄢ ㄙㄨㄢˋ ㄎㄨㄛˋ ㄏㄠˋ ㄌㄧˇ ㄇㄧㄢˋ ˙ㄉㄜ", "要先說從哪裡開始數": "ㄧㄠˋ ㄒㄧㄢ ㄕㄨㄛ ㄘㄨㄥˊ ㄋㄚˇ ㄌㄧˇ ㄎㄞ ㄕˇ ㄕㄨˇ", "要向十位": "ㄧㄠˋ ㄒㄧㄤˋ ㄕˊ ㄨㄟˋ", "要找多少元": "ㄧㄠˋ ㄓㄠˇ ㄉㄨㄛ ㄕㄠˇ ㄩㄢˊ", "要把每一格加起來": "ㄧㄠˋ ㄅㄚˇ ㄇㄟˇ ㄧˋ ㄍㄜˊ ㄐㄧㄚ ㄑㄧˇ ㄌㄞˊ", "要減掉多的": "ㄧㄠˋ ㄐㄧㄢˇ ㄉㄧㄠˋ ㄉㄨㄛ ˙ㄉㄜ", "要進": "ㄧㄠˋ ㄐㄧㄣˋ", "要進位": "ㄧㄠˋ ㄐㄧㄣˋ ㄨㄟˋ", "要進位到前一位": "ㄧㄠˋ ㄐㄧㄣˋ ㄨㄟˋ ㄉㄠˋ ㄑㄧㄢˊ ㄧˊ ㄨㄟˋ", "規律就是": "ㄍㄨㄟ ㄌㄩˋ ㄐㄧㄡˋ ㄕˋ", "角": "ㄐㄧㄠˇ", "記得進位": "ㄐㄧˋ ˙ㄉㄜ ㄐㄧㄣˋ ㄨㄟˋ", "評量": "ㄆㄧㄥˊ ㄌㄧㄤˋ", "認識錢幣": "ㄖㄣˋ ㄕˊ ㄑㄧㄢˊ ㄅㄧˋ", "課本": "ㄎㄜˋ ㄅㄣˇ", "課本的寬度": "ㄎㄜˋ ㄅㄣˇ ˙ㄉㄜ ㄎㄨㄢ ㄉㄨˋ", "課程範圍": "ㄎㄜˋ ㄔㄥˊ ㄈㄢˋ ㄨㄟˊ", "請選日期的": "ㄑㄧㄥˇ ㄒㄩㄢˇ ㄖˋ ㄑㄧ ˙ㄉㄜ", "請選相差的人數": "ㄑㄧㄥˇ ㄒㄩㄢˇ ㄒㄧㄤ ㄔㄚ ˙ㄉㄜ ㄖㄣˊ ㄕㄨˋ", "讀作": "ㄉㄨˊ ㄗㄨㄛˋ", "買了": "ㄇㄞˇ ˙ㄌㄜ", "貼紙": "ㄊㄧㄝ ㄓˇ", "迴紋針的厚度": "ㄏㄨㄟˊ ㄨㄣˊ ㄓㄣ ˙ㄉㄜ ㄏㄡˋ ㄉㄨˋ", "送出去用減法": "ㄙㄨㄥˋ ㄔㄨ ㄑㄩˋ ㄩㄥˋ ㄐㄧㄢˇ ㄈㄚˇ", "送給朋友": "ㄙㄨㄥˋ ㄍㄟˇ ㄆㄥˊ ㄧㄡˇ", "這一關的題型": "ㄓㄜˋ ㄧˋ ㄍㄨㄢ ˙ㄉㄜ ㄊㄧˊ ㄒㄧㄥˊ", "這些錢一共是多少元": "ㄓㄜˋ ㄒㄧㄝ ㄑㄧㄢˊ ㄧˊ ㄍㄨㄥˋ ㄕˋ ㄉㄨㄛ ㄕㄠˇ ㄩㄢˊ", "這個圖形的面積是多少": "ㄓㄜˋ ˙ㄍㄜ ㄊㄨˊ ㄒㄧㄥˊ ˙ㄉㄜ ㄇㄧㄢˋ ㄐㄧ ㄕˋ ㄉㄨㄛ ㄕㄠˇ", "這是什麼角": "ㄓㄜˋ ㄕˋ ㄕㄣˊ ˙ㄇㄜ ㄐㄧㄠˇ", "這裡依課程週次大致分成": "ㄓㄜˋ ㄌㄧˇ ㄧ ㄎㄜˋ ㄔㄥˊ ㄓㄡ ㄘˋ ㄉㄚˋ ㄓˋ ㄈㄣ ㄔㄥˊ", "通過圓心連接圓上兩點的線段叫直徑": "ㄊㄨㄥ ㄍㄨㄛˋ ㄩㄢˊ ㄒㄧㄣ ㄌㄧㄢˊ ㄐㄧㄝ ㄩㄢˊ ㄕㄤˋ ㄌㄧㄤˇ ㄉㄧㄢˇ ˙ㄉㄜ ㄒㄧㄢˋ ㄉㄨㄢˋ ㄐㄧㄠˋ ㄓˊ ㄐㄧㄥˋ", "連乘題要分兩步": "ㄌㄧㄢˊ ㄔㄥˊ ㄊㄧˊ ㄧㄠˋ ㄈㄣ ㄌㄧㄤˇ ㄅㄨˋ", "連連看": "ㄌㄧㄢˊ ㄌㄧㄢˊ ㄎㄢˋ", "週": "ㄓㄡ", "進": "ㄐㄧㄣˋ", "過": "ㄍㄨㄛˋ", "過關": "ㄍㄨㄛˋ ㄍㄨㄢ", "適合用哪一個單位": "ㄕˋ ㄏㄜˊ ㄩㄥˋ ㄋㄚˇ ㄧˊ ˙ㄍㄜ ㄉㄢ ㄨㄟˋ", "選出正確的算式": "ㄒㄩㄢˇ ㄔㄨ ㄓㄥˋ ㄑㄩㄝˋ ˙ㄉㄜ ㄙㄨㄢˋ ㄕˋ", "選單": "ㄒㄩㄢˇ ㄉㄢ", "選學期": "ㄒㄩㄢˇ ㄒㄩㄝˊ ㄑㄧ", "選擇": "ㄒㄩㄢˇ ㄗㄜˊ", "選擇題": "ㄒㄩㄢˇ ㄗㄜˊ ㄊㄧˊ", "還剩幾": "ㄏㄞˊ ㄕㄥˋ ㄐㄧˇ", "還剩幾隻": "ㄏㄞˊ ㄕㄥˋ ㄐㄧˇ ㄓ", "還剩幾顆": "ㄏㄞˊ ㄕㄥˋ ㄐㄧˇ ㄎㄜ", "還差一點": "ㄏㄞˊ ㄔㄚˋ ㄧˋ ㄉㄧㄢˇ", "那麼": "ㄋㄚˋ ˙ㄇㄜ", "重來": "ㄔㄨㄥˊ ㄌㄞˊ", "量很細的東西": "ㄌㄧㄤˊ ㄏㄣˇ ㄒㄧˋ ˙ㄉㄜ ㄉㄨㄥ ㄒㄧ", "量的時候要從頭開始": "ㄌㄧㄤˊ ˙ㄉㄜ ㄕˊ ㄏㄡˋ ㄧㄠˋ ㄘㄨㄥˊ ㄊㄡˊ ㄎㄞ ㄕˇ", "鈍角": "ㄉㄨㄣˋ ㄐㄧㄠˇ", "鉛筆": "ㄑㄧㄢ ㄅㄧˇ", "鉛筆有幾個紫色方塊長": "ㄑㄧㄢ ㄅㄧˇ ㄧㄡˇ ㄐㄧˇ ˙ㄍㄜ ㄗˇ ㄙㄜˋ ㄈㄤ ㄎㄨㄞˋ ㄔㄤˊ", "鉛筆芯": "ㄑㄧㄢ ㄅㄧˇ ㄒㄧㄣ", "鉛筆芯的粗細": "ㄑㄧㄢ ㄅㄧˇ ㄒㄧㄣ ˙ㄉㄜ ㄘㄨ ㄒㄧˋ", "銳角": "ㄖㄨㄟˋ ㄐㄧㄠˇ", "錢幣和錢數連連看": "ㄑㄧㄢˊ ㄅㄧˋ ㄏㄢˋ ㄑㄧㄢˊ ㄕㄨˋ ㄌㄧㄢˊ ㄌㄧㄢˊ ㄎㄢˋ", "錢有": "ㄑㄧㄢˊ ㄧㄡˇ", "錯": "ㄘㄨㄛˋ", "長": "ㄔㄤˊ", "長幾個單位": "ㄔㄤˊ ㄐㄧˇ ˙ㄍㄜ ㄉㄢ ㄨㄟˋ", "長方形": "ㄔㄤˊ ㄈㄤ ㄒㄧㄥˊ", "長針指": "ㄔㄤˊ ㄓㄣ ㄓˇ", "長針指到": "ㄔㄤˊ ㄓㄣ ㄓˇ ㄉㄠˋ", "長針指著": "ㄔㄤˊ ㄓㄣ ㄓˇ ˙ㄓㄜ", "開": "ㄎㄞ", "開始冒險": "ㄎㄞ ㄕˇ ㄇㄠˋ ㄒㄧㄢˇ", "關": "ㄍㄨㄢ", "除不完的數字要和下一位合起來繼續除": "ㄔㄨˊ ㄅㄨˋ ㄨㄢˊ ˙ㄉㄜ ㄕㄨˋ ㄗˋ ㄧㄠˋ ㄏㄢˋ ㄒㄧㄚˋ ㄧˊ ㄨㄟˋ ㄏㄜˊ ㄑㄧˇ ㄌㄞˊ ㄐㄧˋ ㄒㄩˋ ㄔㄨˊ", "除回去就是原來的數": "ㄔㄨˊ ㄏㄨㄟˊ ㄑㄩˋ ㄐㄧㄡˋ ㄕˋ ㄩㄢˊ ㄌㄞˊ ˙ㄉㄜ ㄕㄨˋ", "除數": "ㄔㄨˊ ㄕㄨˋ", "除數驗算": "ㄔㄨˊ ㄕㄨˋ ㄧㄢˋ ㄙㄨㄢˋ", "除法": "ㄔㄨˊ ㄈㄚˇ", "除法是": "ㄔㄨˊ ㄈㄚˇ ㄕˋ", "隻": "ㄓ", "隻鳥": "ㄓ ㄋㄧㄠˇ", "離開": "ㄌㄧˊ ㄎㄞ", "需要幾盒": "ㄒㄩ ㄧㄠˋ ㄐㄧˇ ㄏㄜˊ", "面積": "ㄇㄧㄢˋ ㄐㄧ", "面積不會變": "ㄇㄧㄢˋ ㄐㄧ ㄅㄨˊ ㄏㄨㄟˋ ㄅㄧㄢˋ", "面積是": "ㄇㄧㄢˋ ㄐㄧ ㄕˋ", "面積是多少": "ㄇㄧㄢˋ ㄐㄧ ㄕˋ ㄉㄨㄛ ㄕㄠˇ", "面積是幾平方公分": "ㄇㄧㄢˋ ㄐㄧ ㄕˋ ㄐㄧˇ ㄆㄧㄥˊ ㄈㄤ ㄍㄨㄥ ㄈㄣ", "鞋盒": "ㄒㄧㄝˊ ㄏㄜˊ", "音效": "ㄧㄣ ㄒㄧㄠˋ", "顆": "ㄎㄜ", "顆愛心": "ㄎㄜ ㄞˋ ㄒㄧㄣ", "顆星": "ㄎㄜ ㄒㄧㄥ", "顆星星": "ㄎㄜ ㄒㄧㄥ ㄒㄧㄥ", "顆糖": "ㄎㄜ ㄊㄤˊ", "顆蘋果": "ㄎㄜ ㄆㄧㄥˊ ㄍㄨㄛˇ", "題": "ㄊㄧˊ", "題型參考各校期末評量": "ㄊㄧˊ ㄒㄧㄥˊ ㄘㄢ ㄎㄠˇ ㄍㄜˋ ㄒㄧㄠˋ ㄑㄧ ㄇㄛˋ ㄆㄧㄥˊ ㄌㄧㄤˋ", "額外題型": "ㄜˊ ㄨㄞˋ ㄊㄧˊ ㄒㄧㄥˊ", "顏色": "ㄧㄢˊ ㄙㄜˋ", "飛走": "ㄈㄟ ㄗㄡˇ", "飛走了用減法": "ㄈㄟ ㄗㄡˇ ˙ㄌㄜ ㄩㄥˋ ㄐㄧㄢˇ ㄈㄚˇ", "餅乾": "ㄅㄧㄥˇ ㄑㄧㄢˊ", "餘數": "ㄩˊ ㄕㄨˋ", "餘數一定比除數小": "ㄩˊ ㄕㄨˋ ㄧˊ ㄉㄧㄥˋ ㄅㄧˇ ㄔㄨˊ ㄕㄨˋ ㄒㄧㄠˇ", "餘數是": "ㄩˊ ㄕㄨˋ ㄕˋ", "香蕉": "ㄒㄧㄤ ㄐㄧㄠ", "驗算": "ㄧㄢˋ ㄙㄨㄢˋ", "骰子": "ㄊㄡˊ ˙ㄗ", "高矮": "ㄍㄠ ㄞˇ", "魔術方塊": "ㄇㄛˊ ㄕㄨˋ ㄈㄤ ㄎㄨㄞˋ", "點": "ㄉㄧㄢˇ", "點一點": "ㄉㄧㄢˇ ㄧˋ ㄉㄧㄢˇ", "點半": "ㄉㄧㄢˇ ㄅㄢˋ", "點掉": "ㄉㄧㄢˇ ㄉㄧㄠˋ", "鼓": "ㄍㄨˇ", "重複": "ㄔㄨㄥˊ ㄈㄨˋ", "重疊": "ㄔㄨㄥˊ ㄉㄧㄝˊ", "數數": "ㄕㄨˇ ㄕㄨˇ", "數東西": "ㄕㄨˇ ㄉㄨㄥ ㄒㄧ", "數很多": "ㄕㄨˇ ㄏㄣˇ ㄉㄨㄛ", "邊數過": "ㄅㄧㄢ ㄕㄨˇ ㄍㄨㄛˋ", "始數": "ㄕˇ ㄕㄨˇ", "方塊數": "ㄈㄤ ㄎㄨㄞˋ ㄕㄨˇ", "相差": "ㄒㄧㄤ ㄔㄚ", "記得": "ㄐㄧˋ ˙ㄉㄜ", "量很細": "ㄌㄧㄤˊ ㄏㄣˇ ㄒㄧˋ", "量的時": "ㄌㄧㄤˊ ˙ㄉㄜ ㄕˊ", "指著": "ㄓˇ ˙ㄓㄜ", "試卷": "ㄕˋ ㄐㄩㄢˋ", "去數": "ㄑㄩˋ ㄕㄨˇ"};const ZC={"一": "ㄧ", "份": "ㄈㄣˋ", "分": "ㄈㄣ", "位": "ㄨㄟˋ", "乘": "ㄔㄥˊ", "加": "ㄐㄧㄚ", "小": "ㄒㄧㄠˇ", "數": "ㄕㄨˋ", "個": "˙ㄍㄜ", "十": "ㄕˊ", "指": "ㄓˇ", "接": "ㄐㄧㄝ", "量": "ㄌㄧㄤˋ", "方": "ㄈㄤ", "塊": "ㄎㄨㄞˋ", "星": "ㄒㄧㄥ", "期": "ㄑㄧ", "有": "ㄧㄡˇ", "幾": "ㄐㄧˇ", "天": "ㄊㄧㄢ", "橡": "ㄒㄧㄤˋ", "皮": "ㄆㄧˊ", "擦": "ㄘㄚ", "盤": "ㄆㄢˊ", "子": "˙ㄗ", "放": "ㄈㄤˋ", "配": "ㄆㄟˋ", "長": "ㄔㄤˊ", "形": "ㄒㄧㄥˊ", "每": "ㄇㄟˇ", "列": "ㄌㄧㄝˋ", "面": "ㄇㄧㄢˋ", "多": "ㄉㄨㄛ", "大": "ㄉㄚˋ", "共": "ㄍㄨㄥˋ", "少": "ㄕㄠˇ", "毫": "ㄏㄠˊ", "升": "ㄕㄥ", "顆": "ㄎㄜ", "重": "ㄓㄨㄥˋ", "公": "ㄍㄨㄥ", "克": "ㄎㄜˋ", "年": "ㄋㄧㄢˊ", "級": "ㄐㄧˊ", "樣": "ㄧㄤˋ", "再": "ㄗㄞˋ", "比": "ㄅㄧˇ", "點": "ㄉㄧㄢˇ", "後": "ㄏㄡˋ", "的": "˙ㄉㄜ", "合": "ㄏㄜˊ", "起": "ㄑㄧˇ", "來": "ㄌㄞˊ", "步": "ㄅㄨˋ", "算": "ㄙㄨㄢˋ", "直": "ㄓˊ", "照": "ㄓㄠˋ", "同": "ㄊㄨㄥˊ", "法": "ㄈㄚˇ", "變": "ㄅㄧㄢˋ", "複": "ㄈㄨˋ", "眼": "ㄧㄢˇ", "就": "ㄐㄧㄡˋ", "能": "ㄋㄥˊ", "關": "ㄍㄨㄢ", "學": "ㄒㄩㄝˊ", "會": "ㄏㄨㄟˋ", "課": "ㄎㄜˋ", "本": "ㄅㄣˇ", "單": "ㄉㄢ", "元": "ㄩㄢˊ", "頭": "ㄊㄡˊ", "對": "ㄉㄨㄟˋ", "齊": "ㄑㄧˊ", "三": "ㄙㄢ", "除": "ㄔㄨˊ", "以": "ㄧˇ", "狀": "ㄓㄨㄤˋ", "角": "ㄐㄧㄠˇ", "上": "ㄕㄤˋ", "是": "ㄕˋ", "取": "ㄑㄩˇ", "下": "ㄒㄧㄚˋ", "題": "ㄊㄧˊ", "午": "ㄨˇ", "要": "ㄧㄠˋ", "各": "ㄍㄜˋ", "哪": "ㄋㄚˇ", "最": "ㄗㄨㄟˋ", "平": "ㄆㄧㄥˊ", "不": "ㄅㄨˊ", "夠": "ㄍㄡˋ", "減": "ㄐㄧㄢˇ", "向": "ㄒㄧㄤˋ", "左": "ㄗㄨㄛˇ", "邊": "ㄅㄧㄢ", "借": "ㄐㄧㄝˋ", "漏": "ㄌㄡˋ", "掉": "ㄉㄧㄠˋ", "留": "ㄌㄧㄡˊ", "空": "ㄎㄨㄥˋ", "堆": "ㄉㄨㄟ", "高": "ㄍㄠ", "時": "ㄕˊ", "疊": "ㄉㄧㄝˊ", "乒": "ㄆㄧㄥ", "乓": "ㄆㄤ", "球": "ㄑㄧㄡˊ", "和": "ㄏㄢˋ", "相": "ㄒㄧㄤ", "反": "ㄈㄢˇ", "與": "ㄩˇ", "也": "ㄧㄝˇ", "可": "ㄎㄜˇ", "滾": "ㄍㄨㄣˇ", "用": "ㄩㄥˋ", "二": "ㄦˋ", "五": "ㄨˇ", "人": "ㄖㄣˊ", "今": "ㄐㄧㄣ", "付": "ㄈㄨˋ", "內": "ㄋㄟˋ", "任": "ㄖㄣˋ", "何": "ㄏㄜˊ", "母": "ㄇㄨˇ", "估": "ㄍㄨ", "伸": "ㄕㄣ", "出": "ㄔㄨ", "去": "ㄑㄩˋ", "較": "ㄐㄧㄠˋ", "短": "ㄉㄨㄢˇ", "字": "ㄗˋ", "例": "ㄌㄧˋ", "如": "ㄖㄨˊ", "迴": "ㄏㄨㄟˊ", "紋": "ㄨㄣˊ", "針": "ㄓㄣ", "依": "ㄧ", "序": "ㄒㄩˋ", "捆": "ㄎㄨㄣˇ", "組": "ㄗㄨˇ", "先": "ㄒㄧㄢ", "滿": "ㄇㄢˇ", "成": "ㄔㄥˊ", "千": "ㄑㄧㄢ", "地": "˙ㄉㄜ", "完": "ㄨㄢˊ", "整": "ㄓㄥˇ", "什": "ㄕㄣˊ", "麼": "˙ㄇㄜ", "百": "ㄅㄞˇ", "都": "ㄉㄡ", "倍": "ㄅㄟˋ", "側": "ㄘㄜˋ", "圓": "ㄩㄢˊ", "偶": "ㄡˇ", "像": "ㄒㄧㄤˋ", "種": "ㄓㄨㄥˇ", "素": "ㄙㄨˋ", "村": "ㄘㄨㄣ", "換": "ㄏㄨㄢˋ", "那": "ㄋㄚˋ", "決": "ㄐㄩㄝˊ", "定": "ㄉㄧㄥˋ", "把": "ㄅㄚˇ", "看": "ㄎㄢˋ", "近": "ㄐㄧㄣˋ", "部": "ㄅㄨˋ", "到": "ㄉㄠˋ", "湊": "ㄘㄡˋ", "欄": "ㄌㄢˊ", "箱": "ㄒㄧㄤ", "答": "ㄉㄚˊ", "案": "ㄢˋ", "括": "ㄎㄨㄛˋ", "號": "ㄏㄠˋ", "選": "ㄒㄩㄢˇ", "式": "ㄕˋ", "全": "ㄑㄩㄢˊ", "拿": "ㄋㄚˊ", "兩": "ㄌㄧㄤˇ", "交": "ㄐㄧㄠ", "置": "ㄓˋ", "區": "ㄑㄩ", "條": "ㄊㄧㄠˊ", "線": "ㄒㄧㄢˋ", "從": "ㄘㄨㄥˊ", "發": "ㄈㄚ", "腳": "ㄐㄧㄠˇ", "距": "ㄐㄩˋ", "離": "ㄌㄧˊ", "半": "ㄅㄢˋ", "徑": "ㄐㄧㄥˋ", "正": "ㄓㄥˋ", "尺": "ㄔˇ", "斤": "ㄐㄧㄣ", "六": "ㄌㄧㄡˋ", "其": "ㄑㄧˊ", "中": "ㄓㄨㄥ", "冊": "ㄘㄜˋ", "倒": "ㄉㄠˋ", "入": "ㄖㄨˋ", "寫": "ㄒㄧㄝˇ", "想": "ㄒㄧㄤˇ", "找": "ㄓㄠˇ", "由": "ㄧㄡˊ", "挑": "ㄊㄧㄠ", "戰": "ㄓㄢˋ", "次": "ㄘˋ", "吧": "˙ㄅㄚ", "剩": "ㄕㄥˋ", "玩": "ㄨㄢˊ", "之": "ㄓ", "跟": "ㄍㄣ", "進": "ㄐㄧㄣˋ", "過": "ㄍㄨㄛˋ", "鐘": "ㄓㄨㄥ", "刪": "ㄕㄢ", "前": "ㄑㄧㄢˊ", "剛": "ㄍㄤ", "好": "ㄏㄠˇ", "書": "ㄕㄨ", "叫": "ㄐㄧㄠˋ", "驟": "ㄓㄡˋ", "約": "ㄩㄝ", "厚": "ㄏㄡˋ", "薄": "ㄅㄛˊ", "又": "ㄧㄡˋ", "得": "ㄉㄜˊ", "只": "ㄓˇ", "給": "ㄍㄟˇ", "東": "ㄉㄨㄥ", "西": "ㄒㄧ", "右": "ㄧㄡˋ", "吃": "ㄔ", "了": "˙ㄌㄜ", "型": "ㄒㄧㄥˊ", "別": "ㄅㄧㄝˊ", "類": "ㄌㄟˋ", "商": "ㄕㄤ", "喜": "ㄒㄧˇ", "歡": "ㄏㄨㄢ", "康": "ㄎㄤ", "軒": "ㄒㄩㄢ", "版": "ㄅㄢˇ", "四": "ㄙˋ", "回": "ㄏㄨㄟˊ", "圖": "ㄊㄨˊ", "首": "ㄕㄡˇ", "頁": "ㄧㄝˋ", "圈": "ㄑㄩㄢ", "裡": "ㄌㄧˇ", "心": "ㄒㄧㄣ", "遠": "ㄩㄢˇ", "周": "ㄓㄡ", "沒": "ㄇㄟˊ", "段": "ㄉㄨㄢˋ", "罐": "ㄍㄨㄢˋ", "規": "ㄍㄨㄟ", "張": "ㄓㄤ", "開": "ㄎㄞ", "記": "ㄐㄧˋ", "儀": "ㄧˊ", "場": "ㄔㄤˇ", "考": "ㄎㄠˇ", "魔": "ㄇㄛˊ", "王": "ㄨㄤˊ", "塗": "ㄊㄨˊ", "色": "ㄙㄜˋ", "連": "ㄌㄧㄢˊ", "填": "ㄊㄧㄢˊ", "太": "ㄊㄞˋ", "厲": "ㄌㄧˋ", "害": "ㄏㄞˋ", "奇": "ㄐㄧ", "媽": "ㄇㄚ", "他": "ㄊㄚ", "度": "ㄉㄨˋ", "教": "ㄐㄧㄠˋ", "科": "ㄎㄜ", "編": "ㄅㄧㄢ", "排": "ㄆㄞˊ", "習": "ㄒㄧˊ", "卡": "ㄎㄚˇ", "尋": "ㄒㄩㄣˊ", "律": "ㄌㄩˋ", "傑": "ㄐㄧㄝˊ", "安": "ㄢ", "第": "ㄉㄧˋ", "明": "ㄇㄧㄥˊ", "杯": "ㄅㄟ", "玉": "ㄩˋ", "美": "ㄇㄟˇ", "華": "ㄏㄨㄚˊ", "增": "ㄗㄥ", "已": "ㄧˇ", "知": "ㄓ", "月": "ㄩㄝˋ", "日": "ㄖˋ", "貼": "ㄊㄧㄝ", "紙": "ㄓˇ", "彈": "ㄉㄢˋ", "珠": "ㄓㄨ", "往": "ㄨㄤˇ", "格": "ㄍㄜˊ", "走": "ㄗㄡˇ", "些": "ㄒㄧㄝ", "始": "ㄕˇ", "愛": "ㄞˋ", "應": "ㄧㄥ", "或": "ㄏㄨㄛˋ", "所": "ㄙㄨㄛˇ", "穩": "ㄨㄣˇ", "還": "ㄏㄞˊ", "打": "ㄉㄚˇ", "怪": "ㄍㄨㄞˋ", "物": "ㄨˋ", "披": "ㄆㄧ", "薩": "ㄙㄚˋ", "切": "ㄑㄧㄝˋ", "拼": "ㄆㄧㄣ", "枚": "ㄇㄟˊ", "錢": "ㄑㄧㄢˊ", "幣": "ㄅㄧˋ", "失": "ㄕ", "敗": "ㄅㄞˋ", "順": "ㄕㄨㄣˋ", "掛": "ㄍㄨㄚˋ", "操": "ㄘㄠ", "跑": "ㄆㄠˇ", "道": "ㄉㄠˋ", "室": "ㄕˋ", "史": "ㄕˇ", "萊": "ㄌㄞˊ", "姆": "ㄇㄨˇ", "試": "ㄕˋ", "卷": "ㄐㄩㄢˋ", "很": "ㄏㄣˇ", "盒": "ㄏㄜˊ", "昨": "ㄗㄨㄛˊ", "鈍": "ㄉㄨㄣˋ", "銳": "ㄖㄨㄟˋ", "非": "ㄈㄟ", "制": "ㄓˋ", "說": "ㄕㄨㄛ", "間": "ㄐㄧㄢ", "水": "ㄕㄨㄟˇ", "果": "ㄍㄨㄛˇ", "超": "ㄔㄠ", "末": "ㄇㄛˋ", "枝": "ㄓ", "桌": "ㄓㄨㄛ", "樹": "ㄕㄨˋ", "橘": "ㄐㄩˊ", "確": "ㄑㄩㄝˋ", "範": "ㄈㄢˋ", "圍": "ㄨㄟˊ", "校": "ㄒㄧㄠˋ", "裝": "ㄓㄨㄤ", "快": "ㄎㄨㄞˋ", "米": "ㄇㄧˇ", "氣": "ㄑㄧˋ", "壺": "ㄏㄨˊ", "桶": "ㄊㄨㄥˇ", "常": "ㄔㄤˊ", "注": "ㄓㄨˋ", "音": "ㄧㄣ", "效": "ㄒㄧㄠˋ", "退": "ㄊㄨㄟˋ", "然": "ㄖㄢˊ", "片": "ㄆㄧㄢˋ", "牛": "ㄋㄧㄡˊ", "奶": "ㄋㄞˇ", "態": "ㄊㄞˋ", "現": "ㄒㄧㄢˋ", "在": "ㄗㄞˋ", "畫": "ㄏㄨㄚˋ", "它": "ㄊㄚ", "驗": "ㄧㄢˋ", "表": "ㄅㄧㄠˇ", "計": "ㄐㄧˋ", "結": "ㄐㄧㄝˊ", "著": "˙ㄓㄜ", "硬": "ㄧㄥˋ", "認": "ㄖㄣˋ", "秒": "ㄇㄧㄠˇ", "秤": "ㄔㄥˋ", "輕": "ㄑㄧㄥ", "等": "ㄉㄥˇ", "於": "ㄩˊ", "原": "ㄩㄢˊ", "錯": "ㄘㄨㄛˋ", "餘": "ㄩˊ", "籃": "ㄌㄢˊ", "糖": "ㄊㄤˊ", "紅": "ㄏㄨㄥˊ", "統": "ㄊㄨㄥˇ", "資": "ㄗ", "料": "ㄌㄧㄠˋ", "理": "ㄌㄧˇ", "缺": "ㄑㄩㄝ", "而": "ㄦˊ", "葡": "ㄆㄨˊ", "萄": "ㄊㄠˊ", "藍": "ㄌㄢˊ", "藥": "ㄧㄠˋ", "蘋": "ㄆㄧㄥˊ", "衛": "ㄨㄟˋ", "生": "ㄕㄥ", "捲": "ㄐㄩㄢˇ", "示": "ㄕˋ", "被": "ㄅㄟˋ", "瓜": "ㄍㄨㄚ", "評": "ㄆㄧㄥˊ", "識": "ㄕˊ", "寬": "ㄎㄨㄢ", "程": "ㄔㄥˊ", "請": "ㄑㄧㄥˇ", "差": "ㄔㄚ", "讀": "ㄉㄨˊ", "作": "ㄗㄨㄛˋ", "買": "ㄇㄞˇ", "送": "ㄙㄨㄥˋ", "朋": "ㄆㄥˊ", "友": "ㄧㄡˇ", "這": "ㄓㄜˋ", "積": "ㄐㄧ", "週": "ㄓㄡ", "致": "ㄓˋ", "通": "ㄊㄨㄥ", "適": "ㄕˋ", "擇": "ㄗㄜˊ", "隻": "ㄓ", "細": "ㄒㄧˋ", "候": "ㄏㄡˋ", "鉛": "ㄑㄧㄢ", "筆": "ㄅㄧˇ", "紫": "ㄗˇ", "芯": "ㄒㄧㄣ", "粗": "ㄘㄨ", "冒": "ㄇㄠˋ", "險": "ㄒㄧㄢˇ", "繼": "ㄐㄧˋ", "續": "ㄒㄩˋ", "鳥": "ㄋㄧㄠˇ", "需": "ㄒㄩ", "鞋": "ㄒㄧㄝˊ", "參": "ㄘㄢ", "額": "ㄜˊ", "外": "ㄨㄞˋ", "顏": "ㄧㄢˊ", "飛": "ㄈㄟ", "餅": "ㄅㄧㄥˇ", "乾": "ㄑㄧㄢˊ", "香": "ㄒㄧㄤ", "蕉": "ㄐㄧㄠ", "骰": "ㄊㄡˊ", "矮": "ㄞˇ", "術": "ㄕㄨˋ", "鼓": "ㄍㄨˇ"};
+function zsyl(s){let t='',l=false;const m=s.match(/[ˊˇˋ]/);if(m){t=m[0];s=s.replace(t,'')}if(s.includes('˙')){l=true;s=s.replace('˙','')}
+ return '<span class="zp"><span class="zs">'+(l?'<i class="zq">˙</i>':'')+[...s].map(c=>'<i>'+c+'</i>').join('')+'</span>'+(t?'<b class="zt">'+t+'</b>':'')+'</span>'}
+function zc(c,s){return s?'<span class="zy"><span>'+c+'</span>'+zsyl(s)+'</span>':c}
+function annRun(r){let o='',i=0;while(i<r.length){let hit=false;for(let L=Math.min(12,r.length-i);L>=2;L--){const w=r.substr(i,L),v=ZR[w];if(v){const sy=v.split(' ');for(let k=0;k<L;k++)o+=zc(w[k],sy[k]);i+=L;hit=true;break}}
+ if(!hit){o+=zc(r[i],ZC[r[i]]);i++}}return o}
+function ann(h){return h.split(/(<[^>]*>)/).map(p=>p[0]==='<'?p:p.replace(/[\u4e00-\u9fff]+/g,annRun)).join('')}
+/* ===== 狀態、注音開關、選單 ===== */
+const GR={1:GRADE1,3:GRADE3};
+let S={view:'home',g:null,s:null,run:null};
+let PROG={};try{PROG=JSON.parse(localStorage.getItem('pxmath-v1')||'{}')}catch(e){}
+let ZY={1:true,3:false};try{const z=JSON.parse(localStorage.getItem('pxmath-zy')||'null');if(z)ZY=z}catch(e){}
+const save=()=>{try{localStorage.setItem('pxmath-v1',JSON.stringify(PROG))}catch(e){}};
+const saveZ=()=>{try{localStorage.setItem('pxmath-zy',JSON.stringify(ZY))}catch(e){}};
+const zyOn=()=>!!ZY[S.g||1];
+const H=h=>zyOn()?ann(h):h;
+const put=(el,h)=>{el.innerHTML=H(h)};
+const key=(g,s,z,u)=>`${g}-${s}-${z}-${u}`;
+const star=(on,s=20)=>`<svg viewBox="0 0 8 8" width="${s}" height="${s}" shape-rendering="crispEdges">${SPR.star.map((row,y)=>[...row].map((c,x)=>c!=='.'?`<rect x="${x}" y="${y}" width="1" height="1" fill="${on?PAL.y:'#4a5190'}"/>`:'').join('')).join('')}</svg>`;
+const stars=(n,s)=>`<span class="stars" aria-label="${n} 顆星">${[1,2,3].map(i=>star(i<=n,s)).join('')}</span>`;
+const app=$('#app');
+const tools=()=>`<span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" id="zy" aria-pressed="${zyOn()}">注音：${zyOn()?'開':'關'}</button><button class="btn sm" id="snd" aria-pressed="${SND}">音效：${SND?'開':'關'}</button></span>`;
+function go(v,o={}){Object.assign(S,o,{view:v});render()}
+function bind(){const b=$('#snd');if(b)b.onclick=()=>{SND=!SND;b.textContent=H('音效：'+(SND?'開':'關'));b.setAttribute('aria-pressed',SND)};
+ const z=$('#zy');if(z)z.onclick=()=>{ZY[S.g||1]=!zyOn();saveZ();render()};
+ document.querySelectorAll('[data-go]').forEach(e=>e.onclick=()=>{const[v,a]=e.dataset.go.split(',');go(v,v=='sem'?{g:+a}:v=='map'?{s:+a}:v=='home'?{g:null}:{})});
+ document.querySelectorAll('[data-lv]').forEach(e=>e.onclick=()=>{const[z,u]=e.dataset.lv.split(',');startLevel(+z,u==='boss'?'boss':+u)})}
+function render(){KEYH=null;app.className=zyOn()?'zyon':'';({home,sem,map,tip,play,result}[S.view])();bind();window.scrollTo(0,0)}
+const prog=g=>Object.keys(PROG).filter(k=>k.startsWith(g+'-')).reduce((a,k)=>a+PROG[k],0);
+function home(){put(app,`<div class="title"><div class="scene"><div class="hop">${spr('hero',72)}</div>${spr('slime',56)}<div class="hop" style="animation-delay:.5s">${spr('boss',72)}</div></div>
+ <h1>像素數學村</h1><p>打倒數學怪物，一關一關學會課本的單元！</p></div>
+ <div class="cards">${[1,3].map(g=>`<button class="btn card" data-go="sem,${g}"><b>${GR[g].name}</b><small>${GR[g].book}數學<br>上、下學期各 9 個單元</small>${stars(Math.min(3,Math.floor(prog(g)/12)),18)}</button>`).join('')}</div>
+ <div class="top">${tools()}</div>
+ <p class="foot">單元依康軒版 115 學年度教科書編排。題型參考各校期末評量：選擇、是非、填填看、圈圈看、排排看、連連看、寫出算式和答案。段考範圍依各校進度不同，這裡依課程週次大致分成「期中」和「期末」兩區。</p>`)}
+function sem(){const G=GR[S.g];put(app,`<div class="top"><button class="btn sm" data-go="home">← 回首頁</button>${tools()}</div>
+ <div class="title"><h1 style="font-size:clamp(30px,8vw,42px)">${G.name}數學</h1><p>${G.book}</p></div>
+ <div class="cards">${G.sems.map((s,i)=>{const t=s.zones.reduce((a,z)=>a+z.units.length,0);const got=s.zones.reduce((a,z,zi)=>a+z.units.reduce((b,_,ui)=>b+(PROG[key(S.g,i,zi,ui)]||0),0)+(PROG[key(S.g,i,zi,'boss')]||0),0);
+ return `<button class="btn card" data-go="map,${i}"><b>${s.name}</b><small>${s.vol}・${t} 個單元＋2 場段考魔王</small><small>星星 ${got} / ${(t+2)*3}</small></button>`}).join('')}</div>`)}
+function map(){const G=GR[S.g],sm=G.sems[S.s];put(app,`<div class="top"><button class="btn sm" data-go="sem,${S.g}">← 選學期</button>${tools()}</div>
+ <div class="crumb">${G.name} ／ ${sm.name}（康軒${sm.vol}）</div>
+ ${sm.zones.map((z,zi)=>`<section class="panel zone"><div><h2>${z.name}</h2><div class="wk">課程範圍：${z.wk}</div></div>
+ <div class="units">${z.units.map((u,ui)=>`<button class="btn unit" data-lv="${zi},${ui}"><span class="no">LV ${ui+1}</span><span class="nm">${u.n}</span>${stars(PROG[key(S.g,S.s,zi,ui)]||0)}</button>`).join('')}
+ <button class="btn unit boss" data-lv="${zi},boss"><span class="no">BOSS・考卷</span><span class="nm">${zi?'期末':'期中'}考魔王</span><span style="display:flex;gap:8px;align-items:center">${spr('boss',28)}${stars(PROG[key(S.g,S.s,zi,'boss')]||0)}</span></button></div></section>`).join('')}`)}
+/* ===== 出題 ===== */
+const KN={choice:'選擇題',tf:'是非題',fill:'填填看',multi:'圈圈看',sort:'排排看',match:'連連看',eq:'寫出算式和答案',remove:'點一點'};
+const kindsFor=u=>['choice','tf','fill',...Object.keys(u.ex||{})];
+function numParse(c){const m=String(c).match(/^(\d+(?:\.\d+)?)(.*)$/);if(!m||/^[:：]/.test(m[2])||/^分之/.test(m[2])||m[2].length>6||/\d/.test(m[2]))return null;return[m[1],m[2].trim()]}
+function vertical(t){const m=t.match(/^(\d+) ([+−×]) (\d+) = \?$/);return m?`<div class="vert"><span>${m[1]}</span><span class="l2"><i>${m[2]}</i>${m[3]}</span><span>？</span></div>`:''}
+function makeQ(u,kind){let q;
+ if(u.ex&&u.ex[kind])q=u.ex[kind]();
+ else if(kind=='tf'){const b=u.gen(),t=R(0,1),cl=t?b.c[b.a]:pick(b.c.filter((_,i)=>i!==b.a));q={kind:'tf',t:b.t,v:b.v,claim:cl,truth:!!t,right:b.c[b.a],e:b.e}}
+ else if(kind=='fill'){for(let i=0;i<20&&!q;i++){const b=u.gen(),m=numParse(b.c[b.a]);if(m)q={kind:'fill',t:b.t,v:vertical(b.t)||b.v,ans:m[0],suffix:m[1],e:b.e}}}
+ if(!q){const b=u.gen();q={kind:'choice',...b}}
+ return{q,u:u.n}}
+function buildQs(z,ui){
+ if(ui!=='boss'){const u=z.units[ui],ex=Object.keys(u.ex||{}),pool=sh(['tf','fill',...ex]);if(ex.length)pool.sort((a,b)=>(ex.includes(b)?1:0)-(ex.includes(a)?1:0)+(Math.random()-.5));
+  const ks=['choice'];for(let i=0;ks.length<5;i++)ks.push(pool[i%pool.length]);return ks.map(k=>makeQ(u,k))}
+ const U=sh(z.units),SEC=[['一、選擇題','choice',3],['二、是非題','tf',2],['三、填填看','fill',3],['四、挑戰題','ex',2]];let n=0,out=[];
+ SEC.forEach(([nm,k,c])=>{for(let i=0;i<c;i++){const u=U[n++%U.length];let kind=k;if(k=='ex'){const cand=z.units.filter(x=>x.ex&&Object.keys(x.ex).length);if(cand.length){const uu=pick(cand);kind=pick(Object.keys(uu.ex));const it=makeQ(uu,kind);it.sec=nm;out.push(it);continue}kind='choice'}
+  const it=makeQ(u,kind);it.sec=nm;out.push(it)}});return out}
+function startLevel(zi,ui){const z=GR[S.g].sems[S.s].zones[zi],boss=ui==='boss';
+ S.run={zi,ui,boss,qs:buildQs(z,ui),i:0,hearts:3,wrong:0,right:0,locked:false};
+ if(boss)go('play');else go('tip')}
+function tip(){const{zi,ui}=S.run,u=GR[S.g].sems[S.s].zones[zi].units[ui],ex=Object.keys(u.ex||{});
+ put(app,`<div class="top"><button class="btn sm" data-go="map,${S.s}">← 回地圖</button>${tools()}</div>
+ <section class="panel qbox"><span class="tag">學習小卡</span><h2 style="font-size:28px">${u.n}</h2><div class="tipbox">${spr('hero',64)}<p>${u.tip}</p></div>
+ <div class="foot">這一關的題型：${['選擇題','是非題','填填看',...ex.map(k=>KN[k])].join('、')}</div>
+ <button class="btn go" id="start" style="align-self:flex-start;font-size:22px">開始冒險！</button></section>`);
+ $('#start').onclick=()=>go('play')}
+/* ===== 答題畫面與各種題型 ===== */
+let KEYH=null;document.addEventListener('keydown',e=>{if(KEYH)KEYH(e)});
+const GRN=()=>GR[S.g].sems[S.s];
+function hud(){const r=S.run,n=r.qs.length;return `<div class="hud">${r.boss?`<div class="pbar">考卷 ${n} 題・每題 10 分</div>`:`<div class="hearts" aria-label="剩下 ${r.hearts} 顆愛心">${[0,1,2].map(i=>spr(i<r.hearts?'heart':'dim',30)).join('')}</div>`}<div class="pbar">第 ${Math.min(r.i+1,n)} / ${n} 題</div><button class="btn sm" data-go="map,${S.s}">離開</button></div>`}
+function play(){const r=S.run,it=r.qs[r.i],q=it.q,n=r.qs.length,G=GR[S.g],zn=r.zi?'期末':'期中';
+ put(app,`${hud()}${r.boss?`<div class="exam"><span class="jp">115 學年度 ${GRN().name}${zn}評量・${G.name}數學試卷</span><span class="score">得分 <b>${r.right*10}</b></span></div>`:''}
+ <div class="arena"><div id="hero">${spr('hero',80)}</div><div class="hpwrap"><span class="jp" style="font-size:14px;color:var(--mute)">${r.boss?'段考魔王':'數學史萊姆'}</span><div class="hp"><i id="hp" style="width:${Math.round((1-r.right/n)*100)}%"></i></div><div id="mon">${spr(r.boss?'boss':'slime',r.boss?88:76)}</div></div></div>
+ <section class="panel qbox"><div class="tags">${r.boss?`<span class="tag">${it.sec}</span>`:''}<span class="tag k">${KN[q.kind]}</span></div><div class="qt">${q.t}</div>${q.v?`<div class="vis">${q.v}</div>`:''}<div id="body" class="qbox"></div><div id="fb"></div></section>`);
+ BODY[q.kind](q,$('#body'),(ok,txt)=>resolve(ok,q,txt))}
+function resolve(ok,q,txt){const r=S.run;if(r.locked)return;r.locked=true;KEYH=null;
+ const n=r.qs.length,last=r.i===n-1;
+ if(ok){r.right++;sfx.ok();$('#hero').classList.add('lunge');$('#mon').classList.add('shake');$('#hp').style.width=Math.round((1-r.right/n)*100)+'%'}
+ else{sfx.no();r.wrong++;if(!r.boss)r.hearts--;$('#hero').classList.add('shake')}
+ const dead=!r.boss&&r.hearts<=0;
+ put($('#fb'),`<div class="fb ${ok?'ok':'no'}"><b>${ok?'答對了！':'再想想看～'}</b> ${q.e||''}${!ok&&txt?`<br>正確答案是：<b>${txt}</b>`:''}</div><button class="btn go" id="next" style="margin-top:12px;font-size:20px">${dead||last?'看結果':'下一題 →'}</button>`);
+ const nb=$('#next');nb.focus();nb.onclick=()=>{r.locked=false;if(dead||last)finish(dead);else{r.i++;render()}}}
+function finish(dead){const r=S.run,n=r.qs.length;
+ if(r.boss){r.score=r.right*10;r.stars=r.score>=90?3:r.score>=70?2:r.score>=60?1:0;r.win=r.stars>0}
+ else{r.win=!dead;r.stars=r.win?(r.wrong==0?3:r.wrong<=1?2:1):0}
+ if(r.win){const k=key(S.g,S.s,r.zi,r.boss?'boss':r.ui);PROG[k]=Math.max(PROG[k]||0,r.stars);save();sfx.win()}
+ go('result')}
+function result(){const r=S.run,z=GRN().zones[r.zi],nx=(!r.boss&&r.ui<z.units.length-1)?r.ui+1:(!r.boss?'boss':null);
+ put(app,`<section class="panel res">${r.boss?`<div class="stamp">${r.score} 分</div>`:spr(r.win?'hero':'slime',96)}<h2>${r.win?(r.boss?'打倒魔王！':'過關！'):(r.boss?'還差一點':'挑戰失敗')}</h2>${r.win?`<div class="bigstars">${stars(r.stars,44)}</div>`:''}
+ <div>${r.boss?`答對 ${r.right} 題，答錯 ${r.wrong} 題。60 分過關，90 分以上拿 3 顆星。`:r.win?`答錯 ${r.wrong} 題${r.stars==3?'，全對，太厲害了！':'。全對可以拿 3 顆星！'}`:'愛心用完了。看看學習小卡，再挑戰一次吧！'}</div>
+ <div class="actions"><button class="btn" id="again">再玩一次</button>${r.win&&nx!==null?`<button class="btn go" id="nxt">下一關 →</button>`:''}<button class="btn" data-go="map,${S.s}">回地圖</button></div></section>`);
+ $('#again').onclick=()=>startLevel(r.zi,r.boss?'boss':r.ui);const nb=$('#nxt');if(nb)nb.onclick=()=>startLevel(r.zi,nx)}
+/* ---- 各題型 ---- */
+const BODY={};
+BODY.choice=(q,h,done)=>{put(h,`<div class="choices">${q.c.map((c,i)=>`<button class="btn choice" data-i="${i}">${c}</button>`).join('')}</div>`);
+ const B=h.querySelectorAll('.choice');B.forEach((b,i)=>b.onclick=()=>{B.forEach((x,k)=>{x.disabled=true;if(k===q.a)x.classList.add('ok');else if(k===i)x.classList.add('no')});done(i===q.a,q.c[q.a])})};
+BODY.tf=(q,h,done)=>{put(h,`<div class="claim">答案是「${q.claim}」</div><div class="choices"><button class="btn choice" data-v="1">○ 對</button><button class="btn choice" data-v="0">✕ 錯</button></div>`);
+ const B=h.querySelectorAll('.choice');B.forEach(b=>b.onclick=()=>{const say=b.dataset.v==='1',ok=say===q.truth;B.forEach(x=>{x.disabled=true;if((x.dataset.v==='1')===q.truth)x.classList.add('ok');else if(x===b)x.classList.add('no')});done(ok,q.truth?'對':`錯，正確答案是 ${q.right}`)})};
+function fillUI(h,o,cb){let v='';const dec=o.ans.includes('.');
+ put(h,`<div class="fillrow">${o.pre?`<span>${o.pre}</span>`:''}<span class="inp" id="inp">&nbsp;</span><span>${o.suffix||''}</span></div><div class="pad">${[7,8,9,4,5,6,1,2,3].map(n=>`<button class="btn key" data-k="${n}">${n}</button>`).join('')}<button class="btn key" data-k="<" aria-label="刪除">⌫</button><button class="btn key" data-k="0">0</button><button class="btn key" data-k="." ${dec?'':'disabled style="visibility:hidden"'}>.</button></div><button class="btn go sub" id="sub">確認答案</button>`);
+ const show=()=>{$('#inp').innerHTML=v||'&nbsp;'};let fin=false;
+ const press=k=>{if(fin)return;if(k==='<')v=v.slice(0,-1);else if(k==='.'){if(dec&&v&&!v.includes('.'))v+='.'}else if(v.length<6&&!(v==='0'&&k==='0'))v=(v==='0'?'':v)+k;show()};
+ const submit=()=>{if(fin||!v||v.endsWith('.'))return;fin=true;KEYH=null;h.querySelectorAll('button').forEach(b=>b.disabled=true);const ok=parseFloat(v)===parseFloat(o.ans);$('#inp').style.borderColor=ok?'var(--green)':'var(--red)';cb(ok)};
+ h.querySelectorAll('.key').forEach(b=>b.onclick=()=>press(b.dataset.k));$('#sub').onclick=submit;
+ KEYH=e=>{if(/^[0-9.]$/.test(e.key))press(e.key);else if(e.key==='Backspace')press('<');else if(e.key==='Enter'){if(document.activeElement&&document.activeElement.id==='next')return;submit()}}}
+BODY.fill=(q,h,done)=>fillUI(h,q,ok=>done(ok,q.ans+(q.suffix?' '+q.suffix:'')));
+BODY.eq=(q,h,done)=>{const ord=sh([0,1,2]),right=`${q.eqs[0]} = ${q.ans} ${q.unit}`;
+ put(h,`<div class="foot" style="font-size:16px">第一步：選出正確的算式</div><div class="choices">${ord.map(i=>`<button class="btn choice" data-i="${i}">${q.eqs[i]}</button>`).join('')}</div>`);
+ const B=h.querySelectorAll('.choice');B.forEach(b=>b.onclick=()=>{const i=+b.dataset.i;B.forEach(x=>x.disabled=true);
+  if(i!==0){b.classList.add('no');B.forEach(x=>{if(+x.dataset.i===0)x.classList.add('ok')});done(false,right);return}
+  b.classList.add('ok');const d=document.createElement('div');h.appendChild(d);put(d,`<div class="foot" style="font-size:16px">第二步：算出答案</div>`);const d2=document.createElement('div');d2.className='qbox';h.appendChild(d2);
+  fillUI(d2,{ans:String(q.ans),pre:`${q.eqs[0]} =`,suffix:q.unit},ok=>done(ok,right))})};
+BODY.multi=(q,h,done)=>{put(h,`<div class="tiles">${q.tiles.map((t,i)=>`<button class="btn tile" data-i="${i}">${t.h}</button>`).join('')}</div><button class="btn go sub" id="sub">確認</button>`);
+ const T=[...h.querySelectorAll('.tile')];T.forEach(b=>b.onclick=()=>b.classList.toggle('sel'));
+ $('#sub').onclick=()=>{let ok=true;T.forEach((b,i)=>{const s=b.classList.contains('sel'),k=q.tiles[i].k;b.disabled=true;b.classList.remove('sel');if(s&&k)b.classList.add('ok');else if(s&&!k){b.classList.add('no');ok=false}else if(!s&&k){b.classList.add('miss');ok=false}});$('#sub').disabled=true;done(ok,'')}};
+BODY.sort=(q,h,done)=>{const asc=q.t.includes('小到大'),n=q.tiles.length,exp=q.tiles.map((t,i)=>i).sort((a,b)=>asc?q.tiles[a].v-q.tiles[b].v:q.tiles[b].v-q.tiles[a].v);let pk=[];
+ put(h,`<div class="tiles">${q.tiles.map((t,i)=>`<button class="btn tile" data-i="${i}">${t.h}</button>`).join('')}</div><button class="btn sm" id="rs" style="align-self:center">重來</button>`);
+ const T=[...h.querySelectorAll('.tile')],paint=()=>{T.forEach((b,i)=>{b.classList.toggle('sel',pk.includes(i));b.querySelector('.badge')?.remove();if(pk.includes(i)){const s=document.createElement('span');s.className='badge';s.textContent=pk.indexOf(i)+1;b.appendChild(s)}})};
+ T.forEach((b,i)=>b.onclick=()=>{if(pk.includes(i)||pk.length>=n)return;pk.push(i);paint();if(pk.length===n){T.forEach(x=>x.disabled=true);$('#rs').disabled=true;const ok=pk.every((x,k)=>x===exp[k]);T.forEach((x,i)=>{x.classList.remove('sel');x.classList.add(pk.indexOf(i)===exp.indexOf(i)?'ok':'no');x.querySelector('.badge').textContent=exp.indexOf(i)+1});done(ok,q.order.join(' → '))}});
+ $('#rs').onclick=()=>{pk=[];paint()}};
+BODY.match=(q,h,done)=>{const n=q.pairs.length,R2=sh([...Array(n).keys()]);let sel=null,mist=0,got=0;
+ put(h,`<div class="mcols"><div class="mcol">${q.pairs.map((p,i)=>`<button class="btn mt L" data-i="${i}">${p[0]}</button>`).join('')}</div><div class="mcol">${R2.map(i=>`<button class="btn mt Rr" data-i="${i}">${q.pairs[i][1]}</button>`).join('')}</div></div>`);
+ const L=[...h.querySelectorAll('.L')],Rr=[...h.querySelectorAll('.Rr')];
+ L.forEach(b=>b.onclick=()=>{if(b.disabled)return;L.forEach(x=>x.classList.remove('sel'));b.classList.add('sel');sel=+b.dataset.i});
+ Rr.forEach(b=>b.onclick=()=>{if(b.disabled||sel===null)return;const i=+b.dataset.i;
+  if(i===sel){const c='m'+got;[L[sel],b].forEach(x=>{x.classList.remove('sel');x.classList.add(c);x.disabled=true});got++;sel=null;sfx.ok();if(got===n)done(mist===0,'')}
+  else{mist++;sfx.no();b.classList.add('shake');setTimeout(()=>b.classList.remove('shake'),400);L.forEach(x=>x.classList.remove('sel'));sel=null}})};
+BODY.remove=(q,h,done)=>{let gone=0;put(h,`<div class="rmgrid">${Array.from({length:q.total},()=>`<button class="btn rm">${spr(q.sp,44)}</button>`).join('')}</div><div class="foot" style="text-align:center;font-size:16px">已點掉 <b id="gc">0</b> 個</div><button class="btn go sub" id="sub">確認</button>`);
+ const B=[...h.querySelectorAll('.rm')];B.forEach(b=>b.onclick=()=>{b.classList.toggle('gone');gone=B.filter(x=>x.classList.contains('gone')).length;$('#gc').textContent=gone});
+ $('#sub').onclick=()=>{B.forEach(b=>b.disabled=true);$('#sub').disabled=true;done(gone===q.need,`${q.need} 個`)}};
+render();
+</script>
+<script src="../../../assets/site.js"></script>
+</body>
+</html>
+
