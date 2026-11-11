@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>17:00的後院</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--g1:#6aa96b;--g2:#7bc96f;--dk:#355e3b;--ink:#2d3a2d}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Noto Sans TC",system-ui,monospace;font-weight:500;color:var(--ink);min-height:100vh;position:relative;overflow-x:hidden;background:#bfe8ff}
+/* 天空：藍天約 90%，底部 10% 是金黃傍晚（固定在視窗，不隨時間變化） */
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(#78c2f4 0%,#bfe8ff 86%,#ffe9a8 90%,#ffd36b 95%,#ffbf4d 100%)}
+a{color:inherit}
+header{position:sticky;top:0;z-index:5;background:var(--g1);color:#fff;padding:10px 16px;border-bottom:4px solid var(--dk)}
+.hi{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.logo{font-weight:700;font-size:18px;text-decoration:none}
+nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+nav a,.lang{padding:8px 12px;background:var(--g2);border:3px solid var(--dk);color:#fff;text-decoration:none;font:inherit;font-weight:700;cursor:pointer}
+nav a.on{background:#fff;color:var(--dk)}
+.lang{background:#ffd36b;color:var(--dk)}
+.cloud{position:absolute;background:#fff;border-radius:20px;opacity:.85;animation:float 40s linear infinite;pointer-events:none}
+.c1{width:90px;height:30px;left:-100px;top:90px}
+.c2{width:120px;height:40px;left:-200px;top:170px;animation-duration:55s}
+@keyframes float{to{transform:translateX(calc(100vw + 350px))}}
+.page{display:none;position:relative}
+.page.on{display:block}
+.hero{padding:56px 20px 40px;text-align:center}
+.hero h1{margin:0 0 8px;font-size:36px}
+.hero p{margin:0 auto 6px;max-width:560px;line-height:1.7}
+.grass{height:40px;background:repeating-linear-gradient(90deg,#5d8b4a,#5d8b4a 8px,#6c9d58 8px,#6c9d58 16px)}
+.wrap{max-width:1000px;margin:auto;padding:28px 20px 40px}
+.btn{display:inline-block;padding:10px 14px;background:var(--g2);border:4px solid var(--dk);color:#fff;text-decoration:none;box-shadow:4px 4px var(--dk);cursor:pointer;font:inherit;font-weight:700}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px var(--dk)}
+.btn.off{background:#c9c9c9;border-color:#777;box-shadow:4px 4px #777;color:#555;cursor:default}
+.enter{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.big{background:#fff;border:4px solid #444;padding:24px 18px;text-align:center;text-decoration:none;display:flex;flex-direction:column;gap:8px;align-items:center}
+.big:hover{transform:translateY(-6px)}
+.big .em{font-size:60px;line-height:1}
+.big h2{margin:0;font-size:24px}
+.big p{margin:0}
+.bar{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;background:#fff;border:4px solid #444;padding:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row b{min-width:64px}
+.chip{font:inherit;font-weight:700;padding:6px 12px;background:#eaf8e4;border:3px solid var(--dk);color:var(--dk);cursor:pointer}
+.chip.on{background:var(--dk);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{background:#fff;border:4px solid #444;padding:14px;display:flex;flex-direction:column;gap:8px;transition:.2s}
+.card:hover{transform:translateY(-6px)}
+.thumb{height:100px;background:repeating-linear-gradient(45deg,#8dcb74,#8dcb74 10px,#7ab566 10px,#7ab566 20px);display:flex;align-items:center;justify-content:center;font-size:46px}
+.card strong{font-size:18px}
+.card p{margin:0;font-size:14px;flex:1}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:12px;font-weight:700;padding:2px 8px;border:2px solid var(--dk);background:#eaf8e4}
+.tag.by{background:#ffe08a;border-color:#8a6a00}
+.empty{text-align:center;padding:30px;background:#fff;border:4px dashed #444}
+h2.t{margin:0 0 4px;font-size:26px}
+.sub{margin:0 0 16px}
+footer{text-align:center;padding:26px;background:var(--dk);color:#fff;position:relative}
+a:focus-visible,button:focus-visible{outline:4px solid #ff9a3c;outline-offset:2px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.grid,.enter{grid-template-columns:1fr}.hero h1{font-size:28px}}
+@media(prefers-reduced-motion:reduce){.cloud{animation:none}.card:hover,.big:hover{transform:none}}
+</style>
+</head>
+<body>
+<div class="cloud c1"></div><div class="cloud c2"></div>
+
+<header><div class="hi">
+<a class="logo" href="#home">🕔 <span data-i="name"></span></a>
+<nav>
+<a href="#home" data-p="home" data-i="nHome"></a>
+<a href="#learn" data-p="learn" data-i="nLearn"></a>
+<a href="#create" data-p="create" data-i="nCreate"></a>
+<a href="#about" data-p="about" data-i="nAbout"></a>
+</nav>
+<button class="lang" id="lang" aria-label="Language / 語言"></button>
+</div></header>
+
+<section id="home" class="page">
+<div class="hero">
+<h1>📺 <span data-i="name"></span></h1>
+<p data-i="h1"></p>
+<p data-i="h2"></p>
+</div>
+<div class="grass"></div>
+<div class="wrap"><div class="enter">
+<a class="big" href="#learn"><span class="em">📚</span><h2 data-i="zLearn"></h2><p data-i="zLearnD"></p><span class="btn" id="cLearn"></span></a>
+<a class="big" href="#create"><span class="em">🎨</span><h2 data-i="zCreate"></h2><p data-i="zCreateD"></p><span class="btn" id="cCreate"></span></a>
+</div></div>
+</section>
+
+<section id="learn" class="page"><div class="wrap">
+<h2 class="t">📚 <span data-i="zLearn"></span></h2>
+<p class="sub" data-i="zLearnD"></p>
+<div class="bar"><div class="row" id="fGrade"></div><div class="row" id="fSub"></div></div>
+<div class="grid" id="gLearn"></div>
+</div></section>
+
+<section id="create" class="page"><div class="wrap">
+<h2 class="t">🎨 <span data-i="zCreate"></span></h2>
+<p class="sub" data-i="zCreateD"></p>
+<div class="bar"><div class="row" id="fBy"></div></div>
+<div class="grid" id="gCreate"></div>
+</div></section>
+
+<section id="about" class="page">
+<div class="hero">
+<h1 data-i="nAbout"></h1>
+<p data-i="a1"></p><p data-i="a2"></p><p data-i="a3"></p>
+</div>
+</section>
+
+<footer data-i="foot"></footer>
+
+<script>
+var TXT={
+name:["17:00的後院","Backyard at 5 PM"],
+nHome:["首頁","Home"],nLearn:["📚 先寫功課","📚 Homework First"],nCreate:["🎨 卡通時間","🎨 Cartoon Time"],nAbout:["關於","About"],
+h1:["小朋友的遊戲小站，免費、打開就能玩。","A free little game site made by kids. Just open and play."],
+h2:["17:00，遊戲開播！","5 PM — game time!"],
+zLearn:["先寫功課","Homework First"],zLearnD:["依年級和科目挑遊戲","Pick games by grade and subject"],
+zCreate:["卡通時間","Cartoon Time"],zCreateD:["Bobo、Yang 和 Rrrr 的原創遊戲","Original games by Bobo, Yang and Rrrr"],
+a1:["小時候，17:00 是一天中最期待的時間，有線電視開始播放卡通。","When I was a kid, 5 PM was the most exciting time of the day: cartoons started on cable TV."],
+a2:["這個後院，想把那份期待留給下一代。","This backyard is here to pass that joy on to the next generation."],
+a3:["學習區的遊戲幫助複習功課；創作區是小設計師 Bobo、Yang 和 Rrrr 想出來的原創遊戲。","Learning games help with homework. Creations are original ideas by young designers Bobo, Yang and Rrrr."],
+foot:["Made with ❤️ by Bobo & Yang • 17:00的後院","Made with ❤️ by Bobo & Yang • Backyard at 5 PM"]
+};
+var UI={all:["全部","All"],grade:["年級","Grade"],sub:["科目","Subject"],by:["設計師","Designer"],play:["PLAY","PLAY"],soon:["製作中","Coming soon"],
+emptyL:["這個年級和科目還沒有遊戲，敬請期待！","No games for this grade and subject yet. Coming soon!"],
+emptyC:["還沒有作品，敬請期待！","No creations yet. Coming soon!"]};
+var SUBJ={english:["英文","English"],math:["數學","Math"],chinese:["國語","Chinese"],science:["自然","Science"],social:["社會","Social Studies"]};
+var GRADES=[1,2,3,4,5,6],BYS=["Bobo","Yang","Rrrr"];
+
+/* ===== 遊戲清單：新增遊戲只要在這裡加一筆 =====
+ zone: learn 學習 / create 創作；grade 1~6、subject 為上方 SUBJ 的代號（學習區）；by 設計師暱稱（創作區）
+ title、desc 都是 [中文, English]；ready:false 代表製作中 */
+var GAMES=[
+{zone:"learn",title:["單字小勇士・3 年級","Word Hero · Grade 3"],icon:"☁️",grade:3,subject:"english",desc:["英語單字王：選 Part，挑戰選字、聽音、拼字和口說。","English Word King: pick a Part, then pick, listen, spell and speak."],path:"games/learn/vocab/?grade=3",ready:true},
+{zone:"learn",title:["單字小勇士・4 年級","Word Hero · Grade 4"],icon:"☁️",grade:4,subject:"english",desc:["英語單字王：選 Part，挑戰選字、聽音、拼字和口說。","English Word King: pick a Part, then pick, listen, spell and speak."],path:"games/learn/vocab/?grade=4",ready:true},
+{zone:"learn",title:["單字小勇士・5 年級","Word Hero · Grade 5"],icon:"☁️",grade:5,subject:"english",desc:["英語單字王：選 Part，挑戰選字、聽音、拼字和口說。","English Word King: pick a Part, then pick, listen, spell and speak."],path:"games/learn/vocab/?grade=5",ready:true},
+{zone:"learn",title:["單字小勇士・6 年級","Word Hero · Grade 6"],icon:"☁️",grade:6,subject:"english",desc:["英語單字王：選 Part，挑戰選字、聽音、拼字和口說。","English Word King: pick a Part, then pick, listen, spell and speak."],path:"games/learn/vocab/?grade=6",ready:true},
+{zone:"learn",title:["像素數學村・1 年級","Pixel Math Village · Grade 1"],icon:"🧮",grade:1,subject:"math",desc:["康軒版數學，從地圖選單元、闖關練習。","Math practice by unit: explore the map and clear each level."],path:"games/learn/pixel-math/",ready:true},
+{zone:"learn",title:["像素數學村・3 年級","Pixel Math Village · Grade 3"],icon:"🧮",grade:3,subject:"math",desc:["康軒版數學，從地圖選單元、闖關練習。","Math practice by unit: explore the map and clear each level."],path:"games/learn/pixel-math/",ready:true},
+{zone:"create",title:["今日海產","Today's Seafood"],icon:"🎣",by:"Bobo",desc:["一款簡單的魚叉遊戲。","A simple harpoon fishing game."],path:"games/create/seafood/",ready:true},
+{zone:"create",title:["傘兵防禦","Paratrooper Defense"],icon:"🪂",by:"Yang",desc:["一款地面防禦射擊遊戲。","A ground-defense shooting game."],path:"games/create/paratrooper-defense/",ready:true},
+{zone:"create",title:["整點打卡","Check In on the Hour"],icon:"⏰",by:"Rrrr",desc:["一款卷軸式跳躍障礙的遊戲。","A side-scrolling jump-and-dodge game."],path:"games/create/check-in/",ready:true}
+];
+
+var L=0,F={grade:"all",sub:"all",by:"all"};
+try{var s=localStorage.getItem("lang");L=s!==null?+s:(/^zh/i.test(navigator.language)?0:1)}catch(e){L=/^zh/i.test(navigator.language)?0:1}
+
+function row(id,key,list,label){
+ var h='<b>'+UI[key][L]+'</b>';
+ [["all",UI.all[L]]].concat(list.map(function(v){return [String(v),label(v)]})).forEach(function(p){
+  h+='<button class="chip'+(String(F[key])===p[0]?' on':'')+'" data-k="'+key+'" data-v="'+p[0]+'">'+p[1]+'</button>';
+ });
+ document.getElementById(id).innerHTML=h;
+}
+function card(g){
+ var tags=g.zone==="learn"?'<span class="tag">'+(L?'Grade '+g.grade:g.grade+' 年級')+'</span><span class="tag">'+SUBJ[g.subject][L]+'</span>':'<span class="tag by">'+(L?'By ':'設計師：')+g.by+'</span>';
+ var act=g.ready?'<a class="btn" href="'+g.path+'">'+UI.play[L]+'</a>':'<span class="btn off">'+UI.soon[L]+'</span>';
+ return '<div class="card"><div class="thumb">'+g.icon+'</div><strong>'+g.title[L]+'</strong><div class="tags">'+tags+'</div><p>'+g.desc[L]+'</p>'+act+'</div>';
+}
+function fill(id,list,msg){
+ document.getElementById(id).innerHTML=list.length?list.map(card).join(""):'<div class="empty" style="grid-column:1/-1">'+msg[L]+'</div>';
+}
+function paint(){
+ document.documentElement.lang=L?"en":"zh-Hant";
+ document.title=TXT.name[L];
+ document.querySelectorAll("[data-i]").forEach(function(e){e.textContent=TXT[e.dataset.i][L]});
+ document.getElementById("lang").textContent=L?"中文":"EN";
+ row("fGrade","grade",GRADES,function(v){return L?"Grade "+v:v+" 年級"});
+ row("fSub","sub",Object.keys(SUBJ),function(v){return SUBJ[v][L]});
+ row("fBy","by",BYS,function(v){return v});
+ fill("gLearn",GAMES.filter(function(g){return g.zone==="learn"&&(F.grade==="all"||g.grade==F.grade)&&(F.sub==="all"||g.subject===F.sub)}),UI.emptyL);
+ fill("gCreate",GAMES.filter(function(g){return g.zone==="create"&&(F.by==="all"||g.by===F.by)}),UI.emptyC);
+ var nl=GAMES.filter(function(g){return g.zone==="learn"&&g.ready}).length,nc=GAMES.filter(function(g){return g.zone==="create"&&g.ready}).length;
+ document.getElementById("cLearn").textContent=L?nl+" games":nl+" 款遊戲";
+ document.getElementById("cCreate").textContent=L?nc+" games":nc+" 款作品";
+}
+function route(){
+ var id=(location.hash||"#home").slice(1);
+ if(!document.getElementById(id))id="home";
+ document.querySelectorAll(".page").forEach(function(p){p.classList.toggle("on",p.id===id)});
+ document.querySelectorAll("nav a").forEach(function(a){a.classList.toggle("on",a.dataset.p===id)});
+ window.scrollTo(0,0);
+}
+document.addEventListener("click",function(e){
+ var c=e.target.closest(".chip");
+ if(c){F[c.dataset.k]=c.dataset.v;paint()}
+});
+document.getElementById("lang").onclick=function(){
+ L=L?0:1;try{localStorage.setItem("lang",L)}catch(e){}paint();
+};
+window.addEventListener("hashchange",route);
+paint();route();
+</script>
+<script src="assets/site.js"></script>
+</body>
+</html>
