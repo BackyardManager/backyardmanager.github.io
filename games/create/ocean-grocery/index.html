@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>海浪雜貨舖</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fbe8c9;--paper:#fff8ea;--ink:#4a3b5c;--line:#5b4636;--coral:#ef6f6c;--coral2:#c24f5e;--sea:#4aa8c8;--sea2:#2f7fa3;--mint:#7fd6a4;--mint2:#4aa97f;--sun:#ffd966;--sun2:#e2b23c;--sand:#f6dfa8}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'DotGothic16','PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif;font-size:17px;line-height:1.5}
+body{min-height:100vh;background:linear-gradient(#bfe6f7 0,#d9f1fa 140px,var(--bg) 140px)}
+#app{max-width:1120px;margin:0 auto;padding:max(10px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+img.px{image-rendering:pixelated;image-rendering:crisp-edges;vertical-align:middle;-webkit-user-drag:none}
+button{font:inherit;color:inherit;cursor:pointer}
+.box{background:var(--paper);border:3px solid var(--line);border-radius:6px;box-shadow:0 4px 0 var(--line)}
+#hud{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+#hud .tt{font-size:22px;letter-spacing:1px;color:var(--coral2);text-shadow:2px 2px 0 #fff;margin-right:auto}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;min-height:38px;background:var(--paper);border:3px solid var(--line);border-radius:6px;box-shadow:0 3px 0 var(--line);font-size:16px}
+.chip.btn:active{transform:translateY(3px);box-shadow:none}
+.steps{display:flex;gap:4px;margin:0 0 10px}.steps span{flex:1;text-align:center;padding:3px 0;border:3px solid var(--line);background:#fff;border-radius:6px;font-size:14px;opacity:.55}.steps span.on{background:var(--sun);opacity:1;box-shadow:0 3px 0 var(--sun2)}.steps span.ok{background:var(--mint);opacity:.9}
+#main{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:860px){#main{grid-template-columns:minmax(0,1fr)}}
+#stagewrap{border:4px solid var(--line);border-radius:8px;background:#bfe6f7;box-shadow:0 5px 0 var(--line);overflow:hidden;line-height:0;display:flex;justify-content:center}
+#cv{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+#say{margin-top:12px;padding:10px 14px 12px 76px;min-height:92px;position:relative}
+#say .face{position:absolute;left:10px;top:10px;width:56px;height:56px;background:var(--sand);border:3px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center}
+#say .nm{font-size:15px;color:var(--coral2);margin-bottom:2px}#say .tx{font-size:18px}
+#panel{padding:14px 14px 16px}
+h2{margin:0 0 6px;font-size:21px;color:var(--sea2)}
+.tip{margin:0 0 10px;font-size:15px;color:#7a6a63;background:#fff1cf;border:2px dashed #e2b23c;border-radius:6px;padding:6px 10px}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+.b{min-height:46px;padding:6px 16px;border:3px solid var(--line);border-radius:6px;background:#fff;box-shadow:0 4px 0 var(--line);font-size:18px;transition:transform .05s}
+.b:active{transform:translateY(4px);box-shadow:0 0 0 var(--line)}
+.b:disabled{opacity:.45;box-shadow:0 4px 0 #9a8d86;cursor:not-allowed}
+.b.go{background:var(--coral);color:#fff;text-shadow:1px 1px 0 var(--coral2)}.b.sea{background:var(--sea);color:#fff;text-shadow:1px 1px 0 var(--sea2)}.b.mint{background:var(--mint)}.b.sun{background:var(--sun)}.b.big{min-height:54px;font-size:21px;padding:8px 22px}
+.pips{display:flex;gap:4px;margin:0 0 8px;font-size:15px;align-items:center;flex-wrap:wrap}.pip{width:14px;height:18px;background:var(--sea);border:2px solid var(--line);border-radius:60% 60% 50% 50%}.pip.off{background:#fff;opacity:.35}
+.sandgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.cell{aspect-ratio:1;border:3px solid var(--line);border-radius:8px;background:repeating-linear-gradient(45deg,#f1d28d 0 6px,#ecc77c 6px 12px);position:relative;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 3px 0 #b88a4a;min-height:56px}
+.cell:active{transform:translateY(3px);box-shadow:none}
+.cell.sp::after{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;background:#fff;box-shadow:0 -6px 0 #fff,0 6px 0 #fff,-6px 0 0 #fff,6px 0 0 #fff;animation:tw 1.4s steps(2) infinite}
+.cell.sp:nth-child(3n)::after{animation-delay:.5s}.cell.sp:nth-child(4n)::after{animation-delay:.9s}
+@keyframes tw{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.2;transform:scale(.6)}}
+.cell.dug{background:#d9b377;box-shadow:inset 0 3px 0 #b88a4a;border-style:dashed;animation:pop .25s}
+@keyframes pop{from{transform:scale(.7)}to{transform:scale(1)}}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.card{display:flex;flex-direction:column;align-items:center;gap:0;padding:6px 2px 4px;border:3px solid var(--line);border-radius:8px;background:#fff;box-shadow:0 3px 0 var(--line);font-size:14px;position:relative;min-height:92px}
+.card.on{background:#fff1b3;outline:3px solid var(--coral);outline-offset:1px}.card:active{transform:translateY(3px);box-shadow:none}
+.card .tag{position:absolute;top:-6px;right:-4px;font-style:normal;font-size:11px;background:var(--mint);border:2px solid var(--line);border-radius:5px;padding:0 4px}.card .tag.lost{background:#f7a8c4}.card .tag.dirt{background:#d9b377}
+.d1{filter:sepia(.35) brightness(.93)}.d2{filter:sepia(.75) brightness(.78) saturate(.8)}
+.det{margin-top:12px;padding:10px;display:flex;gap:10px;flex-wrap:wrap}.det .big{flex:0 0 72px;text-align:center}.det .inf{flex:1 1 180px;font-size:15px}.det .inf b{font-size:18px;color:var(--coral2)}.det .inf p{margin:2px 0}
+.wig{animation:wig .3s}@keyframes wig{25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}
+.sc{display:inline-flex;gap:3px}.sc i{width:12px;height:12px;border:2px solid var(--line);background:#fff;border-radius:3px}.sc i.f{background:var(--sea)}
+.hearts{display:flex;gap:3px;align-items:center}
+.price{text-align:center;margin:8px 0}.price .n{font-size:40px;color:var(--coral2);line-height:1.1}
+input[type=range]{width:100%;height:36px;accent-color:var(--coral)}
+.kv{display:flex;justify-content:space-between;border-bottom:2px dotted #d9c9a8;padding:3px 0}
+.deco{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:2px dotted #d9c9a8}
+.deco small{display:block;color:#8a7a72;font-size:13px}
+.wx-sun{background:#fff1b3}.wx-cloud{background:#e3e8ee}.wx-rain{background:#cfe3f5}.wx-storm{background:#cfc9e3}
+.steps span{font-size:13px;padding:3px 0}
+#modal[hidden]{display:none}#modal{position:fixed;inset:0;background:rgba(60,40,70,.55);display:flex;align-items:center;justify-content:center;padding:max(14px,env(safe-area-inset-top)) 14px;z-index:9}
+#modal .mb{max-width:560px;width:100%;max-height:88vh;overflow:auto;padding:16px}
+.dex{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}.dex .card{min-height:104px}.dex .q{filter:brightness(0) opacity(.25)}
+.title{text-align:center;padding:8px 4px}.title h1{margin:4px 0;font-size:40px;color:var(--coral2);text-shadow:3px 3px 0 #fff,5px 5px 0 var(--sun)}.title p{margin:6px 0}
+.letter{background:#fffdf3;border:3px solid var(--line);padding:14px;font-size:18px;line-height:1.8;border-radius:4px;background-image:repeating-linear-gradient(transparent 0 31px,#e8dcc0 31px 32px)}
+.empty{text-align:center;color:#9a8a82;padding:14px}
+.combo{display:inline-block;background:var(--coral);color:#fff;border:2px solid var(--line);border-radius:6px;padding:0 8px;font-size:14px}
+@media(max-width:520px){html,body{font-size:16px}#say{padding-left:70px}#say .tx{font-size:17px}.b{font-size:17px}.price .n{font-size:34px}}
+@media(prefers-reduced-motion:reduce){.cell.sp::after{animation:none}}
+</style></head><body><div id="app">
+<div id="hud"></div><div id="steps"></div>
+<div id="main"><div><div id="stagewrap"><canvas id="cv" width="160" height="90"></canvas></div><div id="say" class="box"></div></div><div id="panel" class="box"></div></div>
+</div><div id="modal" hidden></div><script>
+const $=s=>document.querySelector(s);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+/* ===== 療癒像素美術：16×16 精靈（左半鏡射＋自動描邊） ===== */
+const PAL={r:'#ef6f6c',R:'#c24f5e',o:'#f7a35c',O:'#d9803f',y:'#ffd966',Y:'#e2b23c',g:'#7fd6a4',G:'#4aa97f',b:'#6cc3e8',B:'#3f8fc4',p:'#f7a8c4',P:'#d4739b',n:'#b9824f',N:'#84552f',t:'#f3d9a8',T:'#d9b377',s:'#ffd9bd',S:'#efb08a',l:'#b9a3f0',L:'#8b72d1',m:'#b8c2d3',M:'#8794ab',c:'#c9f3f6',w:'#fffaf0',W:'#eadfcb',k:'#4a3b5c',h:'#ffffff',K:'#3b2f4a',z:'#d9d2f5',v:'#f6d27a'};
+const HALF={ /* 8 欄 × 16 列，鏡射成 16×16 */
+shell:['........','........','....pppp','..pppwpP','.pppwpPp','.ppwpPpp','ppwpPppP','pwpPppPp','ppPppPpp','pPppPppP','.PppPppp','..TTpppp','...TTttt','....Tttt'],
+star:['........','.......o','.......o','......oo','......oo','.ooooooo','..oooyoo','...oooyo','...ooooO','..ooooOO','..oooooo','.ooo..oo','.oo....o','........'],
+glass:['........','........','....gggg','..ggwwgg','.ggwgggg','.gwgggGg','ggggggGG','gggggGGG','ggggGGGG','.gggGGGG','.ggGGGGG','..ggGGGG','....GGGG','........'],
+bucket:['........','...mmmmm','..m.....','.m......','.yyyyyyy','.rrrwwrr','.rrwwrrr','.rrrrrrR','.yyyyyyy','.rrrrrrR','..rrrrrR','..RrrrrR','...RRRRR','........'],
+duck:['........','.....yyy','....yyyy','....ykyy','....yyoo','....yyoo','...yyyyy','..yyyyyy','.rwrwrwr','rwrwrwrw','.rwrwrwr','..rrrrrr','........','........'],
+coin:['........','....oooo','..oooyyy','.ooyyyyy','.oyywyyy','ooyyyyyy','oyyyyyYY','oyyyyYYy','oyyyyyYY','ooyyyyyy','.oyyyyyy','.ooyyyyy','..oooyyy','....oooo'],
+teddy:['........','..nnn...','..nTnnnn','..nnnnnn','..nnnnnn','.nnnnnnn','.nnknnnn','.nnnnTTT','.nnnnTkk','..nnnrrr','.nnnnnnr','.nnnnnnn','.nnnTTTT','.nn..nnn'],
+shades:['........','........','........','........','.rrrrrrr','.rkkkkrr','.rkhkkrr','.rkkkkrr','..rkkrrr','...rr...','........','........','........','........'],
+slipper:['........','......tt','.....ttt','....tttt','....tttt','....bttt','.....bbt','......bb','.......b','....tttt','....tttt','....tttt','.....ttt','......tt'],
+heart:['........','........','..rrrr..','.rrwrrrr','.rrrrrrr','.rrrrrrr','..rrrrrr','...rrrrr','....rrrr','.....rrr','......rr','.......r','........','........'],
+heartx:['........','........','..mmmm..','.mmmmmmm','.mmmmmmm','.mmmmmmm','..mmmmmm','...mmmmm','....mmmm','.....mmm','......mm','.......m','........','........'],
+star2:['........','.......y','.......y','......yy','......yy','.yyyyyyy','..yyyyyy','...yyyyy','...yyyyy','..yyyyyy','..yyyy.y','.yyy....','.yy.....','........'],
+me:['........','....tttt','...tttTt','.TTtttTt','..ssssss','..skssps','..ssssss','..bbbbbb','.sbwwwww','.sbwwwww','..bwwwww','..bbbbbb','..nnnnn.','..kkkkk.'],
+crab:['........','.rrr....','.rRr....','.rrrrk..','..rrrrrr','..rrwwrr','.rrrrrrr','.rrrrrrR','..rrrrRR','...RRRRR','.r.r.r.r','.r.r.r..','........','........'],
+gull:['........','....wwww','...wwwww','..wwkwww','..wwwwoo','..wwwwoo','.wwwwwww','.mwwwwww','.mwwwwww','.mmwwwww','..mwwwww','...wwwww','....o...','...ooo..'],
+girl:['........','...NNNNN','..NNNNNN','.NNNNNNN','.NNsssss','.nNskssp','..nsssss','..yyyyyy','.syyyyyy','.syyyyyy','..yyyyYY','.yyyyyYY','..ss....','..kk....'],
+turtle:['........','....gggg','...ggggg','..gggkgg','..ggggGg','..gggwww','...ggggg','.nnnnnnn','.nNnnNnn','.nnnNnnN','.nNnnnNn','.nnnnnnn','.gnnnnnn','.gg.gg..']};
+const FULL={ /* 不對稱：完整 16 欄 */
+boat:['','','.......nW.......','.......nwW......','......nwwwW.....','......nwwwwW....','.....nwwwwwwW...','.....nwwwwwwwW..','....nwwwwwwwwwW.','.......n........','..rrrrrrrrrrrr..','...RrrrrrrrrrR..','....RRRRRRRRR...'],
+pearl:['','','.....wwwwww.....','...wwhhwwwwzz...','..wwhhwwwwwwzz..','..whhwwwwwwwwz..','.wwwwwwwwwwwwzz.','.wwwwwwwwwwwwzz.','.wwwwwwwwwwwzzc.','.wwwwwwwwwzzzcc.','..wwwwwwzzzzcc..','..wwwwzzzzzcc...','...zzzzzzzcc....','.....cccccc.....'],
+bottle:['','','.......NN.......','.......nn.......','.......cc.......','......cccb......','.....ccccbb.....','....ccwwwcbb....','...cccwtwtcbb...','...ccwwttwcbb...','...cccwwwtcbb...','...ccccccccbb...','....cccccccbB...','.....BBBBBBB....']};
+const SPR_CACHE={},URL_CACHE={};
+function buildSprite(name){let g;
+ if(FULL[name]){g=Array.from({length:16},(_,y)=>{const r=FULL[name][y]||'';return r.padEnd(16,'.').slice(0,16)})}
+ else{const h=HALF[name];g=Array.from({length:16},(_,y)=>{const r=(h[y]||'').padEnd(8,'.').slice(0,8);return r+[...r].reverse().join('')})}
+ const cv=document.createElement('canvas');cv.width=16;cv.height=16;const x=cv.getContext('2d');
+ const at=(a,b)=>a<0||b<0||a>15||b>15?'.':g[b][a];
+ for(let y=0;y<16;y++)for(let i=0;i<16;i++){const c=g[y][i];if(c!=='.'){x.fillStyle=PAL[c];x.fillRect(i,y,1,1)}
+  else if([[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>at(i+dx,y+dy)!=='.')){x.fillStyle=PAL.K;x.fillRect(i,y,1,1)}}
+ return cv}
+function sprCanvas(n){return SPR_CACHE[n]||(SPR_CACHE[n]=buildSprite(n))}
+function sprURL(n){return URL_CACHE[n]||(URL_CACHE[n]=sprCanvas(n).toDataURL())}
+const spr=(n,px=48,cls='')=>`<img class="px ${cls}" src="${sprURL(n)}" width="${px}" height="${px}" alt="" draggable="false">`;
+/* ===== 第二批像素：稀有物、魚、食材、飲料、料理 ===== */
+Object.assign(PAL,{});
+Object.assign(HALF,{
+sunstone:['........','........','....oooo','..ooyyyy','.ooyywyy','ooyyyyyy','oyyyyyyY','.oyyyyYY','..oyyYYY','...oyYYY','....oYYY'],
+chest:['........','........','........','..nnnnnn','.nnnNnnn','.nNnnnnn','.yyyyyyy','.nnnnyyy','.nnnnyyk','.nnnnnyy','.NnnnnnN','.NNNNNNN'],
+puffer:['........','........','....oyyy','..yyyyyy','.yyywkyy','oyyyyyyy','.yyyyppy','oyyyyyyy','.yyYYyyy','..YYYYYY','..o.YYYY'],
+octopus:['........','........','....llll','...lllll','..llllll','..llwkll','..llllll','..lllllL','.llllllL','.ll.ll.l','ll..ll.l','l..ll..l'],
+oct2:['.......y','......yy','....rrrr','...rrrrr','..rrrrrr','..rrwkrr','..rrrrrr','..rrrrrR','.rrrrrrR','.rr.rr.r','rr..rr.r','r..rr..r'],
+coco:['........','........','...nnnnn','..nnnnnn','.nnwwwww','.nwwwwww','.nwwwwww','.nwwwwww','.nnwwwww','..nnnnnn','...NNNNN'],
+lemon:['........','........','......gg','.....yyy','...yyyyy','..yywyyy','.yyyyyyy','.yyyyyyY','..yyyyYY','...yyYYY','.....YYY'],
+mint:['........','.....g..','....ggg.','...gGggg','..gggGgg','...ggggg','....gg.g','.....G..','.....n..','.....n..'],
+ice:['........','........','..cccccc','.cchhccc','.chcccbb','.ccccccb','.ccccccb','.cccccbb','.ccccbbb','..bbbbbb'],
+soda:['........','........','..mmmmmm','..bbbbbb','..bwwwbb','..bwBwbb','..bwwwbb','..bbbbbb','..bbbbBB','..mmmmmm'],
+bowl:['........','........','...o.o.o','..oooooo','wwwwwwww','.wbwbwbw','.wwwwwww','..wwwwww','...bbbbb'],
+onigiri:['........','........','.......w','......ww','.....www','....wwww','...wwwww','..wwwwww','.wwkkkkk','.wwkkkkk','.wwwkkkk'],
+cup:['........','........','..mmmmmm','..wwwwww','..cqqqqq','..cqqqqq','..cqqqqq','..cqqqqq','...cqqqq','...cqqqq','....cccc']});
+HALF.silver=HALF.shell.map(r=>r.replace(/p/g,'m').replace(/P/g,'M'));
+{const RB=['r','o','y','g','b','l'];HALF.rainbow=HALF.shell.map((r,j)=>{const c=RB[j%6];return r.replace(/p/g,c).replace(/P/g,c.toUpperCase())})}
+const CUPC={coco:['w','w','w','W','W','W'],lemon:['y','y','y','Y','Y','Y'],mint:['g','g','g','G','G','G'],rb:['r','o','y','g','b','l'],mix:['m','m','m','M','M','M']};
+Object.entries(CUPC).forEach(([k,c])=>{let j=0;HALF['cup_'+k]=HALF.cup.map(r=>r.includes('q')?r.replace(/q/g,c[Math.min(5,j++)]||c[5]):r)});
+/* 魚：共用模板，換色。面向左 */
+const FT=['','','','.....aaaa.......','...aaaaaaaa..ff.','..aaaaaaaaaafff.','.aaeaaaaaaaaaff.','.aaaaaaaaaaaaf..','..bbbbbbbbbbff..','...bbbbbbbb.f...'];
+function mkFish(k,a,b,f,s,extra){FULL[k]=FT.map((r,y)=>{let o=[...r.padEnd(16,'.')].map((ch,x)=>{if(ch==='a')return(s&&y>=4&&y<=8&&(x===6||x===9))?s:a;if(ch==='b')return(s&&(x===6||x===9)&&y<=8)?s:b;if(ch==='f')return f;if(ch==='e')return'k';return ch});
+ return o.join('')});if(extra)extra.forEach(([x,y,c])=>{const r=[...FULL[k][y]];r[x]=c;FULL[k][y]=r.join('')})}
+mkFish('sardine','m','w','M');mkFish('mackerel','B','c','b','k');mkFish('bream','r','p','R');mkFish('clown','o','o','O','w');mkFish('tuna','B','c','M');
+mkFish('boss1','y','w','o',null,[[7,1,'y'],[9,1,'y'],[8,0,'y'],[8,2,'y']]);mkFish('boss3','l','w','L',null,[[7,1,'h'],[9,1,'h'],[8,0,'h'],[8,2,'h']]);mkFish('grilled','n','t','N','N');
+HALF.boss2=HALF.oct2;
+/* ===== 160×90 海邊場景（canvas，放大時保持像素銳利） ===== */
+const SW=160,SH=90;
+const SKY={day:['#a9dcf7','#c4e8fa','#dff3fc','#fff1d6'],warm:['#9fd3f0','#bfe3f2','#ffe6bd','#ffd0a0'],dusk:['#4b3f86','#7d5aa6','#d98aa0','#ffbf86']};
+SKY.cloud=['#aab7c7','#bfc9d6','#d3dbe4','#e8e4dc'];SKY.rain=['#7f93a8','#95a8bb','#adbdcc','#c9d0d6'];SKY.storm=['#4d5870','#5f6b82','#76819a','#8c93a6'];
+const SEAW={cloud:['#5a9cc0','#78b2d0'],rain:['#4f86a8','#6a9dba'],storm:['#3d6585','#58809e']};
+const SEAC={day:['#6cc3e8','#85d2ef'],warm:['#5fb5dc','#7ec9e8'],dusk:['#3d5f9c','#5a79b4']};
+const BM={heart:['.x.x.','xxxxx','xxxxx','.xxx.','..x..'],star:['..x..','.xxx.','xxxxx','.xxx.','..x..'],coin:['.xx.','xxxx','xxxx','.xx.'],drop:['.x.','xxx','xxx','.x.'],note:['.xx','.x.','.x.','xx.']};
+const Scene={wx:'sun',bob:null,pop:null,flash:0,t:0,sky:'day',mode:'shop',cust:null,cx:-20,tx:80,leaving:false,lh:0,deco:[],shelf:[],parts:[],speck:[],
+ setCust(id){this.cust=id;this.cx=-18;this.leaving=false},
+ leave(){this.leaving=true},
+ burst(type,n=6,x,y){x=x??(this.cust?this.cx+8:80);y=y??66;const col={heart:'#ef6f6c',star:'#ffd966',coin:'#ffd966',drop:'#6cc3e8'}[type];
+  for(let i=0;i<n;i++)this.parts.push({type,col,x:x+(Math.random()-.5)*10,y,vx:(Math.random()-.5)*.6,vy:-.5-Math.random()*.6,life:1.1+Math.random()*.4,age:0})},
+ init(){let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;for(let i=0;i<70;i++)this.speck.push([Math.floor(r()*160),Math.floor(r()*30),r()<.5?0:1])}
+};
+function R(c,x,y,w,h,col){c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h)}
+function bit(c,m,x,y,col){m.forEach((row,j)=>{for(let i=0;i<row.length;i++)if(row[i]==='x')R(c,x+i,y+j,1,1,col)})}
+function drawScene(c,dt){
+ const S=Scene;S.t+=dt;const t=S.t,dig=S.mode==='dig'||S.mode==='fish',dusk=S.sky==='dusk',wx=S.wx||'sun';const sky=dusk?'dusk':(wx!=='sun'?wx:S.sky);
+ const bands=SKY[sky];bands.forEach((col,i)=>R(c,0,i*10,SW,10,col));
+ if(dusk){for(let i=0;i<14;i++){const x=(i*37+11)%160,y=(i*13)%26;if(Math.sin(t*2+i)>-.3)R(c,x,y,1,1,'#fff6d6')}}
+ const sy=dusk?34:15;if(wx==='sun'||dusk){R(c,126,sy-6,13,13,dusk?'#ffb070':'#ffe58a');R(c,124,sy-4,17,9,dusk?'#ffb070':'#ffe58a');R(c,128,sy-8,9,17,dusk?'#ffb070':'#ffe58a');
+ R(c,128,sy-4,9,9,dusk?'#ffd29a':'#fff6bf');}
+ (wx==='sun'?[[10,8,.9],[70,16,.6],[104,6,.75]]:[[10,6,.9],[40,14,.5],[70,4,.6],[104,8,.75],[130,16,.4],[-20,18,.7]]).forEach(([bx,by,sp],i)=>{const x=((bx+t*sp*3)%200)-24;const col=dusk?'#b6a0cf':wx==='sun'?'#ffffff':wx==='cloud'?'#eef1f5':wx==='rain'?'#a3b0c0':'#69738c';R(c,x+3,by+3,16,4,col);R(c,x,by+5,22,4,col);R(c,x+6,by,9,5,col)});
+ if(!dusk&&wx==='sun'){const bx=((t*9)%210)-30,by=24+Math.sin(t*2)*3;const f=Math.sin(t*9)>0?1:0;R(c,bx,by+f,2,1,'#5b4636');R(c,bx+2,by+1-f,2,1,'#5b4636');R(c,bx+4,by+f,2,1,'#5b4636')}
+ // sea
+ const hz=38;const SC=(wx!=='sun'&&!dusk)?SEAW[wx]:SEAC[sky];R(c,0,hz,SW,26,SC[0]);
+ for(let y=hz+3;y<62;y+=4){for(let k=0;k<7;k++){const x=((k*29+y*7+Math.sin(t*.9+y)*5)%170);R(c,x,y,5+(y%3),1,SC[1])}}
+ if(dusk)R(c,120,hz+1,26,1,'#ffb070'),R(c,126,hz+5,16,1,'#ffb070'),R(c,130,hz+9,8,1,'#e58fa0');
+ // lighthouse
+ R(c,10,44,26,8,'#8b8fa3');R(c,12,42,22,3,'#a3a8bb');R(c,8,50,30,3,'#7b7f93');
+ const lx=19;for(let y=16;y<44;y++){const k=Math.floor((y-16)/6)%2;const w=8+Math.floor((y-16)/9);R(c,24-Math.floor(w/2),y,w,1,k?'#ef6f6c':'#fffaf0')}
+ R(c,17,14,14,3,'#3b2f4a');R(c,18,13,12,1,'#5b4a6e');
+ const lit=S.lh>=1;const BEAM=S.lh>=4;R(c,20,6,8,8,lit?'#ffe27a':'#6b6b7e');if(lit){R(c,22,8,4,4,'#fffbe0')}else{R(c,21,7,1,6,'#8a8a9e')}
+ R(c,20,6,1,8,'#3b2f4a');R(c,27,6,1,8,'#3b2f4a');R(c,19,4,10,2,'#3b2f4a');R(c,20,2,8,2,'#ef6f6c');R(c,22,0,4,2,'#ef6f6c');
+ R(c,22,22,4,5,'#6cc3e8');R(c,22,22,4,1,'#3b2f4a');
+ if(lit&&(dusk||BEAM)){c.save();c.globalAlpha=dusk?.28:.14;c.fillStyle='#fff3a8';const a=S.lh>=2?Math.sin(t*.9):0.0;const L=S.lh>=4?130:S.lh>=3?100:S.lh>=2?70:26;
+  c.beginPath();c.moveTo(24,10);c.lineTo(24+L,10+a*30-10);c.lineTo(24+L,10+a*30+12);c.closePath();c.fill();
+  if(S.lh>=4){c.beginPath();c.moveTo(24,10);c.lineTo(24-20,6-a*10);c.lineTo(24-20,16-a*10);c.closePath();c.fill()}
+  c.globalAlpha=dusk?.22:0;c.fillRect(17,3,14,14);c.restore()}
+ // sand
+ const shore=(dig?64:60)+Math.sin(t*.9)*2;
+ R(c,0,Math.round(shore),SW,SH,dusk?'#d9b98f':'#f6dfa8');
+ R(c,0,Math.round(shore)+1,SW,4,dusk?'#b99a76':'#e3c58a');
+ for(let x=0;x<SW;x+=2){R(c,x,Math.round(shore)-1,2,1,'#ffffff');if((x/2+Math.floor(t*2))%3===0)R(c,x,Math.round(shore)-2,1,1,'#e6f6fb')}
+ S.speck.forEach(([x,y,k])=>R(c,x,70+y*0.66,1,1,dusk?'#a98a68':(k?'#e3c58a':'#fffaf0')));
+ // palm
+ const sway=Math.sin(t*1.3)*1.5*(wx==='storm'?3:wx==='rain'?1.6:1);const px=58;for(let i=0;i<26;i++){const x=px+Math.sin(i*.12)*2+sway*i/26;R(c,x,64-i,i>20?2:3,1,i%4===0?'#84552f':'#b9824f')}
+ const tx=px+Math.sin(26*.12)*2+sway+1,ty=38;
+ [[-2.6,0],[-1.7,.3],[-.8,.5],[0.8,.5],[1.7,.3],[2.6,0]].forEach(([dx,dy],k)=>{for(let j=0;j<11;j++){const x=tx+dx*j*1.3+Math.sin(t*1.3+k)*j*.06,y=ty+dy*j*.5+j*j*.1-j*.7;R(c,x,y,2,2,'#4aa97f');R(c,x,y-1,2,1,'#7fd6a4')}});
+ R(c,tx-1,ty+1,2,2,'#84552f');R(c,tx+2,ty+2,2,2,'#84552f');
+ // umbrella
+ if(S.deco.includes('umbrella')){R(c,17,70,2,16,'#b9824f');for(let i=0;i<9;i++){const w=20-Math.abs(i-4)*3;R(c,18-Math.floor(w/2)+1,62+i,w,1,(Math.floor(i/1)%2||true)?'#ffffff':'#fff')}
+  for(let k=0;k<7;k++){const x=7+k*3;R(c,x,62+(k===0||k===6?3:k===1||k===5?1:0),3,5-(k===0||k===6?3:k===1||k===5?1:0)+3,k%2?'#fffaf0':'#ef6f6c')}R(c,6,72,24,1,'#3b2f4a');R(c,28,86,18,3,'#ffd966');R(c,28,86,18,1,'#ef6f6c')}
+ // stall
+ R(c,106,40,3,38,'#84552f');R(c,152,40,3,38,'#84552f');R(c,109,47,43,18,'#f3d9a8');R(c,109,54,43,2,'#b9824f');R(c,109,47,43,1,'#d9b377');
+ R(c,104,66,54,14,'#b9824f');R(c,104,64,54,3,'#d9b377');for(let x=108;x<158;x+=10)R(c,x,69,1,10,'#84552f');R(c,104,79,54,1,'#84552f');
+ // shelf & me
+ S.shelf.slice(0,2).forEach((id,i)=>c.drawImage(sprCanvas(id),110+i*14,48));
+ c.drawImage(sprCanvas('me'),139,49+Math.round(Math.sin(t*2)*.5));
+ R(c,104,64,54,1,'#fff1d0');
+ if(S.deco.includes('pots')){R(c,146,59,6,5,'#c24f5e');R(c,146,59,6,1,'#ef6f6c');R(c,147,56,1,3,'#4aa97f');R(c,149,55,1,4,'#4aa97f');R(c,146,54,3,2,'#f7a8c4');R(c,149,53,3,2,'#ffd966')}
+ // awning
+ for(let i=0;i<9;i++)R(c,102+i*6,36,6,10,i%2?'#fffaf0':'#ef6f6c');R(c,102,35,54,1,'#3b2f4a');
+ for(let i=0;i<9;i++){R(c,102+i*6,46,6,2,i%2?'#fffaf0':'#ef6f6c');R(c,102+i*6+1,48,4,1,i%2?'#eadfcb':'#c24f5e')}
+ if(S.deco.includes('chime')){const sw=Math.sin(t*2.2)*1.2;R(c,112,49,1,5,'#3b2f4a');[['#6cc3e8',-2],['#f7a8c4',0],['#ffd966',2]].forEach(([col,o],k)=>R(c,111+o+sw,54+(k===1?2:0),2,5,col))}
+ if(S.deco.includes('flags')){for(let i=0;i<14;i++){const x=70+i*6,y=28+Math.round(Math.sin(i/13*Math.PI)*4);R(c,x,y,6,1,'#3b2f4a');R(c,x+1,y+1,4,3,['#ef6f6c','#ffd966','#7fd6a4','#6cc3e8'][i%4]);R(c,x+2,y+4,2,1,['#ef6f6c','#ffd966','#7fd6a4','#6cc3e8'][i%4])}}
+ // me on beach (dig mode)
+ if(S.mode==='dig'){c.drawImage(sprCanvas('me'),66+Math.round(Math.sin(t*5)),66)}
+ if(S.mode==='fish'){c.drawImage(sprCanvas('me'),68,60);for(let i=0;i<20;i++)R(c,82+i,60-i*.6,1,1,'#84552f');const b=S.bob;if(b){const bx=b.x,by=44+(b.dip?4:0)+Math.sin(t*3)*(b.reel?2:1);for(let i=0;i<=12;i++){const k=i/12;R(c,102+(bx-102)*k,48+(by-48)*k+Math.sin(k*3)*(b.reel?2:0),1,1,'#ffffff')}R(c,bx-1,by,3,2,'#ef6f6c');R(c,bx-1,by+2,3,1,'#fffaf0');if(b.dip)bit(c,[ '.x.','.x.','.x.','...','.x.'],bx,by-9,'#ef6f6c')}}
+ if(S.pop){S.pop.t+=dt;if(S.pop.t>1.8)S.pop=null;else{c.drawImage(sprCanvas(S.pop.id),66,38-Math.min(8,S.pop.t*14));if(Math.floor(S.pop.t*8)%2)bit(c,BM.star,60,38,'#ffd966'),bit(c,BM.star,86,34,'#ffd966')}}
+ // customer
+ if(S.cust){const spd=S.leaving?-1.4:Math.max(.5,(S.tx-S.cx)*.08);S.cx+=spd*dt*60*.9;if(!S.leaving&&S.cx>S.tx)S.cx=S.tx;if(S.leaving&&S.cx<-20)S.cust=null;
+  if(S.cust){const bob=Math.abs(Math.sin(t*(S.cx<S.tx-1||S.leaving?9:3)))*(S.cx<S.tx-1||S.leaving?2:1);R(c,S.cx+2,82,12,2,'rgba(0,0,0,.15)');c.drawImage(sprCanvas(S.cust),Math.round(S.cx),Math.round(68-bob))}}
+ // particles
+ S.parts=S.parts.filter(p=>{p.age+=dt;p.x+=p.vx;p.y+=p.vy;p.vy+=.01;if(p.age>p.life)return false;c.globalAlpha=Math.max(0,1-p.age/p.life);bit(c,BM[p.type],p.x,p.y,p.col);c.globalAlpha=1;return true});
+ if(wx==='rain'||wx==='storm'){const n=wx==='storm'?70:45;for(let i=0;i<n;i++){const x=((i*37+t*(wx==='storm'?90:40))%180)-10,y=(i*53+t*150)%90;R(c,x-y*.15,y,1,3,'#d6ecff')}}
+ if(wx==='storm'){if(Math.random()<.006)S.flash=.35;if(S.flash>0){c.fillStyle='rgba(255,255,255,'+S.flash+')';c.fillRect(0,0,SW,SH);S.flash-=dt}}
+ if(wx==='cloud'||wx==='rain'){c.fillStyle='rgba(60,70,100,.08)';c.fillRect(0,0,SW,SH)}
+ // tint
+ if(dusk){c.fillStyle='rgba(50,30,110,.18)';c.fillRect(0,0,SW,SH)}else if(sky==='warm'){c.fillStyle='rgba(255,170,90,.07)';c.fillRect(0,0,SW,SH)}
+}
+const ITEMS={
+ shell:{n:'貝殼',v:8,d:'粉粉的扇形貝殼。'},
+ star:{n:'海星',v:12,d:'五隻腳的橘色海星。'},
+ bottle:{n:'漂流瓶',v:15,d:'瓶子裡好像有一張紙。'},
+ glass:{n:'海玻璃',v:10,d:'被海浪磨得圓圓的綠玻璃。'},
+ bucket:{n:'小水桶',v:14,d:'玩沙用的紅色小水桶。'},
+ duck:{n:'泳圈鴨',v:20,d:'黃色小鴨造型的泳圈。'},
+ coin:{n:'海盜金幣',v:40,d:'金色的圓圓硬幣。'},
+ teddy:{n:'泰迪熊',v:25,d:'棕色小熊，脖子上有紅色蝴蝶結。',own:'girl',tag:'背後縫著一塊名字布條：夏'},
+ shades:{n:'太陽眼鏡',v:18,d:'紅色鏡框的太陽眼鏡。',own:'turtle',tag:'鏡框內側刻著一個字：龜'},
+ boat:{n:'小帆船',v:30,d:'白帆紅身的小帆船模型。'},
+ slipper:{n:'拖鞋',v:6,d:'一隻藍色夾腳拖鞋。'},
+ pearl:{n:'珍珠',v:35,d:'圓滾滾的白珍珠。'},
+ sunstone:{n:'太陽石',v:60,d:'晴天才找得到，暖暖的橘色寶石。',nd:1,rare:1},
+ silver:{n:'銀月貝',v:50,d:'陰天才會出現的銀色貝殼。',nd:1,rare:1},
+ rainbow:{n:'彩虹貝',v:70,d:'雨後才有的七彩貝殼。',nd:1,rare:1},
+ chest:{n:'漂流寶箱',v:100,d:'暴風雨沖上岸的小寶箱，沉甸甸的。',nd:1,rare:1},
+ sardine:{n:'沙丁魚',v:8,d:'銀色的小魚。',nd:1,fish:1},
+ mackerel:{n:'鯖魚',v:14,d:'背上有藍色條紋。',nd:1,fish:1},
+ puffer:{n:'河豚',v:18,d:'圓滾滾，生氣會鼓起來。',nd:1,fish:1},
+ bream:{n:'海鯛',v:26,d:'粉紅色的漂亮大魚。',nd:1,fish:1},
+ octopus:{n:'章魚',v:30,d:'紫色的八隻腳。',nd:1,fish:1},
+ clown:{n:'小丑魚',v:34,d:'橘身白條紋，礁岩的明星。',nd:1,fish:1},
+ tuna:{n:'金槍魚',v:52,d:'深海來的大魚，力氣很大。',nd:1,fish:1},
+ boss1:{n:'胖老大',v:120,d:'【防波堤之主】金色的巨大鯖魚。',nd:1,fish:1,boss:1},
+ boss2:{n:'彩虹章魚王',v:180,d:'【礁岩之主】頭戴小皇冠的章魚。',nd:1,fish:1,boss:1},
+ boss3:{n:'月光魚',v:260,d:'【深海之主】像月光一樣的紫色大魚。',nd:1,fish:1,boss:1}
+};
+const CUST={
+ crab:{n:'阿蟹',wish:['shell','star','glass','pearl','silver'],f:1.3,fo:.8,hi:'你好呀！我最喜歡閃亮亮的小東西了。',like:'哇，這個我好喜歡！',meh:'嗯…還可以啦。'},
+ gull:{n:'小白',hi:'嘎嘎！我撿到一樣東西，你要不要收購？'},
+ girl:{n:'小夏',wish:['duck','bucket','slipper','rainbow'],f:1.3,fo:.8,hi:'你好！我想找好玩的玩具。',like:'好可愛，我要這個！',meh:'嗯…我再想想。'},
+ turtle:{n:'龜爺爺',wish:['boat','pearl','coin','sunstone','chest'],f:1.4,fo:.9,hi:'呵呵，我在找適合收藏的好東西。',like:'這個正是我要找的！',meh:'嗯，普普通通。'}
+};
+const ASK={teddy:'我的泰迪熊不見了！棕色的，脖子上有紅色蝴蝶結，背後還縫著我的名字。',shades:'我的太陽眼鏡不見了！紅色鏡框，內側刻著我的名字。'};
+const DAYS={
+ 1:[{c:'crab',t:'buy'},{c:'girl',t:'owner',it:'teddy'},{c:'gull',t:'sell',it:'coin',fake:true},{c:'turtle',t:'buy'}],
+ 2:[{c:'crab',t:'buy'},{c:'turtle',t:'owner',it:'shades'},{c:'gull',t:'sell',it:'bottle'},{c:'girl',t:'buy'}],
+ 3:[{c:'gull',t:'sell',it:'pearl'},{c:'crab',t:'buy'},{c:'turtle',t:'buy'},{c:'girl',t:'buy'}]
+};
+const GUARD={1:['teddy','shell','star','boat','bucket','glass'],2:['shades','duck','shell','glass','star'],3:['shell','boat','duck','star']};
+const POOL=['shell','shell','star','glass','bucket','duck','boat','slipper','slipper','pearl','coin','bottle'];
+const DECOS=[{id:'umbrella',n:'遮陽傘',cost:30,d:'海灘上的大遮陽傘。'},{id:'pots',n:'花盆',cost:20,d:'櫃台上開著小花。'},{id:'chime',n:'風鈴',cost:25,d:'風一吹就叮叮噹噹。'},{id:'flags',n:'彩旗',cost:35,d:'小店掛滿彩色小旗子。'}];
+const LH_COST=[50,150,300,500];
+const DOW=['週一','週二','週三','週四','週五','週六','週日'];
+const WXN={sun:'晴天',cloud:'陰天',rain:'雨天',storm:'暴風雨'};
+const WXRARE={sun:'sunstone',cloud:'silver',rain:'rainbow',storm:'chest'};
+const DRINKS={coco:{n:'椰子冰沙',p:12,r:["coco","ice"],s:'cup_coco'},lemon:{n:'檸檬汽水',p:10,r:["lemon","soda"],s:'cup_lemon'},mint:{n:'薄荷檸檬',p:15,r:["mint","lemon","ice"],s:'cup_mint'},rb:{n:'彩虹氣泡飲',p:26,r:['soda','coco','mint','lemon'],s:'cup_rb',need:1}};
+const INGN={coco:'椰子',lemon:'檸檬',mint:'薄荷',ice:'冰塊',soda:'氣泡水'};
+const DISHES={grill:{n:"烤魚",b:12,s:'grilled',w:.17},soup:{n:"魚湯",b:14,s:'bowl',w:.24},rice:{n:"魚飯糰",b:10,s:'onigiri',w:.2}};
+const WXDRINK={sun:1.3,cloud:1,rain:.8,storm:0},WXDISH={sun:1,cloud:1.1,rain:1.3,storm:1.4};
+const SPOTS=[{id:'pier',n:'防波堤',lv:1,f:[['sardine',50],['mackerel',32],['puffer',18]],boss:'boss1',bw:'rain'},{id:'reef',n:'礁岩區',lv:2,f:[['bream',40],['octopus',28],['clown',22],['mackerel',10]],boss:'boss2',bw:'cloud'},{id:'deep',n:'深海灣',lv:3,f:[['tuna',40],['bream',25],['octopus',20],['clown',15]],boss:'boss3',bw:'sun'}];
+const FD={sardine:[34,.6],mackerel:[30,.8],puffer:[28,1],bream:[26,.9],octopus:[24,1.1],clown:[24,1.2],tuna:[20,1.3],boss1:[20,1.2],boss2:[18,1.4],boss3:[16,1.5]};
+const ROD=[0,0,120,300];
+const NEWS={drink:['新工作：海灘飲料攤','外婆的冰箱裡有一本調飲食譜！今天起，開店前可以去擺飲料攤打工。晴天賣得最好喔。'],cook:['新工作：海邊小食堂','後院的小廚房整理好了！把魚做成烤魚、魚湯、飯糰，下雨天特別受歡迎。'],fish:['週末釣魚！','龜爺爺借你一支釣竿：「週末正適合釣魚。傳說三處海邊各住著一位『海之主』，遇到對的天氣，也許能釣到喔。」暴風雨天不能出海。']};
+const STORY_INTRO=[
+ ['旁白','外婆留下了一間海邊的小雜貨舖。從今天起，你就是新的小店長！'],
+ ['旁白','每天早上海水退潮，沙灘上會冒出許多漂流物。把它們撿回來，洗乾淨，再賣給需要的朋友。'],
+ ['旁白','不過，有些東西是別人弄丟的喔。幫它們找到主人，才是好店長！'],
+ ['旁白','遠處的老燈塔好久沒有亮了。賺到貝幣，就能把燈塔一盞一盞修好。最後一盞還需要一顆稀有的寶石當燈芯！']];
+const LETTER=['外婆的信','給接手小舖的孩子：每一件漂來的東西，都有自己的故事。把它們還給主人，或是賣給需要的人，燈塔的燈就會再亮起來。'];
+const TIPS={dig:'點閃閃發亮的沙地，把漂流物挖出來。海水只退一下下，只能挖 10 次！',prep:'點一個東西來檢查。刷洗乾淨會比較值錢，有名字的東西是別人弄丟的，要放進失物箱。',price:'拉動價格條決定價錢。客人心情好、價錢剛剛好，就能「漂亮成交」拿到小費！'};
+/* ===== 遊戲狀態與規則 ===== */
+let G=null;const KEY='seawave-cozy-v2';
+function newGame(){return{wx:'sun',wxn:rollWx(2),un:{drink:false,cook:false,fish:false,rod:1,rb:false},boss:[],casts:0,day:1,money:30,trust:0,items:[],codex:[],best:{},uid:1,ret:[],stage:'dig',custIdx:0,log:null,sched:[],digs:10,field:[],deco:[],lh:0,bottleRead:false,combo:0,met:[]}}
+function saveG(){try{localStorage.setItem(KEY,JSON.stringify(G))}catch(e){}}
+function loadG(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}}
+function clearG(){try{localStorage.removeItem(KEY)}catch(e){}}
+const wd=()=>pick([0,0,1,1,1,2,2]),MULT=[1,.8,.6];
+function rollWx(day){const r=Math.random();return r<.38?'sun':r<.62?'cloud':r<.9?'rain':'storm'}
+const dow=()=>(G.day-1)%7,weekend=()=>dow()>=5;
+function makeItem(id,o={}){const I=ITEMS[id];const it={uid:G.uid++,id,dirty:I.nd?0:(o.dirty??wd()),crack:o.crack??(['bucket','boat','duck'].includes(id)&&Math.random()<.25),fake:o.fake??(id==='coin'&&Math.random()<.5),loc:'bag',mag:false,mgn:false};
+ if(I.own){it.crack=false;it.dirty=Math.min(it.dirty,1)}return it}
+function addItem(it){G.items.push(it);if(!G.codex.includes(it.id))G.codex.push(it.id);return it}
+function val(it){return it.fake?5:Math.max(1,Math.round(ITEMS[it.id].v*MULT[it.dirty]*(it.crack?.6:1)))}
+function hintRange(it){const v=val(it);return[Math.max(1,Math.round(v*.8)),Math.max(2,Math.round(v*1.3))]}
+function details(it){const I=ITEMS[it.id],L=[];if(!I.nd)L.push(it.dirty==2?'沾滿了沙子和髒東西。':it.dirty==1?'有一點沙子。':'乾乾淨淨，亮晶晶。');else L.push(I.fish?'還活蹦亂跳！':'閃閃發光，保存得很好。');
+ if(it.crack)L.push('有一條小裂縫，會比較不值錢。');if(I.tag)L.push(I.tag+'。');
+ if(it.id==='coin')L.push(it.fake?'邊邊有生鏽的痕跡，圖案有點模糊。':'圖案很清楚，閃閃發亮。');return L}
+function magnetMsg(it){if(it.id==='coin')return it.fake?'啪！被磁鐵吸住了，裡面是鐵做的。':'沒有被吸住。';return'沒有反應。'}
+const inLoc=l=>G.items.filter(i=>i.loc===l);
+const patienceMax=()=>Math.min(5,3+Math.floor((G.deco.length+G.trust)/2));
+function maxPrice(c,it){const C=CUST[c],V=val(it),w=C.wish.includes(it.id);return{M:Math.max(1,Math.round(V*(w?C.f:C.fo))),w}}
+function haggle(c,it,price){const{M,w}=maxPrice(c,it);const r=price<=M*.85?'cheap':price<=M?'great':price<=M*1.3?'high':'toohigh';return{r,M,w}}
+function sellerMin(it){return Math.max(2,Math.round(ITEMS[it.id].v*.55))}
+function makeField(day){const ids=(GUARD[day]||[]).slice();while(ids.length<9)ids.push(pick(POOL));const rp={sun:.35,cloud:.35,rain:.45,storm:1}[G.wx]||0;if(Math.random()<rp)ids[ids.length-1]=WXRARE[G.wx];if(G.wx==='storm'&&Math.random()<.35)ids[ids.length-2]=pick(['sunstone','silver','rainbow']);
+ const order=sh([...Array(20).keys()]),F=Array(20).fill(null);ids.forEach((id,k)=>{F[order[k]]={it:makeItem(id),dug:false}});
+ order.slice(9,12).forEach(i=>{F[i]={it:null,crab:true,dug:false}});return F.map(x=>x||{it:null,dug:false})}
+function schedule(day){if(DAYS[day])return DAYS[day].map(x=>({...x}));
+ const out=[],lost=inLoc('lost').filter(i=>ITEMS[i.id].own);if(lost.length)out.push({c:ITEMS[lost[0].id].own,t:'owner',it:lost[0].id});
+ while(out.length<4){if(Math.random()<.28)out.push({c:'gull',t:'sell',it:pick(['shell','star','glass','bucket','duck','boat','pearl','bottle'])});else out.push({c:pick(['crab','girl','turtle']),t:'buy'})}if(G.day>3){if(weekend())out.push({c:pick(['crab','girl','turtle']),t:'buy'});if(G.wx==='storm')out.pop()}return out}
+/* ===== 聲音：海浪、輕音樂、音效（可開關） ===== */
+const Aud={ctx:null,on:true,master:null,
+ init(){if(this.ctx)return;try{const A=window.AudioContext||window.webkitAudioContext;this.ctx=new A();this.master=this.ctx.createGain();this.master.gain.value=this.on?1:0;this.master.connect(this.ctx.destination);this.waves();this.music()}catch(e){this.ctx=null}},
+ set(on){this.on=on;if(this.master)this.master.gain.value=on?1:0;try{localStorage.setItem('seawave-snd',on?'1':'0')}catch(e){}},
+ tone(f,d=.12,type='square',v=.05,w=0,f2){if(!this.ctx||!this.on)return;const c=this.ctx,o=c.createOscillator(),g=c.createGain(),t=c.currentTime+w;o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.01);g.gain.exponentialRampToValueAtTime(.0008,t+d);o.connect(g);g.connect(this.master);o.start(t);o.stop(t+d+.05)},
+ sfx(n){const T=(...a)=>this.tone(...a);({click:()=>T(620,.06,'square',.04),pop:()=>T(300,.12,'triangle',.08,0,120),find:()=>[660,880,1175].forEach((f,i)=>T(f,.14,'square',.04,i*.07)),
+  scrub:()=>T(200+Math.random()*120,.07,'sawtooth',.03),clean:()=>[880,1320].forEach((f,i)=>T(f,.12,'triangle',.06,i*.08)),coin:()=>{T(988,.08,'square',.04);T(1319,.18,'square',.04,.08)},
+  good:()=>[523,659,784,1047].forEach((f,i)=>T(f,.18,'triangle',.07,i*.09)),no:()=>T(240,.22,'sawtooth',.04,0,150),step:()=>T(420,.05,'triangle',.04),bell:()=>[1047,1568].forEach((f,i)=>T(f,.5,'sine',.05,i*.12)),
+  lamp:()=>[392,523,659,784,1047,1319].forEach((f,i)=>T(f,.5,'triangle',.07,i*.14))}[n]||(()=>{}))()},
+ waves(){const c=this.ctx,len=c.sampleRate*3,b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);let l=0;for(let i=0;i<len;i++){l=l*.97+(Math.random()*2-1)*.03;d[i]=l*6}
+  const s=c.createBufferSource();s.buffer=b;s.loop=true;const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=700;const g=c.createGain();g.gain.value=.05;const lfo=c.createOscillator(),lg=c.createGain();lfo.frequency.value=.11;lg.gain.value=.035;lfo.connect(lg);lg.connect(g.gain);s.connect(f);f.connect(g);g.connect(this.master);s.start();lfo.start()},
+ music(){const sc=[261.6,293.7,329.6,392,440,523.3,587.3],m=this;let i=2;setInterval(()=>{if(!m.on||!m.ctx||document.hidden)return;i=Math.max(0,Math.min(sc.length-1,i+pick([-2,-1,-1,0,1,1,2])));if(Math.random()<.78)m.tone(sc[i],.9,'triangle',.028);if(Math.random()<.2)m.tone(sc[i]/2,1.2,'sine',.03)},560)}
+};
+try{Aud.on=localStorage.getItem('seawave-snd')!=='0'}catch(e){}
+/* ===== 介面與流程 ===== */
+const ACT={};
+const U={fs:null,dk:null,ck:null,news:null,say:null,sel:null,i:0,cs:null,price:10,modal:null,wig:false,cn:false,day:{earn:0,sold:0,tips:0,ret:0,job:0}};
+function stepList(){const a=[['dig','挖寶']];if(weekend()&&G.un.fish)a.push(['fish','釣魚']);a.push(['prep','整理']);if(G.un.drink||G.un.cook)a.push(['job','兼職']);a.push(['shop','開店'],['end','打烊']);return a}
+const FACE={旁白:'shell',小店長:'me',外婆的信:'bottle',燈塔:'star2',外婆的聲音:'heart'};
+const btn=(a,l,c='',d='',dis=false)=>`<button class="b ${c}" data-a="${a}" ${d} ${dis?'disabled':''}>${l}</button>`;
+const hearts=(n,m)=>Array.from({length:m},(_,i)=>spr(i<n?'heart':'heartx',24)).join('');
+function say(who,text,sp){sp=sp||FACE[who]||(CUST[Object.keys(CUST).find(k=>CUST[k].n===who)]?Object.keys(CUST).find(k=>CUST[k].n===who):'me');U.say={who,text,sp};$('#say').innerHTML=`<div class="face">${spr(sp,48)}</div><div class="nm">${who}</div><div class="tx">${text}</div>`}
+const sndBtn=()=>`<button class="chip btn" data-a="snd">音樂：${Aud.on?'開':'關'}</button>`;
+function renderHud(){const h=$('#hud'),s=$('#steps');
+ if(!G){h.innerHTML=`<span class="tt">海浪雜貨舖</span>${sndBtn()}`;s.innerHTML='';return}
+ h.innerHTML=`<span class="tt">海浪雜貨舖</span><span class="chip">第 ${G.day} 天 ${DOW[dow()]}</span><span class="chip wx-${G.wx}">${WXN[G.wx]}</span><span class="chip">${spr('coin',24)} ${G.money}</span><span class="chip">燈塔 ${'★'.repeat(G.lh)}${'☆'.repeat(4-G.lh)}</span><button class="chip btn" data-a="dex">圖鑑</button>${sndBtn()}`;
+ const SL=stepList(),key={drink:'job',cook:'job'}[G.stage]||G.stage,k=SL.findIndex(x=>x[0]===key);s.innerHTML=k<0?'':`<div class="steps">${SL.map((x,i)=>`<span class="${i===k?'on':i<k?'ok':''}">${x[1]}</span>`).join('')}</div>`}
+function syncScene(){const st=G?G.stage:'title';Scene.sky=['shop','job','drink','cook'].includes(st)?'warm':(st==='end'||st==='finale')?'dusk':'day';Scene.mode=st==='dig'?'dig':st==='fish'?'fish':'shop';Scene.wx=G?G.wx:'sun';
+ Scene.lh=G?G.lh:0;Scene.deco=G?G.deco:[];Scene.shelf=G?inLoc('shelf').map(i=>i.id):[]}
+function render(){renderHud();syncScene();const st=G?G.stage:'title';$('#panel').innerHTML=(R_[st]||(()=>''))();renderModal()}
+const R_={};
+/* --- 標題 / 故事 --- */
+R_.title=()=>{const has=!!loadG();return`<div class="title"><h1>海浪雜貨舖</h1><p>撿拾海邊的漂流物，開一間小小的雜貨舖，<br>把東西賣給朋友、還給主人，一起修好老燈塔！</p><div class="row" style="justify-content:center">${has?btn('cont','繼續遊戲','go big'):''}${btn('start',has&&U.cn?'確定要重新開始？':'開始新遊戲',has?'':'go big')}</div><p style="font-size:14px;color:#8a7a72">電腦、手機、平板都能玩 · 點一點就好</p></div>`};
+R_.intro=()=>`<h2>外婆的小舖</h2><p>${U.i+1} / ${STORY_INTRO.length}</p><div class="row">${btn('next','下一句','go big')}</div>`;
+R_.finale=()=>`<h2>燈塔亮了</h2><p>${U.i+1} / ${FIN.length}</p><div class="row">${btn('next','下一句','go big')}</div>`;
+const FIN=[['燈塔','喀嚓——第四盞燈，用稀有的寶石當燈芯，亮起來了！光芒掃過整片海面。'],['外婆的聲音','做得很好，小店長。只要有人需要，這間小舖就會一直亮著。'],['旁白','燈塔重新亮了，海邊的朋友們都來向你道謝。小舖還會繼續營業，慢慢經營你的海浪雜貨舖吧！']];
+/* --- 挖寶 --- */
+R_.dig=()=>{let h=`<h2>退潮挖寶</h2><p class="tip">${TIPS.dig}</p><div class="pips">剩餘 ${Array.from({length:10},(_,i)=>`<span class="pip ${i<G.digs?'':'off'}"></span>`).join('')}</div><div class="sandgrid">`;
+ G.field.forEach((c,i)=>{h+=c.dug?`<div class="cell dug">${c.it?spr(c.it.id,40):c.crab?spr('crab',40):''}</div>`:`<button class="cell ${c.it||c.crab?'sp':''}" data-a="dig" data-i="${i}" aria-label="挖"></button>`});
+ return h+`</div><div class="row"><span class="chip">背包 ${G.items.length} 件</span>${btn('topre',G.digs>0?'先收工，去整理':'去整理貨品','go')}</div>`};
+ACT.dig=d=>{const c=G.field[+d.i];if(!c||c.dug||G.digs<=0)return;c.dug=true;G.digs--;
+ if(c.it){addItem(c.it);Aud.sfx('find');Scene.burst('star',8,78,66);say('小店長',`挖到了「${ITEMS[c.it.id].n}」！${ITEMS[c.it.id].d}`,c.it.id)}
+ else if(c.crab){G.money+=2;Aud.sfx('coin');Scene.burst('heart',4,78,66);say('阿蟹','咕嚕嚕～小螃蟹從沙裡探出頭，送你 2 貝幣當見面禮！','crab')}
+ else{Aud.sfx('pop');say('小店長','這裡只有沙子…再換個地方試試！','me')}
+ if(G.digs<=0)say('小店長','海水漲回來了！收工，把東西帶回小舖整理吧。','me');saveG();render()};
+ACT.topre=()=>{U.sel=null;Aud.sfx('step');if(weekend()&&G.un.fish&&G.wx!=='storm'){G.stage='fish';G.casts=6;U.fs=null;say('龜爺爺','週末正適合釣魚！選一處釣點試試。','turtle')}else{G.stage='prep';say('小店長',weekend()&&G.un.fish?'暴風雨太危險了，今天不能出海釣魚。先整理貨品吧。':'把撿到的東西整理一下，再擺上貨架吧。','me')}saveG();render()};
+/* --- 整理 --- */
+const locTag=it=>it.loc==='shelf'?'<i class="tag">貨架</i>':it.loc==='lost'?'<i class="tag lost">失物</i>':it.dirty==2?'<i class="tag dirt">髒</i>':'';
+const card=(it,a)=>`<button class="card ${U.sel===it.uid?'on':''}" data-a="${a}" data-u="${it.uid}">${spr(it.id,48,'d'+it.dirty)}<span>${ITEMS[it.id].n}</span>${a==='sel'?locTag(it):''}</button>`;
+function detail(it){const I=ITEMS[it.id],[a,b]=hintRange(it),shelfN=inLoc('shelf').length,own=!!I.own;
+ const lines=details(it).map(x=>`<p>${x}</p>`).join('');
+ return`<div class="det box"><div class="big">${spr(it.id,64,'d'+it.dirty+(U.wig?' wig':''))}</div><div class="inf"><b>${I.n}</b><p>${I.d}</p>${lines}${it.mgn?`<p>🧲 ${magnetMsg(it)}</p>`:''}<p>店長直覺：大概值 ${a}～${b} 貝幣</p>${own?'<p style="color:#c24f5e">這是別人弄丟的，要還給主人喔！</p>':''}
+ <div class="row">${it.dirty>0?btn('scrub',`刷洗 <span class="sc">${[0,1,2].map(i=>`<i class="${i<(it.sc||0)?'f':''}"></i>`).join('')}</span>`,'sea'):''}${!it.mgn?btn('mag','磁鐵',''):''}${it.id==='bottle'&&!G.bottleRead?btn('read','打開瓶子','sun'):''}</div>
+ <div class="row">${it.loc!=='shelf'?btn('loc','上貨架','mint',`data-l="shelf"`,shelfN>=6||own):''}${it.loc!=='lost'?btn('loc','失物箱','',`data-l="lost"`):''}${it.loc!=='bag'?btn('loc','放回背包','',`data-l="bag"`):''}${btn('toss','放生','')}</div></div></div>`}
+R_.prep=()=>{const sn=inLoc('shelf').length;let h=`<h2>整理貨品</h2><p class="tip">${TIPS.prep}</p><div class="kv"><span>貨架</span><span>${sn} / 6</span></div>`;
+ h+=G.items.length?`<div class="cards" style="margin-top:8px">${G.items.map(i=>card(i,'sel')).join('')}</div>`:'<div class="empty">背包空空的…</div>';
+ const it=G.items.find(i=>i.uid===U.sel);if(it){h+=detail(it);U.wig=false}
+ return h+`<div class="row">${btn('open',sn?'開店！':'開店（貨架還是空的）','go big')}</div>`};
+const gi=d=>G.items.find(i=>i.uid===+d.u);
+ACT.sel=d=>{U.sel=+d.u;Aud.sfx('click');render()};
+ACT.scrub=()=>{const it=gi({u:U.sel});if(!it||it.dirty<=0)return;it.sc=(it.sc||0)+1;U.wig=true;Aud.sfx('scrub');if(it.sc>=3){it.sc=0;it.dirty--;Aud.sfx('clean');Scene.burst('star',5,100,50);say('小店長',it.dirty?'洗掉一些髒東西了，還有一點點。':'刷得亮晶晶！','me')}saveG();render()};
+ACT.mag=()=>{const it=gi({u:U.sel});if(!it)return;it.mgn=true;Aud.sfx(it.fake?'no':'pop');say('小店長',magnetMsg(it),'me');saveG();render()};
+ACT.read=()=>{G.bottleRead=true;U.modal='letter';Aud.sfx('bell');saveG();render()};
+ACT.loc=d=>{const it=gi({u:U.sel});if(!it)return;it.loc=d.l;Aud.sfx('step');saveG();render()};
+ACT.toss=()=>{G.items=G.items.filter(i=>i.uid!==U.sel);U.sel=null;Aud.sfx('pop');say('小店長','把它放回海裡了，再見～','me');saveG();render()};
+ACT.open=()=>{Aud.sfx('bell');if(G.un.drink||G.un.cook){G.stage='job';say('小店長','開店前，要不要先打一份工多賺一點？','me');saveG();render()}else startShop()};
+function startShop(){G.stage='shop';G.sched=schedule(G.day);G.custIdx=0;Aud.sfx('bell');saveG();nextCust()}
+/* --- 開店 --- */
+function nextCust(){if(G.custIdx>=G.sched.length){endDay();return}const x=G.sched[G.custIdx],C=CUST[x.c];
+ U.cs={x,pat:patienceMax(),item:null,offer:null,done:false,res:'',it2:x.t==='sell'?makeItem(x.it,{fake:!!x.fake,dirty:1}):null};if(!G.met.includes(x.c))G.met.push(x.c);
+ Scene.setCust(x.c);Aud.sfx('bell');say(C.n,x.t==='owner'?ASK[x.it]:x.t==='sell'?`${C.hi}`:C.hi,x.c);G.stage='shop';U.price=10;render()}
+const ask=it=>Math.round(ITEMS[it.id].v*.75);
+function finish(res,saySfx){U.cs.done=true;U.cs.res=res;saveG();render()}
+R_.shop=()=>{const cs=U.cs;if(!cs)return`<div class="empty">…</div>`;const x=cs.x,C=CUST[x.c];
+ let h=`<h2>${C.n}</h2><p style="margin:0 0 6px;font-size:14px;color:#8a7a72">第 ${G.custIdx+1} / ${G.sched.length} 位客人</p>`;
+ if(cs.done)return h+`<div class="empty">${cs.res}</div><div class="row">${btn('nextc',G.custIdx+1>=G.sched.length?'打烊':'下一位','go big')}</div>`;
+ if(x.t==='buy')return h+buyPanel(cs,C);if(x.t==='owner')return h+ownerPanel(cs);return h+sellPanel(cs)};
+function buyPanel(cs,C){const sf=inLoc('shelf');let h=`<div class="hearts">耐心 ${hearts(cs.pat,patienceMax())} ${G.combo>=2?`<span class="combo">連續漂亮成交 ×${G.combo}</span>`:''}</div><p style="margin:4px 0">想找：${C.wish.map(i=>ITEMS[i].n).join('、')}</p>`;
+ if(!sf.length)return h+`<div class="empty">貨架是空的…</div>`+`<div class="row">${btn('skipc','請客人下次再來')}</div>`;
+ const it=cs.item&&G.items.find(i=>i.uid===cs.item);
+ if(!it)return h+`<p class="tip">${TIPS.price}</p><div class="cards">${sf.map(i=>card(i,'offer')).join('')}</div><div class="row">${btn('skipc','請客人先離開')}</div>`;
+ const[a,b]=hintRange(it),mx=Math.max(14,Math.round(val(it)*2.8));
+ h+=`<div class="det box" style="margin-top:6px"><div class="big">${spr(it.id,64,'d'+it.dirty)}</div><div class="inf"><b>${ITEMS[it.id].n}</b><p>店長直覺：大概值 ${a}～${b} 貝幣</p>${details(it).map(x=>`<p style="font-size:13px">${x}</p>`).join('')}</div></div>`;
+ if(cs.offer)return h+`<div class="price"><div class="n">${cs.offer}</div>貝幣（客人的還價）</div><div class="row" style="justify-content:center">${btn('acc',`好，賣你 ${cs.offer} 貝幣`,'mint')}${btn('rej','再想想','')}</div>`;
+ return h+`<div class="price"><div class="n" id="pv">${U.price}</div>貝幣</div><input type="range" id="pr" min="1" max="${mx}" value="${Math.min(U.price,mx)}" aria-label="價格">
+ <div class="row" style="justify-content:center">${btn('pp','−5','','data-v="-5"')}${btn('pp','−1','','data-v="-1"')}${btn('pp','+1','','data-v="1"')}${btn('pp','+5','','data-v="5"')}</div>
+ <div class="row" style="justify-content:center">${btn('ask','喊價！','go big')}${btn('swap','換別的','')}</div>`}
+function ownerPanel(cs){const L=inLoc('lost');return`<p class="tip">請從失物箱裡，找出客人弄丟的東西。</p>`+(L.length?`<div class="cards">${L.map(i=>card(i,'give')).join('')}</div>`:'<div class="empty">失物箱是空的…<br>有名字的東西要放進失物箱喔。</div>')+`<div class="row">${btn('noown','還沒找到…','')}</div>`}
+function sellPanel(cs){const it=cs.it2,p=ask(it),mid=Math.max(sellerMin(it),Math.round((p+sellerMin(it))/2));
+ return`<p class="tip">小白想把這個賣給你。先看清楚再決定要不要買！</p><div class="det box"><div class="big">${spr(it.id,64,'d'+it.dirty)}</div><div class="inf"><b>${ITEMS[it.id].n}</b><p>${ITEMS[it.id].d}</p>${details(it).map(x=>`<p>${x}</p>`).join('')}<p>小白開價：<b>${p}</b> 貝幣</p></div></div>
+ <div class="row">${btn('buys',`買下 ${p}`,'mint',`data-p="${p}"`,G.money<p)}${btn('buys',`還價 ${mid}`,'sun',`data-p="${mid}"`,G.money<mid)}${btn('nos','不用了','')}</div>`}
+ACT.offer=d=>{const cs=U.cs;cs.item=+d.u;const it=G.items.find(i=>i.uid===+d.u),C=CUST[cs.x.c];U.price=Math.max(1,val(it));cs.offer=null;Aud.sfx('click');
+ say(C.n,C.wish.includes(it.id)?C.like:C.meh,cs.x.c);render()};
+ACT.swap=()=>{U.cs.item=null;U.cs.offer=null;Aud.sfx('click');render()};
+ACT.pp=d=>{U.price=Math.max(1,U.price+(+d.v));Aud.sfx('step');const mx=+($('#pr')?.max||99);U.price=Math.min(U.price,mx);$('#pv').textContent=U.price;$('#pr').value=U.price};
+function sale(it,price,tip,msg){G.items=G.items.filter(i=>i!==it);G.money+=price+tip;G.best[it.id]=Math.max(G.best[it.id]||0,price+tip);U.day.earn+=price+tip;U.day.tips+=tip;U.day.sold++;Scene.burst('coin',6);if(tip)Scene.burst('heart',5);Aud.sfx(tip?'good':'coin');finish(msg)}
+ACT.ask=()=>{const cs=U.cs,C=CUST[cs.x.c],it=G.items.find(i=>i.uid===cs.item);if(!it)return;const r=haggle(cs.x.c,it,U.price);
+ if(r.r==='cheap'){G.combo=0;say(C.n,`哇，這麼便宜！謝謝！（其實我願意付到 ${r.M} 貝幣呢）`,cs.x.c);sale(it,U.price,0,`賣出「${ITEMS[it.id].n}」，收到 ${U.price} 貝幣。`)}
+ else if(r.r==='great'){G.combo++;const tip=Math.round(U.price*.2)+Math.max(0,G.combo-1);say(C.n,'成交！這個價錢剛剛好～這是小費！',cs.x.c);sale(it,U.price,tip,`漂亮成交！${U.price} 貝幣＋小費 ${tip}。`)}
+ else if(r.r==='high'){G.combo=0;cs.offer=r.M;say(C.n,`有點貴耶…算 ${r.M} 貝幣可以嗎？`,cs.x.c);Aud.sfx('pop');render()}
+ else{G.combo=0;patLoss(cs,C,'太貴啦！差很多耶！')}};
+function patLoss(cs,C,t){cs.pat--;Aud.sfx('no');Scene.burst('drop',3);if(cs.pat<=0){say(C.n,'算了，我先去別家看看…',cs.x.c);Scene.leave();finish(`${C.n}失望地走了。`)}else{say(C.n,t,cs.x.c);render()}}
+ACT.acc=()=>{const cs=U.cs,it=G.items.find(i=>i.uid===cs.item);sale(it,cs.offer,0,`賣出「${ITEMS[it.id].n}」，收到 ${cs.offer} 貝幣。`)};
+ACT.rej=()=>{const cs=U.cs,C=CUST[cs.x.c];cs.offer=null;patLoss(cs,C,'那我再考慮一下…')};
+ACT.skipc=()=>{const cs=U.cs;Scene.leave();finish(`${CUST[cs.x.c].n}離開了。`)};
+ACT.give=d=>{const cs=U.cs,C=CUST[cs.x.c],it=G.items.find(i=>i.uid===+d.u);if(!it)return;
+ if(it.id===cs.x.it){G.items=G.items.filter(i=>i!==it);G.trust++;G.money+=15;U.day.ret++;U.day.earn+=15;Scene.burst('heart',10);Aud.sfx('good');say(C.n,'找到了！太謝謝你了！這是一點心意，我也會幫你多宣傳～',cs.x.c);finish(`物歸原主！收到 15 貝幣謝禮，信任度 +1。`)}
+ else{Aud.sfx('no');say(C.n,'這不是我的耶…',cs.x.c);render()}};
+ACT.noown=()=>{const cs=U.cs,C=CUST[cs.x.c];say(C.n,'好吧…我再找找看。',cs.x.c);Scene.leave();finish('還沒找到失物，客人先回去了。')};
+ACT.buys=d=>{const cs=U.cs,C=CUST[cs.x.c],p=+d.p;if(G.money<p)return;G.money-=p;addItem(cs.it2);Aud.sfx('coin');say(C.n,'謝謝惠顧！嘎嘎！','gull');Scene.burst('coin',4);finish(`買下了「${ITEMS[cs.it2.id].n}」，花了 ${p} 貝幣。`)};
+ACT.nos=()=>{Scene.leave();say('小白','好吧，那我去別的地方賣。嘎～','gull');finish('你沒有買。')};
+ACT.nextc=()=>{Scene.leave();G.custIdx++;U.cs=null;saveG();$('#panel').innerHTML='<div class="empty">…</div>';setTimeout(nextCust,650)};
+/* --- 打烊 --- */
+function endDay(){G.stage='end';U.cs=null;Scene.cust=null;say('小店長',`今天辛苦了！賣出 ${U.day.sold} 件，賺了 ${U.day.earn} 貝幣。夕陽好漂亮。`,'me');saveG();render()}
+R_.end=()=>{const lh=G.lh<4,need=G.lh===3,rare=G.items.filter(i=>ITEMS[i.id].rare).sort((a,b)=>ITEMS[a.id].v-ITEMS[b.id].v)[0];
+ let h=`<h2>打烊啦</h2><div class="kv"><span>今天賣出</span><span>${U.day.sold} 件</span></div><div class="kv"><span>今天賺到</span><span>${U.day.earn} 貝幣（小費 ${U.day.tips}）</span></div><div class="kv"><span>兼職收入</span><span>${U.day.job} 貝幣</span></div><div class="kv"><span>還給主人</span><span>${U.day.ret} 位</span></div><div class="kv"><span>信任度</span><span>${G.trust}</span></div><div class="kv"><span>明天天氣</span><span>${WXN[G.wxn]}</span></div>`;
+ h+=`<h2 style="margin-top:12px">修理燈塔</h2>`+(lh?`<div class="deco"><span>點亮第 ${G.lh+1} 盞燈<small>${G.lh+1}/4 · 修好後客人更有耐心${need?(rare?`<br>會用掉：${ITEMS[rare.id].n}（燈芯）`:'<br>還需要一顆稀有寶石當燈芯：太陽石、銀月貝、彩虹貝或漂流寶箱'):''}</small></span>${btn('fix',`${LH_COST[G.lh]} 貝幣`,'sea','',G.money<LH_COST[G.lh]||(need&&!rare))}</div>`:`<div class="empty">燈塔已經全部修好了！</div>`);
+ if(G.un.fish&&G.un.rod<3)h+=`<h2 style="margin-top:12px">釣具行</h2><div class="deco"><span>魚竿升級 Lv${G.un.rod+1}<small>可以去「${SPOTS[G.un.rod].n}」釣魚</small></span>${btn('rod',`${ROD[G.un.rod+1]} 貝幣`,'sea','',G.money<ROD[G.un.rod+1])}</div>`;
+ if(G.un.drink&&!G.un.rb)h+=`<h2 style="margin-top:12px">新菜單</h2><div class="deco"><span>彩虹氣泡飲<small>飲料攤新食譜，賣得很貴！</small></span>${btn('recipe','60 貝幣','mint','',G.money<60)}</div>`;
+ h+=`<h2 style="margin-top:12px">小舖佈置</h2>`+DECOS.map(d=>`<div class="deco"><span>${d.n}<small>${d.d} 耐心＋</small></span>${G.deco.includes(d.id)?'<span class="chip">已擺放</span>':btn('buyd',`${d.cost} 貝幣`,'mint',`data-i="${d.id}"`,G.money<d.cost)}</div>`).join('');
+ return h+`<div class="row">${btn('nextd','睡覺，明天見','go big')}</div>`};
+ACT.fix=()=>{const c=LH_COST[G.lh];if(G.money<c)return;if(G.lh===3){const r=G.items.filter(i=>ITEMS[i.id].rare).sort((a,b)=>ITEMS[a.id].v-ITEMS[b.id].v)[0];if(!r)return;G.items=G.items.filter(i=>i!==r)}G.money-=c;G.lh++;Scene.lh=G.lh;Aud.sfx('lamp');if(G.lh>=4&&!G.fin){G.fin=true;G.stage='finale';U.i=0;finShow();saveG();render();return}say('燈塔',`第 ${G.lh} 盞燈亮起來了！`,'star2');saveG();render()};
+ACT.rod=()=>{const c=ROD[G.un.rod+1];if(G.money<c)return;G.money-=c;G.un.rod++;Aud.sfx('bell');say('小店長',`魚竿升級了！可以去${SPOTS[G.un.rod-1].n}釣魚。`,'me');saveG();render()};
+ACT.recipe=()=>{if(G.money<60)return;G.money-=60;G.un.rb=true;Aud.sfx('bell');say('小店長','學會「彩虹氣泡飲」了！','me');saveG();render()};
+ACT.buyd=d=>{const x=DECOS.find(z=>z.id===d.i);if(!x||G.money<x.cost||G.deco.includes(x.id))return;G.money-=x.cost;G.deco.push(x.id);Aud.sfx('bell');say('小店長',`${x.n}擺好了，小舖更漂亮了！`,'me');saveG();render()};
+function beginDay(){G.stage='dig';G.field=makeField(G.day);G.digs=10;U.sel=null;U.day={earn:0,sold:0,tips:0,ret:0,job:0};const hint={sun:'晴天，也許能找到太陽石！',cloud:'陰天，也許能找到銀月貝。',rain:'雨天，雨後常有彩虹貝！',storm:'暴風雨！海邊也許會沖上寶箱，但小心別被浪打到。'}[G.wx];say('小店長',`${DOW[dow()]}，今天是${WXN[G.wx]}。${hint}`,'me');
+ const un=G.day===2?'drink':G.day===4?'cook':G.day===6?'fish':null;if(un&&!G.un[un]){G.un[un]=true;U.modal='news';U.news=NEWS[un]}saveG();render()}
+ACT.nextd=()=>{G.day++;G.wx=G.wxn;G.wxn=rollWx(G.day+1);Aud.sfx('step');beginDay()};
+/* --- 故事 --- */
+const introShow=()=>{const l=STORY_INTRO[U.i];say(l[0],l[1])},finShow=()=>{const l=FIN[U.i];say(l[0],l[1])};
+ACT.next=()=>{Aud.sfx('click');U.i++;U.day=U.day||{earn:0,sold:0,tips:0,ret:0,job:0};if(G.stage==='intro'){if(U.i<STORY_INTRO.length){introShow();render()}else ACT.nextd0()}else{if(U.i<FIN.length){finShow();render()}else{G.stage='end';say('小店長','燈塔亮了，小舖也要繼續營業喔！','me');saveG();render()}}};
+ACT.nextd0=()=>{beginDay()};
+ACT.start=()=>{if(loadG()&&!U.cn){U.cn=true;render();return}U.cn=false;clearG();G=newGame();G.stage='intro';U.i=0;Aud.sfx('bell');introShow();render()};
+ACT.cont=()=>{const s=loadG();if(!s)return;G=s;Aud.sfx('bell');resume()};
+function resume(){let st=G.stage;U.day={earn:0,sold:0,tips:0,ret:0,job:0};if(st==='drink'||st==='cook'){G.stage='job';st='job'}if(st==='shop'){nextCust();return}if(st==='intro'){U.i=0;introShow()}else if(st==='finale'){U.i=0;finShow()}else say('小店長','歡迎回來！','me');render()}
+/* --- 圖鑑 / 其他 --- */
+ACT.dex=()=>{U.modal='dex';Aud.sfx('click');render()};ACT.close=()=>{U.modal=null;render()};
+ACT.snd=()=>{Aud.init();Aud.set(!Aud.on);render()};
+function renderModal(){const m=$('#modal');if(!U.modal||!G){m.hidden=true;m.innerHTML='';return}m.hidden=false;
+ if(U.modal==='letter'){m.innerHTML=`<div class="mb box"><h2>瓶子裡的信</h2><div class="letter"><b>${LETTER[0]}</b><br>${LETTER[1]}</div><div class="row">${btn('close','收好','go')}</div></div>`;return}
+ if(U.modal==='news'){m.innerHTML=`<div class="mb box"><h2>${U.news[0]}</h2><div class="letter">${U.news[1]}</div><div class="row">${btn('close','知道了！','go')}</div></div>`;return}
+ const ids=Object.keys(ITEMS),sec=(t,a)=>`<h2 style="margin-top:12px">${t}</h2><div class="dex">${a.map(id=>{const f=G.codex.includes(id);return`<div class="card" ${ITEMS[id].boss?'style="background:#fff1b3"':''}>${f?spr(id,48):`<span class="q">${spr(id,48)}</span>`}<span>${f?ITEMS[id].n:'？？？'}</span><small>${f&&G.best[id]?'最高 '+G.best[id]:''}</small></div>`}).join('')}</div>`;
+ m.innerHTML=`<div class="mb box"><h2>圖鑑　${G.codex.length} / ${ids.length}　海之主 ${G.boss.length} / 3</h2>${sec('海灘寶物',ids.slice(0,12))}${sec('天氣稀有物',ids.filter(i=>ITEMS[i].rare))}${sec('魚',ids.filter(i=>ITEMS[i].fish))}
+ <h2 style="margin-top:14px">海邊的朋友　信任度 ${G.trust}</h2><div class="dex">${Object.keys(CUST).map(k=>{const f=G.met.includes(k);return`<div class="card">${f?spr(k,48):`<span class="q">${spr(k,48)}</span>`}<span>${f?CUST[k].n:'？？？'}</span></div>`}).join('')}</div><div class="row">${btn('close','關閉','go')}</div></div>`}
+/* ===== 兼職（飲料攤、小食堂）與週末釣魚 ===== */
+let TM=null;const stopTm=()=>{if(TM){clearInterval(TM);clearTimeout(TM);TM=null}};
+const ingImg=(k,px=32)=>spr(k,px);
+function earnJob(n){G.money+=n;U.day.job+=n;U.day.earn+=0}
+/* --- 兼職選擇 --- */
+R_.job=()=>{const st=G.wx==='storm';return`<h2>兼職時間</h2><p class="tip">開店前可以打一份工，多賺一點貝幣（每天一份）。天氣會影響生意喔！</p>
+ ${G.un.drink?`<div class="deco"><span>海灘飲料攤<small>${st?'暴風雨，今天不能擺攤':`天氣加成 ×${WXDRINK[G.wx]}（晴天最好賣）`}</small></span>${btn('jdrink','去擺攤','sea','',st)}</div>`:''}
+ ${G.un.cook?`<div class="deco"><span>海邊小食堂<small>天氣加成 ×${WXDISH[G.wx]}（雨天最受歡迎）</small></span>${btn('jcook','去煮菜','sea')}</div>`:''}
+ <div class="row">${btn('jskip','直接開店','go big')}</div>`};
+ACT.jskip=()=>startShop();ACT.jdone=()=>{stopTm();Scene.cust=null;startShop()};
+/* --- 飲料攤 --- */
+ACT.jdrink=()=>{G.stage='drink';U.dk={n:0,tot:4,earn:0,cup:[],ph:'mix',c:null,d:null,taps:0};Aud.sfx('click');dkNext()};
+function dkNext(){const dk=U.dk;stopTm();if(dk.n>=dk.tot){dk.ph='done';Scene.leave();say('小店長',`飲料攤收工！今天賺了 ${dk.earn} 貝幣。`,'me');saveG();render();return}
+ dk.c=pick(['crab','girl','turtle','gull']);dk.d=pick(Object.keys(DRINKS).filter(k=>!DRINKS[k].need||G.un.rb));dk.cup=[];dk.ph='mix';dk.t0=Date.now();Scene.setCust(dk.c);Aud.sfx('bell');say(CUST[dk.c].n,`我要一杯「${DRINKS[dk.d].n}」！`,dk.c);render()}
+R_.drink=()=>{const dk=U.dk;if(!dk)return'';const D=DRINKS[dk.d]||{};let h=`<h2>海灘飲料攤</h2>`;
+ if(dk.ph==='done')return h+`<div class="empty">今天一共賺了 ${dk.earn} 貝幣！</div><div class="row">${btn('jdone','去開店','go big')}</div>`;
+ h+=`<p style="margin:0 0 6px;font-size:14px;color:#8a7a72">第 ${dk.n+1} / ${dk.tot} 位 · 天氣加成 ×${WXDRINK[G.wx]}</p>`;
+ if(dk.ph==='mix'){h+=`<div class="det box"><div class="big">${spr(dk.c,48)}</div><div class="inf"><b>想要：${D.n}</b><p>${D.r.map(i=>ingImg(i,24)).join(' ＋ ')}</p></div></div>
+  <p class="tip">菜單：${Object.values(DRINKS).filter(x=>!x.need||G.un.rb).map(x=>`${x.n}＝${x.r.map(i=>INGN[i]).join('＋')}`).join('　')}</p>
+  <div class="row" style="justify-content:center;min-height:56px">${spr('cup',48)}${dk.cup.map(i=>ingImg(i,32)).join('')}</div>
+  <div class="cards" style="grid-template-columns:repeat(5,1fr)">${Object.keys(INGN).map(i=>`<button class="card" data-a="ing" data-i="${i}" style="min-height:76px">${ingImg(i,40)}<span style="font-size:12px">${INGN[i]}</span></button>`).join('')}</div>
+  <div class="row">${btn('clr','倒掉重做','')}${btn('shake','搖一搖！','go',"",!dk.cup.length)}</div>`}
+ else if(dk.ph==='shake')h+=`<p class="tip">用力搖！在時間內狂點按鈕，點越多越好喝！</p><div class="price"><div class="n" id="tp">${dk.taps}</div>下</div><div class="sc" style="display:block;height:14px;border:3px solid var(--line);background:#fff;border-radius:6px;overflow:hidden"><i id="tbar" style="display:block;width:100%;height:100%;background:var(--sea);border:0;border-radius:0"></i></div><div class="row" style="justify-content:center">${btn('tap','搖搖搖！','go big')}</div>`;
+ else h+=`<div class="det box"><div class="big">${spr(D.s,64)}</div><div class="inf"><b>${D.n}</b><p>${dk.msg}</p><p>收入：<b>${dk.pay}</b> 貝幣</p></div></div><div class="row">${btn('dnext',dk.n+1>=dk.tot?'收工':'下一位','go big')}</div>`;
+ return h};
+ACT.ing=d=>{const dk=U.dk;if(dk.cup.length>=4)return;dk.cup.push(d.i);Aud.sfx('pop');render()};
+ACT.clr=()=>{U.dk.cup=[];Aud.sfx('click');render()};
+ACT.shake=()=>{const dk=U.dk,D=DRINKS[dk.d];const ok=[...dk.cup].sort().join()===[...D.r].sort().join();
+ if(!ok){Aud.sfx('no');say(CUST[dk.c].n,'嗯？這跟我點的不一樣耶…',dk.c);dk.cup=[];render();return}
+ dk.ph='shake';dk.taps=0;dk.t1=Date.now();render();const dur=2600;TM=setInterval(()=>{const f=Math.max(0,1-(Date.now()-dk.t1)/dur),b=$('#tbar');if(b)b.style.width=f*100+'%';if(f<=0)dkEnd()},40)};
+ACT.tap=()=>{const dk=U.dk;if(dk.ph!=='shake')return;dk.taps++;Aud.sfx('scrub');const e=$('#tp');if(e)e.textContent=dk.taps};
+function dkEnd(){stopTm();const dk=U.dk,D=DRINKS[dk.d];const tip=dk.taps>=14?5:dk.taps>=8?3:dk.taps>=4?1:0,sp=(dk.t1-dk.t0)/1000<14?2:0;const pay=Math.round(D.p*WXDRINK[G.wx])+tip+sp;
+ dk.pay=pay;dk.earn+=pay;earnJob(pay);dk.msg=tip>=3?'搖得超棒，好喝！':'謝謝惠顧～';if(sp)dk.msg+=' 出餐很快，有加分！';dk.ph='show';Aud.sfx('good');Scene.burst('coin',6);Scene.burst('heart',4);say(CUST[dk.c].n,tip>=3?'哇，冰涼好喝！給你小費！':'謝謝！',dk.c);saveG();render()}
+ACT.dnext=()=>{U.dk.n++;Scene.leave();Aud.sfx('step');setTimeout(dkNext,450)};
+/* --- 小食堂 --- */
+ACT.jcook=()=>{G.stage='cook';U.ck={n:0,tot:3,earn:0,ph:'pick',c:null,d:null,fish:null};Aud.sfx('click');ckNext()};
+function ckNext(){const ck=U.ck;stopTm();if(ck.n>=ck.tot){ck.ph='done';Scene.leave();say('小店長',`小食堂打烊！今天賺了 ${ck.earn} 貝幣。`,'me');saveG();render();return}
+ ck.c=pick(['crab','girl','turtle','gull']);ck.d=pick(Object.keys(DISHES));ck.fish=null;ck.ph='pick';Scene.setCust(ck.c);Aud.sfx('bell');say(CUST[ck.c].n,`我想吃「${DISHES[ck.d].n}」！`,ck.c);render()}
+const fishOf=()=>G.items.filter(i=>ITEMS[i.id].fish&&!ITEMS[i.id].boss);
+R_.cook=()=>{const ck=U.ck;if(!ck)return'';const Ds=DISHES[ck.d]||{};let h=`<h2>海邊小食堂</h2>`;
+ if(ck.ph==='done')return h+`<div class="empty">今天一共賺了 ${ck.earn} 貝幣！</div><div class="row">${btn('jdone','去開店','go big')}</div>`;
+ h+=`<p style="margin:0 0 6px;font-size:14px;color:#8a7a72">第 ${ck.n+1} / ${ck.tot} 位 · 天氣加成 ×${WXDISH[G.wx]}</p><div class="det box"><div class="big">${spr(ck.c,48)}</div><div class="inf"><b>想吃：${Ds.n}</b><p>用一條魚來做。魚越大條，賣得越貴！</p></div></div>`;
+ if(ck.ph==='pick'){const F=fishOf();h+=F.length?`<div class="cards" style="margin-top:8px">${F.map(i=>card(i,'cfish')).join('')}</div>`:'<div class="empty">背包裡沒有魚…</div>';
+  return h+`<div class="row">${btn('cbuy','去市場買沙丁魚 6','sun','',G.money<6)}${btn('cskip','這份先不做','')}</div>`}
+ if(ck.ph==='cook'){const half=ck.d==='soup'?18:ck.d==='grill'?14:16;return h+`<p class="tip">看準時機，在游標跑到綠色區域時按「現在！」，正中間最完美！</p><div style="position:relative;height:34px;border:3px solid var(--line);background:#fff;border-radius:6px;overflow:hidden;margin:10px 0"><div style="position:absolute;left:${50-half}%;width:${half*2}%;top:0;bottom:0;background:var(--mint)"></div><div style="position:absolute;left:45%;width:10%;top:0;bottom:0;background:var(--sun)"></div><div id="cur" style="position:absolute;left:0;top:-2px;bottom:-2px;width:8px;background:var(--coral2);border:2px solid var(--line)"></div></div><div class="row" style="justify-content:center">${btn('stop','現在！','go big')}</div>`}
+ return h+`<div class="det box"><div class="big">${spr(Ds.s,64)}</div><div class="inf"><b>${Ds.n}</b><p>${ck.msg}</p><p>收入：<b>${ck.pay}</b> 貝幣</p></div></div><div class="row">${btn('cnext',ck.n+1>=ck.tot?'收工':'下一位','go big')}</div>`};
+ACT.cbuy=()=>{if(G.money<6)return;G.money-=6;addItem(makeItem('sardine'));Aud.sfx('coin');render()};
+ACT.cskip=()=>{U.ck.n++;Scene.leave();setTimeout(ckNext,350)};
+ACT.cfish=d=>{const ck=U.ck;ck.fish=+d.u;ck.ph='cook';ck.pos=0;ck.dir=1;Aud.sfx('click');render();const sp=ck.d==='soup'?85:ck.d==='grill'?125:105;TM=setInterval(()=>{ck.pos+=ck.dir*sp*.03;if(ck.pos>=100){ck.pos=100;ck.dir=-1}if(ck.pos<=0){ck.pos=0;ck.dir=1}const e=$('#cur');if(e)e.style.left=`calc(${ck.pos}% - ${ck.pos*.08}px)`},30)};
+ACT.stop=()=>{const ck=U.ck;if(ck.ph!=='cook')return;stopTm();const it=G.items.find(i=>i.uid===ck.fish);if(!it){ckNext();return}const half=ck.d==='soup'?18:ck.d==='grill'?14:16,dist=Math.abs(ck.pos-50);
+ const q=dist<=5?1.4:dist<=half?1.1:.6;const pay=Math.round((DISHES[ck.d].b+ITEMS[it.id].v*.6)*q*WXDISH[G.wx]);G.items=G.items.filter(i=>i!==it);ck.pay=pay;ck.earn+=pay;earnJob(pay);
+ ck.msg=q>=1.4?'完美！香噴噴！':q>=1.1?'煮得不錯！':'有點焦了…下次小心。';ck.ph='show';Aud.sfx(q>1?'good':'no');Scene.burst(q>1?'heart':'drop',5);say(CUST[ck.c].n,q>1?'好好吃！':'嗯…還可以。',ck.c);saveG();render()};
+ACT.cnext=()=>{U.ck.n++;Scene.leave();Aud.sfx('step');setTimeout(ckNext,450)};
+/* --- 週末釣魚 --- */
+R_.fish=()=>{const fs=U.fs||(U.fs={ph:'pick'});let h=`<h2>週末釣魚</h2><div class="kv"><span>剩餘拋竿次數</span><span>${G.casts}</span></div>`;
+ if(fs.ph==='pick'){h+=`<p class="tip">選釣點、拋竿。浮標下沉時馬上拉竿！魚上鉤後，按住「拉」讓綠色區域追著魚跑。${fs.msg?`<br><b>${fs.msg}</b>`:''}</p>`+SPOTS.map(sp=>`<div class="deco"><span>${sp.n}<small>${G.un.rod>=sp.lv?`海之主：${G.boss.includes(sp.boss)?'已釣到！':'傳說在'+WXN[sp.bw]+'出現'}`:'魚竿 Lv'+sp.lv+' 才能來這裡'}</small></span>${btn('cast','拋竿','sea',`data-s="${sp.id}"`,G.un.rod<sp.lv||G.casts<=0)}</div>`).join('')+`<div class="row">${btn('fdone','收竿，去整理','go')}</div>`}
+ else if(fs.ph==='wait')h+=`<div class="empty">浮標靜靜漂著…<br>等魚來</div>`;
+ else if(fs.ph==='bite')h+=`<div class="empty" style="color:var(--coral2);font-size:24px">！有魚上鉤了！</div><div class="row" style="justify-content:center">${btn('pull','拉竿！','go big')}</div>`;
+ else if(fs.ph==='reel')h+=`<p class="tip">${ITEMS[fs.fish].boss?'是海之主！':'上鉤了！'}按住「拉」，讓綠色區域包住魚。</p><div style="position:relative;height:40px;border:3px solid var(--line);background:#cfeefb;border-radius:6px;overflow:hidden;margin:10px 0"><div id="zone" style="position:absolute;top:0;bottom:0;background:rgba(127,214,164,.85);border-left:3px solid var(--mint2);border-right:3px solid var(--mint2)"></div><div id="fsh" style="position:absolute;top:4px;width:30px;height:30px;margin-left:-15px">${spr(fs.fish,30)}</div></div><div class="sc" style="display:block;height:16px;border:3px solid var(--line);background:#fff;border-radius:6px;overflow:hidden"><i id="fp" style="display:block;height:100%;width:35%;background:var(--coral);border:0;border-radius:0"></i></div><div class="row" style="justify-content:center"><button class="b sea big" id="hold" style="touch-action:none;user-select:none;min-width:200px">按住：拉！</button></div>`;
+ else h+=`<div class="det box"><div class="big">${fs.ok?spr(fs.fish,64):''}</div><div class="inf"><b>${fs.ok?'釣到了！':'魚跑掉了…'}</b><p>${fs.txt}</p></div></div><div class="row">${btn('fcont','繼續','go big')}</div>`;
+ return h};
+ACT.cast=d=>{if(G.casts<=0)return;const sp=SPOTS.find(x=>x.id===d.s);G.casts--;U.fs={ph:'wait',sp};Scene.bob={x:106+Math.random()*14,dip:false,reel:false};Aud.sfx('pop');say('小店長','拋竿！等魚上鉤…','me');render();stopTm();TM=setTimeout(()=>{if(!U.fs||U.fs.ph!=='wait')return;U.fs.ph='bite';Scene.bob.dip=true;Aud.sfx('find');say('小店長','浮標沉下去了！快拉竿！','me');render();TM=setTimeout(()=>{if(U.fs&&U.fs.ph==='bite'){Scene.bob=null;U.fs={ph:'pick',msg:'太慢了，魚跑掉了…'};render()}},1400)},1400+Math.random()*2400)};
+function pickFish(sp){if(!G.boss.includes(sp.boss)&&G.wx===sp.bw&&Math.random()<.22)return sp.boss;const t=sp.f.reduce((a,x)=>a+x[1],0);let r=Math.random()*t;for(const[f,w]of sp.f){if((r-=w)<=0)return f}return sp.f[0][0]}
+ACT.pull=()=>{const fs=U.fs;if(fs.ph!=='bite')return;stopTm();fs.fish=pickFish(fs.sp);fs.ph='reel';fs.zp=50;fs.zv=0;fs.fp=50;fs.ft=50;fs.pr=35;fs.hold=false;fs.t=0;fs.nt=0;Scene.bob.dip=false;Scene.bob.reel=true;Aud.sfx('pop');say('小店長',ITEMS[fs.fish].boss?'好大的力氣…是傳說中的海之主！':'好重！加油！','me');render();
+ const [z,sp]=FD[fs.fish];TM=setInterval(()=>{const dt=.03;fs.t+=dt;fs.zv+=(fs.hold?150:-120)*dt;fs.zv*=.92;fs.zp+=fs.zv*dt;const h=z/2;if(fs.zp<h){fs.zp=h;fs.zv=0}if(fs.zp>100-h){fs.zp=100-h;fs.zv=0}
+  fs.nt-=dt;if(fs.nt<=0){fs.nt=.6+Math.random()*.9;fs.ft=8+Math.random()*84}fs.fp+=(fs.ft-fs.fp)*Math.min(1,dt*sp*2.2);
+  const inz=Math.abs(fs.fp-fs.zp)<=h;fs.pr+=(inz?26:-15)*dt;const e=$('#zone');if(e){e.style.left=(fs.zp-h)+'%';e.style.width=z+'%';$('#fsh').style.left=fs.fp+'%';$('#fp').style.width=Math.max(0,Math.min(100,fs.pr))+'%'}
+  if(fs.pr>=100)fEnd(true);else if(fs.pr<=0||fs.t>32)fEnd(false)},30)};
+function fEnd(ok){stopTm();const fs=U.fs;Scene.bob=null;fs.ph='res';fs.ok=ok;if(ok){const it=addItem(makeItem(fs.fish));const I=ITEMS[fs.fish];Scene.pop={id:fs.fish,t:0};if(I.boss&&!G.boss.includes(fs.sp.boss)){G.boss.push(fs.sp.boss)}fs.txt=`${I.n}！${I.d}`+(I.boss?` （海之主 ${G.boss.length}/3）`:'');Aud.sfx(I.boss?'lamp':'good');say('小店長',I.boss?'釣到海之主了！太厲害了！':`釣到了${I.n}！`,'me');Scene.burst('star',8,80,40)}
+ else{fs.txt='魚掙脫了，下次再試試。';Aud.sfx('no');say('小店長','可惜，魚跑掉了…','me')}saveG();render()}
+ACT.fcont=()=>{if(G.casts<=0){ACT.fdone();return}U.fs={ph:'pick'};render()};
+ACT.fdone=()=>{stopTm();Scene.bob=null;U.fs=null;G.stage='prep';Aud.sfx('step');say('小店長','釣到的魚可以賣，也可以拿去小食堂做料理。先整理貨品吧。','me');saveG();render()};
+document.addEventListener('pointerdown',e=>{if(e.target.closest('#hold')&&U.fs)U.fs.hold=true});
+['pointerup','pointercancel'].forEach(k=>document.addEventListener(k,()=>{if(U.fs)U.fs.hold=false}));
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&U.fs&&U.fs.ph==='reel'){U.fs.hold=true;e.preventDefault()}});document.addEventListener('keyup',e=>{if(e.code==='Space'&&U.fs)U.fs.hold=false});
+/* ===== 啟動 ===== */
+function fit(){const p=$('#stagewrap').parentElement,av=p.clientWidth-8;let s=av/160;const f=Math.floor(s);if(f>=3&&s-f<.3)s=f;const cv=$('#cv');cv.style.width=Math.floor(160*s)+'px';cv.style.height=Math.floor(90*s)+'px'}
+document.addEventListener('click',e=>{Aud.init();const el=e.target.closest('[data-a]');if(!el||el.disabled)return;const f=ACT[el.dataset.a];if(f)f(el.dataset,el)});
+document.addEventListener('input',e=>{if(e.target.id==='pr'){U.price=+e.target.value;$('#pv').textContent=U.price}});
+window.addEventListener('resize',fit);if(window.ResizeObserver)new ResizeObserver(fit).observe(document.body);
+Scene.init();const ctx=$('#cv').getContext('2d');ctx.imageSmoothingEnabled=false;
+let last=performance.now();(function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;drawScene(ctx,dt);requestAnimationFrame(loop)})(last);
+say('外婆的小舖','歡迎來到海邊！','shell');render();fit();
+</script></body></html>
