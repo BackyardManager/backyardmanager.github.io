@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>地底小廚房</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#7fc17a;--panel:#fdf0cf;--panel2:#f7e2b0;--ink:#2e2a3a;--mut:#7a6a58;--gold:#c2521a;--line:#2e2a3a;--org:#ff9a4a;--org2:#c2521a;--blue:#4aa8ff;--grn:#4ad69a;--yel:#ffd45a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'DotGothic16','PingFang TC','Noto Sans TC','Microsoft JhengHei',system-ui,sans-serif;font-size:16px;line-height:1.5}
+body{min-height:100vh;background:linear-gradient(#bfe8c0,#7fc17a 260px,#6aae6e) fixed}
+#app{max-width:1280px;margin:0 auto;padding:max(10px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
+img.px{image-rendering:pixelated;image-rendering:crisp-edges;vertical-align:middle;-webkit-user-drag:none}
+button{font:inherit;color:inherit;cursor:pointer}
+.box{background:var(--panel);border:3px solid var(--line);border-radius:6px;box-shadow:0 4px 0 #4a3a3a,inset 0 0 0 2px #fff6dc}
+#hud{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+#hud .tt{font-family:'DotGothic16',sans-serif;font-size:26px;color:#fff;text-shadow:2px 0 var(--line),-2px 0 var(--line),0 2px var(--line),0 -2px var(--line),2px 2px 0 var(--line);margin-right:auto;letter-spacing:2px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 12px;min-height:38px;background:#b9ecd0;border:3px solid var(--line);border-radius:6px;box-shadow:0 3px 0 #4a3a3a;font-size:15px;color:var(--ink)}
+.chip.btn:active{transform:translateY(2px)}
+.chip.warn{background:#ff8a7a;animation:bl .5s steps(2) infinite}@keyframes bl{50%{background:#fff}}
+#main{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(300px,1fr);gap:14px;align-items:start}
+@media(max-width:900px){#main{grid-template-columns:minmax(0,1fr)}}
+#stagewrap{border:4px solid var(--line);border-radius:6px;background:#07040f;box-shadow:0 5px 0 #4a3a3a;overflow:hidden;line-height:0;display:flex;justify-content:center}
+#cv{display:block;touch-action:manipulation}
+#say{margin-top:12px;padding:10px 14px 12px 82px;min-height:88px;position:relative}
+#say .face{position:absolute;left:12px;top:12px;width:58px;height:58px;background:#b9ecd0;border:3px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center}
+#say .nm{font-size:14px;color:var(--org2);margin-bottom:2px;letter-spacing:1px}#say .tx{font-size:17px}
+#panel{padding:14px 14px 16px}
+h2{margin:0 0 8px;font-size:21px;color:#1f7a5a;letter-spacing:1px}
+.tip{margin:0 0 10px;font-size:14px;color:#6a4a2a;background:#fff;border:2px dashed #d9a64a;border-radius:6px;padding:7px 11px}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+.b{min-height:46px;padding:6px 18px;border:3px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);box-shadow:0 4px 0 #4a3a3a;font-size:17px}
+.b:active{transform:translateY(4px);box-shadow:0 0 0 var(--line)}
+.b:disabled{opacity:.4;cursor:not-allowed}
+.b.go{background:#ff9a4a}.b.sea{background:#6ac0ff}.b.mint{background:#7fe0a4}.b.sun{background:#ffd45a}.b.big{min-height:54px;font-size:20px;padding:8px 24px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.card{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 2px 4px;border:3px solid var(--line);border-radius:6px;background:#fff;box-shadow:0 3px 0 #4a3a3a;font-size:14px;position:relative;min-height:88px;color:var(--ink)}
+.card.on{outline:3px solid var(--org);outline-offset:1px}.card:active{transform:translateY(3px);box-shadow:none}.card small{color:var(--mut);font-size:12px;text-align:center}
+.hero{min-height:210px;padding:10px 6px;font-size:15px;text-align:center}.hero b{font-size:20px;display:block;color:var(--org2)}.hero small{font-size:13px;display:block;margin-top:2px}
+.heroes{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.oil{position:relative;height:28px;border:3px solid var(--line);background:#fff;border-radius:6px;overflow:hidden;min-width:150px;flex:1;box-shadow:0 3px 0 #4a3a3a}
+.oil i{position:absolute;left:0;top:0;bottom:0;background:#ffcf2e}.oil u{position:absolute;top:0;bottom:0;width:3px;background:#ff4a3a}.oil span{position:absolute;inset:0;text-align:center;font-size:14px;line-height:22px;color:var(--ink);text-shadow:1px 0 #fff,-1px 0 #fff,0 1px #fff,0 -1px #fff}
+.dp{display:grid;grid-template-columns:repeat(3,72px);grid-template-rows:repeat(2,64px);gap:6px;justify-content:center;margin:10px 0}
+.dp button{border:3px solid var(--line);border-radius:6px;background:#ffd45a;box-shadow:0 4px 0 #4a3a3a;font-size:24px;color:var(--ink);touch-action:none;user-select:none}.dp button:active{transform:translateY(4px);box-shadow:none}
+.dp .u{grid-column:2;grid-row:1}.dp .l{grid-column:1;grid-row:2}.dp .d{grid-column:2;grid-row:2}.dp .r{grid-column:3;grid-row:2}
+.bag{display:flex;flex-wrap:wrap;gap:4px;min-height:34px;margin:4px 0}.bag span{width:36px;height:36px;border:2px solid var(--line);background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center}.bag span.e{background:#eadfc0;opacity:.7;border-style:dashed}
+.deco{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:2px dotted #b9a070}.deco small{display:block;color:var(--mut);font-size:13px}
+.kv{display:flex;justify-content:space-between;border-bottom:2px dotted #b9a070;padding:3px 0}
+.empty{text-align:center;color:var(--mut);padding:12px}
+.title{text-align:center;padding:6px 4px}.title h1{margin:4px 0;font-family:'DotGothic16',sans-serif;font-size:38px;color:#ff7a2a;text-shadow:2px 0 var(--line),-2px 0 var(--line),0 2px var(--line),0 -2px var(--line),3px 3px 0 var(--line)}.title p{margin:6px 0;color:var(--ink)}
+.buff{display:inline-block;background:#ffd45a;border:2px solid var(--line);border-radius:6px;padding:0 8px;font-size:13px;margin:2px 3px 0 0;color:var(--ink)}
+#modal[hidden]{display:none}#modal{position:fixed;inset:0;background:rgba(30,40,30,.6);display:flex;align-items:center;justify-content:center;padding:14px;z-index:9}
+#modal .mb{max-width:560px;width:100%;max-height:88vh;overflow:auto;padding:16px}
+@media(max-width:520px){html,body{font-size:15px}#say{padding-left:76px}.heroes{gap:8px}.dp{grid-template-columns:repeat(3,68px)}}
+.b.huge{min-height:72px;font-size:24px;flex:1;min-width:120px}.cbtns{display:flex;gap:10px;margin:12px 0}.dots{display:flex;gap:6px;margin-bottom:8px}.dot{min-width:30px;height:26px;padding:0 4px;border:2px solid var(--line);border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#c9a000}.dot.cur{background:#ffd45a;color:var(--ink)}.dot.ok{background:#fff6c8}
+#panel h2{display:flex;align-items:center;gap:8px;margin:-14px -14px 12px;padding:8px 14px;background:#8fe0b8;border-bottom:3px solid var(--line);border-radius:3px 3px 0 0;color:#14513c;font-size:20px}
+.chip.ico{padding:3px 10px;background:#4a3a6a}.chip.ico .px{filter:none}.chip .px{margin-right:2px}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:84px;padding:6px 4px;background:#fff;border:3px solid var(--line);border-radius:6px;box-shadow:0 4px 0 #4a3a3a;font-size:15px;color:var(--ink)}.tile:active{transform:translateY(4px);box-shadow:none}
+.b .px{margin-right:6px}.bk{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;max-height:56vh;overflow:auto;padding:2px}
+.rc{display:flex;gap:10px;align-items:center;padding:6px;background:#fff;border:3px solid var(--line);border-radius:6px}.rc.lock{background:#eadfc0}.rcimg{flex:none;width:76px;display:flex;justify-content:center}.rctx{display:flex;flex-direction:column;min-width:0}.rctx b{font-size:16px}.rctx small{color:var(--mut);font-size:12.5px;line-height:1.35}
+.mb h2{margin:-16px -16px 12px!important;padding:8px 16px;background:#8fe0b8;border-bottom:3px solid var(--line);color:#14513c}
+
+/* ===== 石頭風主題（參考 The Stone GUI Kit 的配色與結構，自行重畫）===== */
+:root{--bg:#2b231b;--panel:#3a3128;--panel2:#463b2f;--ink:#f3e9d2;--mut:#b5a688;--line:#14100b;--gold:#e8b45a;--org:#ffa020;--org2:#ffb84a;--stone:#6a604e;--bronze:#a4783e}
+html,body{color:var(--ink)}
+body{background:#2b231b url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cg fill='none' stroke='%23382d23' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M20 60 L90 110 L130 90 L200 150 L260 130'/%3E%3Cpath d='M300 20 L330 90 L390 120'/%3E%3Cpath d='M60 300 L120 340 L110 400'/%3E%3Cpath d='M250 280 L320 330 L380 310 L410 370'/%3E%3C/g%3E%3C/svg%3E") fixed;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 0,rgba(255,200,120,.10),transparent 60%),radial-gradient(ellipse at 50% 110%,rgba(0,0,0,.45),transparent 60%)}
+#app{position:relative}
+.box{background:linear-gradient(#41372c,#352d24);border:3px solid var(--line);border-radius:12px;box-shadow:inset 0 0 0 3px #6a5a42,inset 0 0 0 5px #231c15,0 6px 0 #0e0b07;color:var(--ink)}
+#hud .tt{font-family:'DotGothic16',sans-serif;font-size:28px;color:#d8cbae;text-shadow:0 3px 0 #14100b,0 0 0 #000,2px 0 #14100b,-2px 0 #14100b;letter-spacing:3px}
+.chip{background:linear-gradient(#3c3328,#2c251d);border:3px solid var(--line);border-radius:12px;box-shadow:inset 0 0 0 2px #54483a,0 4px 0 #0e0b07;color:var(--ink)}
+.chip .px{filter:drop-shadow(0 2px 0 rgba(0,0,0,.5))}
+.chip.btn{background:linear-gradient(#5a4d3c,#443a2d)}
+.chip.ico{background:linear-gradient(#5a4d3c,#443a2d)}
+.chip.warn{background:#c8321f;color:#fff}@keyframes bl{50%{background:#ff7a3a}}
+#stagewrap{border:4px solid var(--line);border-radius:12px;background:#07040f;box-shadow:0 0 0 3px #7a6a50,0 0 0 6px var(--line),0 10px 0 6px #0e0b07}
+#say .nm{color:var(--org2)}
+#say .face{background:radial-gradient(#5a4d3c,#2c251d);border:3px solid #8a7a5a;border-radius:50%;box-shadow:0 0 0 3px var(--line),0 3px 0 3px #0e0b07;width:60px;height:60px;left:14px;top:14px}
+#say{padding-left:92px}
+#panel{margin-top:24px;padding:40px 16px 18px;position:relative}
+#panel h2,.mb h2{position:absolute!important;left:50%;top:-22px;transform:translateX(-50%);margin:0!important;width:max-content;max-width:88%;padding:7px 30px 9px!important;background:linear-gradient(#b98846,#85592c)!important;border:3px solid #2a1b0e!important;border-radius:8px 8px 18px 18px!important;color:#fff3d0!important;text-shadow:0 2px 0 #4a2c10;box-shadow:inset 0 0 0 2px #d8a860,0 4px 0 #1a1008;font-size:19px;z-index:2;white-space:nowrap}
+#panel h2::before,#panel h2::after,.mb h2::before,.mb h2::after{content:'';position:absolute;top:50%;width:10px;height:10px;margin-top:-5px;background:#5a3a1a;border:2px solid #2a1b0e;border-radius:50%}
+#panel h2::before,.mb h2::before{left:8px}#panel h2::after,.mb h2::after{right:8px}
+.mb{position:relative;padding:34px 18px 18px!important;margin-top:18px}
+.mb h2{top:-22px!important}
+.mb h2[style]{position:static!important;transform:none;margin:12px 0 6px!important;width:auto;max-width:none;background:none!important;border:0!important;box-shadow:none;color:var(--gold)!important;padding:0!important;text-shadow:none;border-radius:0!important;white-space:normal;font-size:18px}
+.mb h2[style]::before,.mb h2[style]::after{display:none}
+.tip{background:#2a221b;border:2px dashed #8a7a5a;color:#e8d8a8;border-radius:8px}
+.b{--c1:#a98258;--c2:#85633f;--cb:#2e2012;--cs:#4a3420;min-height:48px;background:linear-gradient(var(--c1),var(--c2));border:3px solid var(--cb);border-radius:11px;box-shadow:0 5px 0 var(--cs),0 5px 0 3px var(--cb),inset 0 2px 0 rgba(255,255,255,.38);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.4);margin-bottom:5px}
+.b:active{transform:translateY(5px);box-shadow:0 0 0 3px var(--cb),inset 0 2px 0 rgba(255,255,255,.3)}
+.b.go{--c1:#ffb830;--c2:#f08a10;--cb:#6a3a08;--cs:#b05a08}
+.b.sea{--c1:#34b4cc;--c2:#1e8aa4;--cb:#0c3a48;--cs:#126a80}
+.b.mint{--c1:#a8d02c;--c2:#7a9e14;--cb:#2c3c06;--cs:#566e0a;color:#fff}
+.b.sun{--c1:#a84ae0;--c2:#7a22b4;--cb:#2c0c48;--cs:#561a82}
+.b:disabled{filter:grayscale(.7) brightness(.8);opacity:.7}
+.card{background:linear-gradient(#2a231b,#211b14);border:3px solid var(--line);border-radius:12px;box-shadow:inset 0 0 0 2px #4a3f32,0 4px 0 #0e0b07;color:var(--ink)}
+.card small,.rctx small,.deco small{color:var(--mut)}
+.card.on{outline:3px solid var(--org);box-shadow:inset 0 0 0 2px var(--org),0 4px 0 #0e0b07;background:linear-gradient(#4a3516,#34260e)}
+.hero b{color:var(--org2)}
+.tile{background:linear-gradient(#7a705c,#585043);border:3px solid var(--line);border-radius:14px;box-shadow:inset 0 2px 0 rgba(255,255,255,.28),inset 0 -3px 0 rgba(0,0,0,.25),0 5px 0 #0e0b07;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.45);font-size:16px}
+.tile .px{filter:drop-shadow(0 3px 0 rgba(0,0,0,.45))}
+.oil{background:#1d1812;border:3px solid var(--line);border-radius:10px;box-shadow:inset 0 0 0 2px #4a3f32,0 4px 0 #0e0b07}
+.oil i{background:linear-gradient(#ffb040,#ff7a10);box-shadow:inset 0 2px 0 rgba(255,255,255,.4)}.oil u{background:#ff3a2a}
+.oil span{color:#fff;text-shadow:0 2px 0 #14100b,1px 0 #14100b,-1px 0 #14100b;display:flex;align-items:center;justify-content:center;gap:4px;line-height:1}
+.dp button{background:linear-gradient(#b98846,#85592c);border:3px solid #2a1b0e;border-radius:12px;box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 5px 0 #4a2c10,0 5px 0 3px #2a1b0e;color:#fff3d0;text-shadow:0 2px 0 #4a2c10}
+.dp button:active{box-shadow:0 0 0 3px #2a1b0e;transform:translateY(5px)}
+.bag span{background:#1d1812;border:2px solid var(--line);box-shadow:inset 0 0 0 2px #3a3025;border-radius:10px}.bag span.e{background:#241d16;opacity:.8}
+.kv,.deco{border-bottom:2px dotted #5a4e3c}
+.empty{color:var(--mut)}
+.title h1{font-size:40px;color:#d8cbae;text-shadow:0 4px 0 #14100b,3px 0 #14100b,-3px 0 #14100b,0 -3px #14100b,0 0 20px rgba(255,160,40,.35);letter-spacing:4px}.title p{color:var(--ink)}
+.buff{background:linear-gradient(#ffb830,#f08a10);border:2px solid #6a3a08;color:#4a2606;border-radius:999px;font-weight:bold}
+#modal{background:rgba(10,7,4,.78)}
+.rc{background:linear-gradient(#2a231b,#211b14);border:3px solid var(--line);box-shadow:inset 0 0 0 2px #4a3f32;border-radius:12px}.rc.lock{background:#1b1610}.rctx b{color:var(--ink)}
+.dot{background:#1d1812;border:2px solid var(--line);color:#ffd45a;border-radius:8px}.dot.cur{background:#ffb830;color:#4a2606}.dot.ok{background:#3a2e12}
+.bk::-webkit-scrollbar{width:10px}.bk::-webkit-scrollbar-thumb{background:#7a6a50;border-radius:5px}
+.heroes{margin-top:6px}
+</style></head><body><div id="app">
+<div id="hud"></div>
+<div id="main"><div><div id="stagewrap"><canvas id="cv" width="320" height="180"></canvas></div><div id="say" class="box"></div></div><div id="panel" class="box"></div></div>
+</div><div id="modal" hidden></div><script>
+/* ===== 中英文切換 ===== */
+let LANG=(()=>{try{const q=new URLSearchParams(location.search).get('lang');if(q==='en'||q==='zh')return q;const s=localStorage.getItem('undergr-lang');if(s==='en'||s==='zh')return s}catch(e){}return /^zh/i.test(navigator.language||'')?'zh':'en'})();
+const EN={"噗噗": "Puff", "圓滾滾的雲朵團": "A round, fluffy cloud blob", "燈油消耗少 20%": "Uses 20% less lamp oil", "長長": "Longo", "長條條的蚯蚓": "A long, wiggly worm", "挖一格，旁邊那格也一起挖開": "Digs the neighboring tile too", "方方": "Boxy", "方塊鼴鼠": "A blocky mole", "挖石頭更省油，背包多 4 格": "Cheaper rock digging, +4 bag slots", "菇菇": "Shroomy", "發光小蘑菇": "A glowing little mushroom", "照得更遠，料理回復多 30%": "Brighter light, dishes restore 30% more", "暖暖蔥湯": "Warm Onion Soup", "燈油 +14": "Oil +14", "香菇濃湯": "Mushroom Chowder", "燈油 +10，接下來 10 次挖石頭更輕鬆": "Oil +10, next 10 rock digs are easier", "發光烤菇": "Glow-Roasted Mushrooms", "燈油 +4，這趟照得更遠": "Oil +4, brighter light this trip", "清涼果凍": "Cool Jelly", "燈油 +6，這趟不怕積水": "Oil +6, safe from water this trip", "岩漿辣地瓜": "Lava Chili Potato", "燈油 +8，這趟不怕熱氣": "Oil +8, safe from heat this trip", "星光果凍": "Starlight Jelly", "燈油 +6，接下來 12 次礦物變雙倍": "Oil +6, next 12 ores are doubled", "辣味海藻湯": "Spicy Seaweed Soup", "燈油 +6，不怕熱氣也不怕積水": "Oil +6, safe from heat and water", "香草烤地瓜": "Herb Roasted Potato", "燈油 +12，接下來 20 步更省油": "Oil +12, next 20 steps cost less oil", "栗子濃湯": "Chestnut Soup", "燈油 +12，接下來 8 次挖石頭更輕鬆": "Oil +12, next 8 rock digs are easier", "栗子地瓜球": "Chestnut Potato Balls", "燈油 +10，這趟背包多 3 格": "Oil +10, +3 bag slots this trip", "香草蔥捲": "Herb Onion Roll", "燈油 +8，接下來 25 步更省油": "Oil +8, next 25 steps cost less oil", "松露菇菇燉飯": "Truffle Mushroom Risotto", "燈油 +16，接下來 10 次礦物變雙倍": "Oil +16, next 10 ores are doubled", "莓果果凍": "Berry Jelly", "燈油 +8，這趟照得更遠": "Oil +8, brighter light this trip", "莓果沙拉": "Berry Salad", "燈油 +9，接下來 20 步更省油": "Oil +9, next 20 steps cost less oil", "夜光松露": "Glowing Truffle", "燈油 +10，照得更遠，還有 8 次雙倍礦物": "Oil +10, brighter light, plus 8 doubled ores", "涼拌蓮藕": "Lotus Root Salad", "燈油 +10，這趟不怕積水": "Oil +10, safe from water this trip", "蓮藕果凍": "Lotus Jelly", "燈油 +8，這趟背包多 3 格": "Oil +8, +3 bag slots this trip", "蓮藕炒蔥": "Lotus & Onion Stir-fry", "燈油 +12，接下來 10 次挖石頭更輕鬆": "Oil +12, next 10 rock digs are easier", "熔岩芒果醬": "Lava Mango Sauce", "燈油 +12，不怕熱氣，還有 15 步更省油": "Oil +12, safe from heat, plus 15 cheaper steps", "芒果地瓜甜點": "Mango Potato Dessert", "燈油 +16，單純好吃": "Oil +16, just delicious", "芒果莓果冰": "Mango Berry Ice", "燈油 +10，這趟不怕熱氣": "Oil +10, safe from heat this trip", "月光星果盤": "Moon & Star Platter", "燈油 +12，接下來 14 次礦物變雙倍": "Oil +12, next 14 ores are doubled", "月光發光湯": "Moonglow Soup", "燈油 +10，照得更遠，還有 20 步更省油": "Oil +10, brighter light, plus 20 cheaper steps", "蜜栗子": "Honey Chestnuts", "燈油 +14，這趟背包多 2 格": "Oil +14, +2 bag slots this trip", "水晶蜜月餅": "Crystal Honey Mooncake", "燈油 +18，接下來 6 次礦物變雙倍": "Oil +18, next 6 ores are doubled", "蜜漿莓果": "Honeyed Berries", "蜜烤地瓜": "Honey-Roasted Potato", "燈油 +16，接下來 6 次挖石頭更輕鬆": "Oil +16, next 6 rock digs are easier", "香草蘑菇": "Herb Mushrooms", "燈油 +10，接下來 8 次挖石頭更輕鬆": "Oil +10, next 8 rock digs are easier", "辣栗子": "Spicy Chestnuts", "燈油 +8，不怕熱氣，還有 6 次省力": "Oil +8, safe from heat, plus 6 easy digs", "松露栗子": "Truffle Chestnuts", "燈油 +16，接下來 12 次礦物變雙倍": "Oil +16, next 12 ores are doubled", "海草香草捲": "Seaweed Herb Roll", "燈油 +9，這趟不怕積水": "Oil +9, safe from water this trip", "怪怪料理": "Weird Dish", "燈油 +3，味道有點奇怪…": "Oil +3, tastes a bit strange…", "鎬子": "Pickaxe", "挖土和石頭更省燈油": "Saves oil when digging dirt and rock", "油壺": "Oil Can", "燈油上限變大": "Bigger oil capacity", "背包": "Backpack", "可以多帶幾樣東西": "Carry more things", "便當盒": "Bento Box", "出發時可以多帶幾個便當": "Carry more bentos when you set out", "燈籠": "Lantern", "照得更遠，看得到更多寶物": "Light reaches farther, so you can spot more treasure", "鍋鍋老闆": "Boss Pot", "歡迎來到地底食堂！村子的燈油快用完了，大家都在等一鍋「大水晶燉鍋」。": "Welcome to the Underground Diner! The village is almost out of lamp oil, and everyone is waiting for a pot of “Great Crystal Stew.”", "螢螢": "Glimmer", "傳說在最深的地方，有一顆會發光的大水晶。我來幫你照路！": "Legend says there is a glowing Great Crystal at the very bottom. I'll light your way!", "礦礦": "Rocky", "挖到的礦石都交給我收購，換成錢就能升級裝備。": "Bring me the ore you dig up. I'll buy it, and the coins let you upgrade your gear.", "路上遇到好吃的食材，也記得帶回來。不同食材一起煮，會有不一樣的效果喔！": "If you find tasty ingredients, bring them back too. Different ingredients cooked together have different effects!", "大水晶、星光果、發光菇……下鍋！咕嚕咕嚕～": "Great Crystal, Starlight Fruit, Glow Mushroom… into the pot! Bubble, bubble~", "哇！整個村子的燈都亮起來了！": "Wow! Every light in the village is glowing again!", "旁白": "Narrator", "地底食堂的燉鍋香味飄滿了整座山。你完成了任務，但地底還有很多沒發現的食譜和寶物，繼續探險吧！": "The aroma of the stew fills the whole mountain. You completed the quest, but there are still many undiscovered recipes and treasures underground. Keep exploring!", "方向鍵／WASD 或下面的按鈕可以挖掘和移動。燈油不夠時，記得按「拉繩子回營地」！": "Use the arrow keys / WASD or the buttons below to dig and move. When oil runs low, remember to press “Rope back to camp”!", "拉繩子回營地要花一點燈油，越深越多。": "Pulling the rope costs a bit of oil — the deeper you are, the more it costs.", "銅塊": "Copper", "銀塊": "Silver", "琥珀": "Amber", "紅寶石": "Ruby", "水晶": "Crystal", "地瓜": "Sweet Potato", "野蔥": "Wild Onion", "香菇": "Shiitake", "發光菇": "Glow Mushroom", "藍果凍": "Blue Jelly", "水草": "Water Grass", "岩漿辣椒": "Lava Chili", "星光果": "Starlight Fruit", "香草葉": "Herb Leaf", "栗子": "Chestnut", "松露": "Truffle", "紫莓": "Purple Berry", "蓮藕": "Lotus Root", "熔岩芒果": "Lava Mango", "月光果": "Moon Fruit", "水晶蜜": "Crystal Honey", "草根洞穴": "Root Cave", "蘑菇森林": "Mushroom Forest", "地下湖": "Underground Lake", "熔岩層": "Lava Layer", "水晶深淵": "Crystal Abyss", "背包滿了！回營地放一放吧。": "Your bag is full! Go back to camp to unload.", "探險家": "Explorer", "音樂": "Music", "燈油": "Oil", "回程": "Return", "最深": "Deepest", "圖鑑": "Codex", "往地底深處挖掘，採集食材、做成料理，": "Dig deep underground, gather ingredients, cook dishes,", "找到傳說中的大水晶，點亮整個村子！": "find the legendary Great Crystal, and light up the whole village!", "繼續遊戲": "Continue", "確定要重新開始？": "Start over for sure?", "開始新遊戲": "New Game", "電腦、手機、平板都能玩": "Plays on PC, phone and tablet", "選擇你的探險家": "Choose Your Explorer", "嗨！選一位探險家，我們要一起去地底囉。": "Hi! Pick an explorer — we're heading underground together.", "下一句": "Next", "大水晶燉鍋完成了！想收集更多食譜和寶物嗎？": "The Great Crystal Stew is done! Want to collect more recipes and treasures?", "你帶回大水晶了！快去煮飯，用大水晶＋星光果＋發光菇做燉鍋！": "You brought back the Great Crystal! Go cook: Great Crystal + Starlight Fruit + Glow Mushroom makes the stew!", "先到第 2 層試試看吧。記得燈油不夠就拉繩子回來！": "Try reaching layer 2 first. If oil runs low, pull the rope back!", "升級裝備可以走得更深。也別忘了食材，煮來吃能補燈油。": "Upgrading gear lets you go deeper. Keep ingredients too — eating them restores oil.", "最深處正中間，有傳說中的大水晶在發光！": "At the very bottom, right in the middle, the legendary Great Crystal is glowing!", "出發": "Set Out", "燈油會加滿。點亮過的營火，之後可以直接從那裡出發。": "Your oil will be refilled. Campfires you have lit can be used as starting points.", "從地面出發": "From the surface", "第": "Layer", "層營火": "campfire", "煮飯（做便當）": "Cook (Make Bento)", "選 2 種食材做成便當，出發時最多帶": "Pick 2 ingredients to make a bento. You can take up to", "個。不同組合有不同效果，試試看！": "per trip. Different combos have different effects — give them a try!", "倉庫沒有食材，先去探險吧。": "No ingredients in storage. Go exploring first!", "選食材…": "Pick ingredients…", "做便當": "Make Bento", "清除": "Clear", "已有便當": "Bentos on hand", "做「大水晶燉鍋」": "Make “Great Crystal Stew”", "有大水晶了！再帶 1 個星光果和 1 個發光菇回來，就能做大水晶燉鍋。": "You have the Great Crystal! Bring back 1 Starlight Fruit and 1 Glow Mushroom to make the stew.", "礦礦的收購站": "Rocky's Ore Shop", "每個": "Each", "貝幣": "coins", "沒有礦物可以賣。": "No ore to sell.", "全部賣掉 +": "Sell all +", "返回": "Back", "升級裝備": "Upgrade Gear", "（滿）": "(Max)", "食譜書": "Recipe Book", "做出新料理就會記進書裡。還沒發現的食譜會給你一點提示：只要見過那種食材，就能看到它的名字。": "New dishes get recorded in the book. Undiscovered recipes give you a hint: once you've seen an ingredient, its name shows up.", "拿手 +20%": "Signature +20%", "熟練 +10%": "Skilled +10%", "還沒發現": "Not found yet", "已做": "Cooked", "次": "times", "提示：": "Hint:", "營地": "Camp", "最深到過": "Deepest reached", "便當": "Bento", "食譜": "Recipes", "出發探險": "Set Out", "煮飯": "Cook", "賣礦": "Sell Ore", "升級": "Upgrade", "返回營地": "Back to Camp", "收購完成，一共": "Sold! Total", "貝幣！": "coins!", "升級了！": "upgraded!", "燈滅了！我把你拉回來了，不過弄掉了一半的東西，帶回": "The lamp went out! I pulled you back, but half your stuff was lost. Brought back", "樣。": "items.", "平安回到營地！帶回": "Back at camp safely! Brought back", "樣東西。": "items.", "還有大水晶！快去煮飯！": "And the Great Crystal! Go cook!", "照遠": "Far Light", "防水": "Waterproof", "防熱": "Heatproof", "力氣": "Strength", "幸運": "Lucky", "輕盈": "Light Feet", "大背包": "Big Bag", "沒有加成": "No boosts", "拉繩子回營地（": "Rope back to camp (", "吃：": "Eat: ", "營火": "Campfire", "營火點亮了！選 2 種食材，現煮現吃，補充燈油。": "Campfire lit! Pick 2 ingredients, cook and eat on the spot to restore oil.", "背包裡沒有食材。": "No ingredients in your bag.", "煮來吃": "Cook & Eat", "繼續探險": "Keep Exploring", "已紮營休息過": "Already rested", "紮營休息（燈油 +10）": "Rest at camp (Oil +10)", "從營火回營地（免費）": "Return to camp (free)", "紮營每座營火每趟只能休息一次；從營火回營地不用花燈油，東西也都帶得走。": "Each campfire can be rested at once per trip. Returning from a campfire costs no oil and you keep everything.", "吃了「": "Ate “", "（新食譜！獎金 +15）": "(New recipe! Bonus +15)", "在營火邊休息了一下，燈油回復了 10 點！": "You rested by the fire and recovered 10 oil!", "吃了便當「": "Ate bento “", "燈油不夠拉繩子了！只能一格一格爬回去，或用料理補油。": "Not enough oil to pull the rope! Climb back tile by tile, or restore oil with a dish.", "新發現：": "New find: ", "咕嚕！踩進積水了，浪費了一些燈油。": "Splash! You stepped in water and wasted some oil.", "好燙！熱氣讓燈油蒸發了。": "Hot! The heat evaporated some oil.", "咳咳！蘑菇孢子噴出來了。": "Cough! Mushroom spores puffed out.", "這是……大水晶！快帶回營地，煮成燉鍋！": "This is… the Great Crystal! Take it back to camp and cook the stew!", "營火點亮了！下次可以直接從這一層出發。": "Campfire lit! Next time you can start from this layer.", "燈油快不夠了！趕快拉繩子回營地，或煮點東西補油！": "Oil is running low! Pull the rope back to camp, or cook something to restore oil!", "探險次數": "Trips", "食材": "Ingredients", "礦物": "Ore", "關閉": "Close", "去皮": "Peel", "切一切": "Chop", "川燙": "Blanch", "調味": "Season", "連續點「刮刮刮」把外皮刮乾淨，越快越好！": "Tap “Scrape” repeatedly to clean off the skin — the faster the better!", "刀子會左右移動，在黃線附近按「切！」，一共切 3 刀。": "The knife moves left and right. Press “Chop!” near the yellow lines — 3 cuts in total.", "按住「放進滾水」，溫度到綠色區間時放開撈起來。": "Hold “Dip in boiling water” and release when the temperature reaches the green zone.", "照著目標數量撒調味料，不多不少最美味。": "Sprinkle the target amount of seasoning — not too much, not too little.", "普通": "Plain", "美味": "Tasty", "絕品": "Perfect", "上菜！": "Serving!", "料理端上桌了…": "Your dish is served…", "評價": "Rating", "效果": "Effect", "加成 ×": "bonus ×", "收下便當": "Take Bento", "切！": "Chop!", "刮刮刮！": "Scrape!", "按住：放進滾水": "Hold: dip in boiling water", "撒！": "Sprinkle!", "好了！": "Done!", "料理：": "Cooking: ", "（空白鍵也可以操作）": "(Space bar works too)", "快速做完（普通）": "Quick finish (Plain)", "收好「": "Packed “", "了！": "!", "溫度": "Temp", "目標": "Target", "下　已撒": "shakes. Sprinkled", "歡迎來到地底食堂！": "Welcome to the Underground Diner!", "地底小廚房": "Underground Kitchen"};
+let ENRE=null;const PUN={'，':',','。':'.','！':'!','？':'?','：':':','；':';','、':',','（':'(','）':')','「':'“','」':'”','～':'~','＋':' + ','／':' / ','\u3000':' '};
+function tr(s){if(LANG==='zh'||typeof s!=='string')return s;
+ if(!ENRE)ENRE=new RegExp(Object.keys(EN).sort((a,b)=>b.length-a.length).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'g');
+ return s.replace(ENRE,k=>EN[k]).replace(/[\u3000-\u303f\uff00-\uffef]/g,c=>PUN[c]??c).replace(/([,.!?:;])(?=[A-Za-z0-9“(])/g,'$1 ').replace(/([A-Za-z0-9])\(/g,'$1 (').replace(/ {2,}/g,' ')}
+function trH(h){if(LANG==='zh')return h;return h.replace(/(<[^>]*>)|([^<]+)/g,(m,tag,txt)=>tag?tag.replace(/(title|alt)="([^"]*)"/g,(a,n,v)=>`${n}="${tr(v)}"`):tr(txt))}
+{const d=Object.getOwnPropertyDescriptor(Element.prototype,'innerHTML');Object.defineProperty(Element.prototype,'innerHTML',{get:d.get,set(v){d.set.call(this,typeof v==='string'?trH(v):v)}})}
+let LASTSAY=null;
+function applyLangMeta(){document.documentElement.lang=LANG==='zh'?'zh-Hant':'en';document.title=LANG==='zh'?'地底小廚房':'Underground Kitchen'}
+function setLang(l){LANG=l;try{localStorage.setItem('undergr-lang',l)}catch(e){}applyLangMeta();render();if(LASTSAY)say(LASTSAY[0],LASTSAY[1])}
+applyLangMeta();
+const $=s=>document.querySelector(s);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const sh=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+/* ===== 繪圖管線：向量著色 → 縮成像素 → 對應調色盤 → 色彩描邊 ===== */
+const hsl2rgb=(h,s,l)=>{h=((h%360)+360)%360/360;s/=100;l/=100;const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q,f=t=>{t=(t+1)%1;return t<1/6?p+(q-p)*6*t:t<.5?q:t<2/3?p+(q-p)*(2/3-t)*6:p};return[Math.round(f(h+1/3)*255),Math.round(f(h)*255),Math.round(f(h-1/3)*255)]};
+const rgb2hsl=(r,g,b)=>{r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h=0,s=0,l=(mx+mn)/2;if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h*=60}return[h,s*100,l*100]};
+const PAL=[];
+(function(){const L=[13,25,38,52,67,82],S=[40,50,62,70,72,66];[8,24,42,68,105,145,172,195,214,238,268,298,328].forEach(h=>L.forEach((l,i)=>PAL.push(hsl2rgb(h+(i<2?-14:i>3?10:0),S[i],l))));
+ [[28,14],[250,16],[22,38],[18,58]].forEach(([h,s])=>[10,20,32,46,62,78,90].forEach(l=>PAL.push(hsl2rgb(h,s,l))));PAL.push([255,255,255],[24,18,36])})();
+const NQ={};function nearest(r,g,b){const k=(r>>2)<<12|(g>>2)<<6|(b>>2);let v=NQ[k];if(v)return v;let[h,s,l]=rgb2hsl(r,g,b);if(s<6){h=0;s=0}else{h=Math.round(h/12)*12;s=Math.round(s/20)*20}l=Math.round(l/11)*11;l=Math.max(6,Math.min(96,l));return NQ[k]=hsl2rgb(h,s,l)}
+const BAY=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5];
+function darker(rgb,f=.38,shift=-18){const[h,s,l]=rgb2hsl(...rgb);return nearest(...hsl2rgb(h+shift,Math.min(80,s+8),Math.max(6,l*f)))}
+/* paint(w,h,ss,fn,opt)：fn(ctx,ss) 在 w*ss × h*ss 的大畫布上用向量畫，回傳 w×h 像素畫布 */
+function paint(w,h,ss,fn,o={}){const big=document.createElement('canvas');big.width=w*ss;big.height=h*ss;const g=big.getContext('2d');g.scale(ss,ss);fn(g,ss,w,h);
+ const d=g.getImageData(0,0,w*ss,h*ss).data,out=document.createElement('canvas');out.width=w;out.height=h;const x=out.getContext('2d'),img=x.createImageData(w,h),px=img.data,dith=o.dither||0,cut=o.cut??.45;
+ for(let y=0;y<h;y++)for(let i=0;i<w;i++){let r=0,gg=0,b=0,a=0;for(let yy=0;yy<ss;yy++)for(let xx=0;xx<ss;xx++){const k=((y*ss+yy)*w*ss+i*ss+xx)*4,al=d[k+3];a+=al;r+=d[k]*al;gg+=d[k+1]*al;b+=d[k+2]*al}
+  const n=ss*ss;if(a/n/255<cut)continue;r/=a;gg/=a;b/=a;const off=dith?(BAY[(y&3)*4+(i&3)]-7.5)*dith:0;const q=nearest(Math.max(0,Math.min(255,r+off))|0,Math.max(0,Math.min(255,gg+off))|0,Math.max(0,Math.min(255,b+off))|0);const k=(y*w+i)*4;px[k]=q[0];px[k+1]=q[1];px[k+2]=q[2];px[k+3]=255}
+ if(o.outline!==false){const src=new Uint8ClampedArray(px),A=(i,y)=>i<0||y<0||i>=w||y>=h?-1:(i+y*w)*4;for(let y=0;y<h;y++)for(let i=0;i<w;i++){const k=(i+y*w)*4;if(src[k+3])continue;let best=null;for(const[dx,dy]of[[0,1],[1,0],[-1,0],[0,-1]]){const kk=A(i+dx,y+dy);if(kk>=0&&src[kk+3]){const c=[src[kk],src[kk+1],src[kk+2]];if(!best||rgb2hsl(...c)[2]<rgb2hsl(...best)[2])best=c}}
+  if(best){const c=o.ol||darker(best);px[k]=c[0];px[k+1]=c[1];px[k+2]=c[2];px[k+3]=255}}}
+ x.putImageData(img,0,0);return out}
+const lin=(g,x0,y0,x1,y1,stops)=>{const gr=g.createLinearGradient(x0,y0,x1,y1);stops.forEach(([t,c])=>gr.addColorStop(t,c));return gr};
+const rad=(g,x0,y0,r0,x1,y1,r1,stops)=>{const gr=g.createRadialGradient(x0,y0,r0,x1,y1,r1);stops.forEach(([t,c])=>gr.addColorStop(t,c));return gr};
+const circ=(g,x,y,r,f)=>{g.fillStyle=f;g.beginPath();g.arc(x,y,r,0,7);g.fill()};
+const elli=(g,x,y,rx,ry,f,rot=0)=>{g.fillStyle=f;g.beginPath();g.ellipse(x,y,rx,ry,rot,0,7);g.fill()};
+const rr=(g,x,y,w,h,r,f)=>{g.fillStyle=f;g.beginPath();g.roundRect(x,y,w,h,r);g.fill()};
+/* 角色（painter 管線）。主角 24×28，NPC 各自尺寸 */
+const CH={};
+const eyes=(g,pts,rx=1.3,ry=1.8)=>pts.forEach(([x,y])=>{elli(g,x,y,rx,ry,'#1d1636');circ(g,x-.45,y-.8,.55,'#fff');circ(g,x+.35,y+.7,.24,'#bfe4ff')});
+const blush=(g,pts,r=1.5)=>{g.globalAlpha=.6;pts.forEach(([x,y])=>circ(g,x,y,r,'#ff8fb8'));g.globalAlpha=1};
+const smile=(g,x,y,r=1.2)=>{g.strokeStyle='#1d1636';g.lineWidth=.45;g.lineCap='round';g.beginPath();g.arc(x,y,r,.15*Math.PI,.85*Math.PI);g.stroke()};
+const helmet=(g,cx,cy,w=7,col=['#fff1a0','#ffd23a','#e09a10'])=>{g.fillStyle=lin(g,0,cy-w*.7,0,cy+1,[[0,col[0]],[.5,col[1]],[1,col[2]]]);g.beginPath();g.moveTo(cx-w,cy+1);g.bezierCurveTo(cx-w,cy-w*1.15,cx+w,cy-w*1.15,cx+w,cy+1);g.closePath();g.fill();
+ rr(g,cx-w-1,cy,w*2+2,1.6,.8,lin(g,0,cy,0,cy+2,[[0,'#f0a820'],[1,'#a05f08']]));g.fillStyle='rgba(255,255,255,.55)';g.beginPath();g.ellipse(cx-w*.35,cy-w*.55,2,1,-.5,0,7);g.fill();
+ circ(g,cx,cy-w*.55,1.7,rad(g,cx,cy-w*.55,.1,cx,cy-w*.55,1.7,[[0,'#ffffff'],[1,'#ffe27a']]));g.globalAlpha=.25;circ(g,cx,cy-w*.55,3.6,'#fff7b0');g.globalAlpha=1};
+const foot=(g,x,y)=>rr(g,x,y,4,4.2,1.6,lin(g,x,y,x,y+4,[[0,'#6c5fb0'],[1,'#2f2a66']]));
+const BL=(g)=>rad(g,8,7,1,12,14,15,[[0,'#bfe4ff'],[.35,'#5aa8ff'],[.75,'#2f6fe0'],[1,'#2548b0']]);
+CH.puff=()=>paint(24,28,10,g=>{foot(g,7,23);foot(g,14,23);const body=BL(g);[[6.5,13,5.2],[12,9.5,6.4],[17.5,13,5.2],[12,15.5,6.2],[7,17.5,3.8],[17,17.5,3.8]].forEach(([x,y,r])=>circ(g,x,y,r,body));
+ g.globalAlpha=.35;elli(g,12,20.5,6,1.3,'#9fd0ff');g.globalAlpha=1;[[3.4,15.5],[20.6,15.5]].forEach(([x,y])=>circ(g,x,y,2.1,rad(g,x-.4,y-.4,.3,x,y,2.3,[[0,'#8ec8ff'],[1,'#2f6fe0']])));
+ blush(g,[[7.2,15.6],[16.8,15.6]]);eyes(g,[[9,13.4],[15,13.4]]);smile(g,12,15.2);helmet(g,12,9,7)});
+CH.worm=()=>paint(24,28,10,g=>{const G=(x,y,r)=>rad(g,x-r*.4,y-r*.5,.5,x,y,r*1.15,[[0,'#c8ffc0'],[.4,'#3fd070'],[.8,'#1b9a48'],[1,'#0f6a34']]);
+ const seg=(x,y,r,band)=>{circ(g,x,y,r,G(x,y,r));if(band){g.save();g.beginPath();g.arc(x,y,r,0,7);g.clip();g.fillStyle='rgba(255,130,200,.85)';g.fillRect(x-r,y+r*.1,r*2,r*.5);g.restore()}};
+ g.globalAlpha=.9;seg(11,24,3.6,1);seg(15,21,4.2,0);seg(9.5,18.2,4.6,1);seg(14,15,4.6,0);g.globalAlpha=1;
+ seg(12,10.6,6.2,0);blush(g,[[7.6,12],[16.4,12]]);eyes(g,[[9.4,10.2],[14.6,10.2]]);smile(g,12,12.2);helmet(g,12,5.6,5.4)});
+CH.mole=()=>paint(24,28,10,g=>{foot(g,7,24);foot(g,13,24);const dk=lin(g,0,8,24,26,[[0,'#6a6490'],[.5,'#34304f'],[1,'#1b1830']]);rr(g,4,9,16,17,6,dk);g.globalAlpha=.25;rr(g,5,10,5,10,3,'#c8c0ff');g.globalAlpha=1;
+ rr(g,8,15.5,8,10,4,lin(g,0,15,0,26,[[0,'#fffbea'],[1,'#e8d8b8']]));
+ [[1.4,17],[17.6,17]].forEach(([x,y])=>{rr(g,x,y,5,5,2.2,lin(g,x,y,x+5,y+5,[[0,'#ffffff'],[1,'#d8d0c0']]));g.strokeStyle='#8a7f9a';g.lineWidth=.3;[1.2,2.5,3.8].forEach(o=>{g.beginPath();g.moveTo(x+o,y+3.4);g.lineTo(x+o,y+5);g.stroke()})});
+ elli(g,12,14.3,1.8,1.3,rad(g,11.4,13.8,.2,12,14.3,1.9,[[0,'#ffc0e0'],[1,'#e0509a']]));[[9,11.8],[15,11.8]].forEach(([x,y])=>{elli(g,x,y,1,1.5,'#fff');circ(g,x,y+.2,.65,'#1d1636');circ(g,x-.2,y-.2,.25,'#fff')});
+ blush(g,[[6.6,14],[17.4,14]],1.2);helmet(g,12,9,6.4,['#ffd2a0','#ff7a3a','#b8400f'])});
+CH.shroom=()=>paint(24,28,10,g=>{foot(g,8,24);foot(g,13,24);rr(g,7.5,12,9,13,4.5,lin(g,7,12,17,24,[[0,'#fffaf0'],[1,'#e8d2b0']]));
+ const cap=rad(g,9,6,1,12,10,14,[[0,'#ff9a70'],[.45,'#ff5a36'],[1,'#b8281c']]);g.fillStyle=cap;g.beginPath();g.moveTo(1.5,13.5);g.bezierCurveTo(1,2.5,23,2.5,22.5,13.5);g.bezierCurveTo(18,15.4,6,15.4,1.5,13.5);g.fill();
+ [[7,8,1.9],[13.5,5.5,1.5],[17.5,9.6,2],[11,11.4,1.1],[4.4,11.6,1]].forEach(([x,y,r])=>circ(g,x,y,r,rad(g,x-.4,y-.4,.2,x,y,r,[[0,'#fff'],[1,'#ffe6d6']])));
+ blush(g,[[9,19],[15,19]],1.2);eyes(g,[[10,17],[14,17]],1,1.4);smile(g,12,19,.9);g.strokeStyle='#d8bfa0';g.lineWidth=.5;g.lineCap='round';g.beginPath();g.moveTo(7.6,17);g.lineTo(4.5,19.5);g.moveTo(16.4,17);g.lineTo(19.5,19.5);g.stroke()});
+CH.pot=()=>paint(30,28,10,g=>{foot(g,8,23.6);foot(g,18,23.6);const iron=rad(g,10,10,1,15,17,16,[[0,'#6a6486'],[.5,'#2e2a44'],[1,'#14111f']]);elli(g,15,17,12.4,8.6,iron);rr(g,2.2,9.5,25.6,4.4,2.2,lin(g,0,9,0,14,[[0,'#8a84a8'],[1,'#34304f']]));
+ [[1,13],[29,13]].forEach(([x,y])=>{g.strokeStyle='#3a3556';g.lineWidth=1.6;g.beginPath();g.arc(x,y,2.2,0,7);g.stroke()});
+ elli(g,15,10.8,11.4,1.8,'#2a2438');elli(g,15,10.4,10.6,1.2,'#d8603a');g.globalAlpha=.7;elli(g,13,10.2,5,.6,'#ffb060');g.globalAlpha=1;
+ [[10.5,16],[19.5,16]].forEach(([x,y])=>{elli(g,x,y,1.8,2.3,'#fff');circ(g,x+.2,y+.3,1.1,'#1d1636');circ(g,x-.4,y-.6,.45,'#fff')});blush(g,[[7.2,19],[22.8,19]],1.6);
+ g.strokeStyle='#ff8fb8';g.lineWidth=.7;g.lineCap='round';g.beginPath();g.arc(15,18.6,2.2,.1*Math.PI,.9*Math.PI);g.stroke();
+ g.fillStyle=lin(g,0,0,0,7,[[0,'#ffffff'],[1,'#e0d8ea']]);[[11,5],[15,3.6],[19,5]].forEach(([x,y])=>circ(g,x,y,3,'#f6f0ff'));rr(g,10,6,10,3,1,lin(g,0,6,0,9,[[0,'#ffffff'],[1,'#cfc6de']]))});
+CH.fly=()=>paint(22,20,10,g=>{g.globalAlpha=.9;[[5.5,7,4.2,2,-.5],[16.5,7,4.2,2,.5]].forEach(([x,y,rx,ry,r])=>elli(g,x,y,rx,ry,lin(g,x-4,y,x+4,y,[[0,'rgba(230,248,255,.95)'],[1,'rgba(150,200,255,.8)']]),r));g.globalAlpha=1;
+ g.strokeStyle='#5a3a2a';g.lineWidth=.45;g.lineCap='round';g.beginPath();g.moveTo(9.4,3.4);g.quadraticCurveTo(8,1.2,6.4,1.4);g.moveTo(12.6,3.4);g.quadraticCurveTo(14,1.2,15.6,1.4);g.stroke();
+ elli(g,11,14.6,4.2,4.6,rad(g,10.4,13.6,.3,11,14.6,5,[[0,'#ffffd0'],[.5,'#ffe040'],[1,'#ffa820']]));circ(g,11,6.8,3.6,rad(g,10,6,.3,11,6.8,4,[[0,'#a0705a'],[1,'#4a2e22']]));
+ [[9.7,6.7],[12.5,6.7]].forEach(([x,y])=>{circ(g,x,y,.95,'#fff');circ(g,x+.1,y+.1,.5,'#1d1636')});smile(g,11.1,8.2,.8);blush(g,[[8.2,8],[13.9,8]],.7)},{outline:true});
+CH.rock=()=>paint(30,28,10,g=>{foot(g,8,23.6);foot(g,18,23.6);const st=rad(g,10,8,1,15,16,16,[[0,'#d8d4e6'],[.4,'#9a96b4'],[.8,'#625e82'],[1,'#3e3a5c']]);g.fillStyle=st;g.beginPath();g.moveTo(3,22);g.bezierCurveTo(1,8,9,3,15,3);g.bezierCurveTo(22,3,29,9,27,22);g.closePath();g.fill();
+ g.strokeStyle='rgba(40,36,70,.55)';g.lineWidth=.5;g.beginPath();g.moveTo(7,10);g.lineTo(10,13);g.lineTo(9,16);g.moveTo(21,8);g.lineTo(19,12);g.stroke();
+ [[18,0,2.2,6],[21,2,1.6,4.5],[15.2,1.8,1.4,4]].forEach(([x,y,w,h],i)=>{g.fillStyle=lin(g,x,y,x+w,y+h,[[0,'#d8ffff'],[1,'#3aa8e8']]);g.beginPath();g.moveTo(x,y+h);g.lineTo(x+w*.5,y);g.lineTo(x+w,y+h);g.closePath();g.fill()});
+ [[10.5,13],[19.5,13]].forEach(([x,y])=>{elli(g,x,y,1.2,1.7,'#fff');circ(g,x,y+.3,.8,'#1d1636');circ(g,x-.3,y-.2,.3,'#fff')});
+ g.fillStyle=lin(g,0,15,0,19,[[0,'#6a4a3a'],[1,'#34221a']]);g.beginPath();g.moveTo(15,17);g.bezierCurveTo(11,15,7,16,5.4,19);g.bezierCurveTo(8,19.6,12,19.8,15,18.6);g.bezierCurveTo(18,19.8,22,19.6,24.6,19);g.bezierCurveTo(23,16,19,15,15,17);g.fill();smile(g,15,20.4,1);blush(g,[[7.2,16.8],[22.8,16.8]],1.3)});
+/* 食材、礦物、裝飾（14×14 左右） */
+const IT={};
+const poly=(g,pts,f)=>{g.fillStyle=f;g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fill()};
+const shine=(g,x,y,r=.7)=>{g.globalAlpha=.9;circ(g,x,y,r,'#fff');g.globalAlpha=1};
+IT.root=()=>paint(14,14,10,g=>{g.save();g.translate(7,7.4);g.rotate(-.55);elli(g,0,0,6.2,3.2,rad(g,-2,-1.4,.4,0,0,6.4,[[0,'#f0a0d0'],[.4,'#c0508c'],[1,'#6a2058']]));g.restore();g.strokeStyle='#6a2058';g.lineWidth=.5;g.lineCap='round';g.beginPath();g.moveTo(2.2,11);g.lineTo(.8,12.6);g.moveTo(11.8,3.4);g.lineTo(12.8,2.2);g.stroke();shine(g,5.4,5.2,.8)});
+IT.onion=()=>paint(14,14,10,g=>{[[7,1.4,4.6,-.1],[7,1.4,2.2,0],[7,1.4,10.2,.15]].forEach(([x,y,tx,ty])=>{g.strokeStyle='#2fb050';g.lineWidth=1.6;g.lineCap='round';g.beginPath();g.moveTo(7,8);g.quadraticCurveTo(x+(tx-7)*.4,y+3,tx,y+ty);g.stroke()});circ(g,7,8.8,4.1,rad(g,5.6,7,.4,7,8.8,4.6,[[0,'#ffffff'],[.6,'#f4eaff'],[1,'#b8a0d0']]));g.strokeStyle='rgba(150,120,190,.5)';g.lineWidth=.3;g.beginPath();g.moveTo(7,5.4);g.quadraticCurveTo(5.4,9,7,13.4);g.moveTo(7,5.4);g.quadraticCurveTo(8.8,9,7,13.4);g.stroke();g.strokeStyle='#d8c0b0';g.lineWidth=.5;g.beginPath();g.moveTo(5.5,13);g.lineTo(5,14);g.moveTo(8.5,13);g.lineTo(9,14);g.stroke()});
+IT.shiitake=()=>paint(14,14,10,g=>{rr(g,5.4,7,3.4,6,1.6,lin(g,5,7,9,13,[[0,'#fff6e0'],[1,'#d8b890']]));g.fillStyle=rad(g,5,4,.5,7,7,7,[[0,'#d09060'],[.5,'#8a5430'],[1,'#4a2a18']]);g.beginPath();g.moveTo(1,8.2);g.bezierCurveTo(1,1.4,13,1.4,13,8.2);g.bezierCurveTo(9,9.6,5,9.6,1,8.2);g.fill();g.strokeStyle='rgba(255,230,190,.55)';g.lineWidth=.4;[[3.4,4.6],[6,3.4],[8.6,3.6],[10.4,5.4]].forEach(([x,y])=>{g.beginPath();g.moveTo(x,y);g.lineTo(x+.8,y+1.4);g.stroke()})});
+IT.glow=()=>paint(14,14,10,g=>{g.globalAlpha=.3;circ(g,7,6,6.6,'#7ff4ff');g.globalAlpha=1;rr(g,5.6,7,2.8,6,1.4,lin(g,5,7,9,13,[[0,'#ffffff'],[1,'#b8e8f0']]));g.fillStyle=rad(g,5.4,3.6,.5,7,6.4,7,[[0,'#d8ffff'],[.5,'#40d8ff'],[1,'#1a7ab8']]);g.beginPath();g.moveTo(1.2,8);g.bezierCurveTo(1,1,13,1,12.8,8);g.bezierCurveTo(9,9.4,5,9.4,1.2,8);g.fill();[[4,5],[8.6,3.6],[10,6]].forEach(([x,y])=>circ(g,x,y,.8,'#fff'))});
+IT.jelly=()=>paint(14,14,10,g=>{g.globalAlpha=.95;g.fillStyle=rad(g,5,5,.5,7,8,7.4,[[0,'#d8f4ff'],[.4,'#58b8ff'],[1,'#1e64d8']]);g.beginPath();g.moveTo(1,11.4);g.bezierCurveTo(.4,4,4,1.6,7,1.6);g.bezierCurveTo(10,1.6,13.6,4,13,11.4);g.bezierCurveTo(10,13,4,13,1,11.4);g.fill();g.globalAlpha=1;
+ [[5,8],[9,8]].forEach(([x,y])=>{circ(g,x,y,1.1,'#1d1636');circ(g,x-.35,y-.4,.4,'#fff')});smile(g,7,9.4,1);elli(g,4.6,4.2,1.7,.9,'rgba(255,255,255,.8)',-.6)});
+IT.kelp=()=>paint(14,14,10,g=>{[[4,'#1f9a46','#7ae08a'],[8,'#2fb055','#a0f0a8'],[11,'#1f9a46','#7ae08a']].forEach(([x,a,b],i)=>{g.strokeStyle=a;g.lineWidth=1.8;g.lineCap='round';g.beginPath();g.moveTo(x,13.4);g.bezierCurveTo(x-3,10,x+3,6,x-1,1.4-i*0);g.stroke();g.strokeStyle=b;g.lineWidth=.6;g.beginPath();g.moveTo(x-.3,12);g.bezierCurveTo(x-3,9,x+3,6,x-1.3,2.4);g.stroke()})});
+IT.chili=()=>paint(14,14,10,g=>{g.strokeStyle=lin(g,2,2,12,12,[[0,'#ff7a5a'],[1,'#a01818']]);g.lineWidth=3.6;g.lineCap='round';g.beginPath();g.moveTo(3.4,3.4);g.bezierCurveTo(8,3.4,11.4,6.4,11,12);g.stroke();g.strokeStyle='rgba(255,200,170,.6)';g.lineWidth=.8;g.beginPath();g.moveTo(4.6,2.6);g.bezierCurveTo(8,2.6,10,4.4,10,7);g.stroke();g.strokeStyle='#2fb050';g.lineWidth=1.3;g.beginPath();g.moveTo(3.2,3.4);g.lineTo(1.4,1.8);g.stroke();poly(g,[[3.4,1.6],[4.6,3.8],[2,4.2]],'#3fd060')});
+IT.star=()=>paint(14,14,10,g=>{const p=[];for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?3.1:6.6;p.push([7+Math.cos(a)*r,7.4+Math.sin(a)*r])}poly(g,p,rad(g,5.4,4.6,.4,7,7.4,7,[[0,'#fffbb8'],[.5,'#ffd030'],[1,'#e08a10']]));g.fillStyle='rgba(255,255,255,.7)';g.beginPath();g.ellipse(5.4,4.6,.9,.5,-.6,0,7);g.fill()});
+const chunk=(a,b,c)=>g=>{[[4.6,8.4,3.6],[9,7.6,3.8],[7,10.2,3.4]].forEach(([x,y,r])=>circ(g,x,y,r,rad(g,x-1,y-1.2,.3,x,y,r*1.1,[[0,a],[.5,b],[1,c]])));[[4,7],[8.4,6],[6.6,9.2]].forEach(([x,y])=>shine(g,x,y,.5))};
+IT.copper=()=>paint(14,14,10,chunk('#ffd0a0','#e08040','#8a3a14'));IT.silver=()=>paint(14,14,10,chunk('#ffffff','#c4cce0','#6c7494'));
+IT.amber=()=>paint(14,14,10,g=>{elli(g,7,7.4,4.6,5.6,rad(g,5.4,5,.4,7,7.4,6.2,[[0,'#fff0a0'],[.45,'#ffb818'],[1,'#b8620a']]));elli(g,5.4,4.6,1.5,2.2,'rgba(255,255,255,.65)',-.4);circ(g,8.6,9.4,.6,'rgba(120,60,0,.6)')});
+IT.ruby=()=>paint(14,14,10,g=>{poly(g,[[7,1.4],[12,5],[10.4,12],[3.6,12],[2,5]],lin(g,2,1,12,12,[[0,'#ff90a0'],[.5,'#e8203c'],[1,'#7a0a24']]));poly(g,[[7,1.4],[12,5],[7,6.6],[2,5]],'rgba(255,200,210,.55)');poly(g,[[7,6.6],[10.4,12],[3.6,12]],'rgba(110,0,30,.35)');shine(g,5,4,.6)});
+IT.crystal=()=>paint(14,14,10,g=>{[[7,1,3.4,12,-.05],[3.6,4.4,2.6,8.4,-.25],[10.6,4.8,2.6,8,.25]].forEach(([x,y,w,h,r])=>{g.save();g.translate(x,y+h);g.rotate(r);poly(g,[[-w/2,0],[-w/2,-h*.7],[0,-h],[w/2,-h*.7],[w/2,0]],lin(g,-w/2,-h,w/2,0,[[0,'#e8ffff'],[.5,'#5ae8ff'],[1,'#1a78c8']]));g.fillStyle='rgba(255,255,255,.5)';g.fillRect(-w/2+.3,-h*.65,.7,h*.5);g.restore()})});
+IT.heart=()=>paint(22,26,10,g=>{g.globalAlpha=.35;circ(g,11,13,11,rad(g,11,13,1,11,13,11,[[0,'#bfffff'],[1,'rgba(90,232,255,0)']]));g.globalAlpha=1;[[11,2,7,22,0],[5.4,8,4.6,14,-.35],[17,8.4,4.6,13,.35]].forEach(([x,y,w,h,r])=>{g.save();g.translate(x,y+h);g.rotate(r);poly(g,[[-w/2,0],[-w/2,-h*.74],[0,-h],[w/2,-h*.74],[w/2,0]],lin(g,-w/2,-h,w/2,0,[[0,'#f0ffff'],[.4,'#5ae8ff'],[1,'#2a62d0']]));poly(g,[[0,-h],[w/2,-h*.74],[w/2,0],[0,0]],'rgba(20,60,160,.25)');g.fillStyle='rgba(255,255,255,.65)';g.fillRect(-w/2+.5,-h*.7,1,h*.5);g.restore()})});
+IT.fire0=()=>paint(16,18,10,g=>{rr(g,2,13.6,12,2.6,1.2,lin(g,0,13,0,16,[[0,'#8a5a32'],[1,'#4a2a18']]));g.save();g.translate(8,13);g.rotate(.3);rr(g,-6,0,12,2.4,1.1,'#6a4220');g.restore();
+ elli(g,8,9.6,4.2,5.6,rad(g,8,12,.5,8,9,6,[[0,'#ffe27a'],[.5,'#ff8a20'],[1,'#d8381a']]));elli(g,8,11,2.2,3.4,rad(g,8,12,.2,8,11,3.4,[[0,'#ffffff'],[1,'#ffd860']]))});
+IT.fire1=()=>paint(16,18,10,g=>{rr(g,2,13.6,12,2.6,1.2,lin(g,0,13,0,16,[[0,'#8a5a32'],[1,'#4a2a18']]));g.save();g.translate(8,13);g.rotate(.3);rr(g,-6,0,12,2.4,1.1,'#6a4220');g.restore();
+ g.fillStyle=rad(g,8,12,.5,8,8,7,[[0,'#ffe27a'],[.5,'#ff8a20'],[1,'#d8381a']]);g.beginPath();g.moveTo(3.8,13);g.bezierCurveTo(3,8,6.4,6,8.4,1.6);g.bezierCurveTo(9.6,5,13,8,12.2,13);g.closePath();g.fill();elli(g,8,11.4,2.2,3.2,rad(g,8,12,.2,8,11,3.4,[[0,'#ffffff'],[1,'#ffd860']]))});
+IT.spore=()=>paint(16,16,10,g=>{[[4.6,11,3.2],[10.6,9,3.8],[7.4,13,2.4]].forEach(([x,y,r])=>{rr(g,x-.8,y,1.6,4.4,.6,'#f0e8f8');g.fillStyle=rad(g,x-1,y-1.2,.3,x,y,r*1.2,[[0,'#ff9ae0'],[.5,'#c050d0'],[1,'#6a1a8a']]);g.beginPath();g.ellipse(x,y,r,r*.75,0,Math.PI,0);g.closePath();g.fill();circ(g,x-r*.3,y-r*.3,.5,'#fff')})});
+IT.vent=(f)=>paint(16,16,10,g=>{g.strokeStyle='#ff7a1a';g.lineWidth=.8;g.lineCap='round';g.beginPath();g.moveTo(2,14);g.lineTo(6,10);g.lineTo(5,6);g.moveTo(6,10);g.lineTo(11,9);g.lineTo(14,5);g.stroke();g.strokeStyle='#ffe27a';g.lineWidth=.35;g.beginPath();g.moveTo(2,14);g.lineTo(6,10);g.lineTo(5,6);g.moveTo(6,10);g.lineTo(11,9);g.lineTo(14,5);g.stroke();g.fillStyle='rgba(255,200,80,.8)';[[5,3+f],[10,5-f],[13,2+f]].forEach(([x,y])=>circ(g,x,y,.6,'#ffe27a'))});
+IT.spark=()=>paint(7,7,8,g=>{g.fillStyle='#fff';g.fillRect(3,0,1,7);g.fillRect(0,3,7,1);g.fillRect(2,2,3,3)},{outline:false});
+const IMG={};const igc=k=>IMG[k]||(IMG[k]=IT[k]());
+IT.herb=()=>paint(14,14,10,g=>{[[-.85,'#3aba5a'],[.85,'#3aba5a'],[0,'#58d878']].forEach(([a,c])=>{g.save();g.translate(7,13);g.rotate(a);elli(g,0,-5,2.3,5.2,lin(g,-2,-10,2,0,[[0,'#c8ffb0'],[1,c]]));g.strokeStyle='rgba(20,110,50,.6)';g.lineWidth=.4;g.beginPath();g.moveTo(0,0);g.lineTo(0,-9.4);g.stroke();g.restore()})});
+IT.nut=()=>paint(14,14,10,g=>{g.fillStyle=rad(g,5,6,.5,7,8.4,5.6,[[0,'#d89a5a'],[.5,'#8a4a22'],[1,'#4a2410']]);g.beginPath();g.moveTo(2.2,9);g.bezierCurveTo(1.6,4.6,5,3,7,3);g.bezierCurveTo(9,3,12.4,4.6,11.8,9);g.bezierCurveTo(11,12.4,3,12.4,2.2,9);g.fill();poly(g,[[3,5.4],[4.4,2],[6,4.2],[7,1.6],[8.2,4.2],[9.8,2],[11,5.4],[7,6.6]],'#e8c070');poly(g,[[4,5.4],[7,5],[10,5.4],[7,6.6]],'#c89a40');shine(g,4.8,8,.8)});
+IT.truffle=()=>paint(14,14,10,g=>{g.fillStyle=rad(g,5,5.6,.5,7,8,6,[[0,'#8a7a70'],[.5,'#4a3e3a'],[1,'#1e1818']]);g.beginPath();g.moveTo(2,8.6);g.bezierCurveTo(1.4,4,5,2.6,7,2.8);g.bezierCurveTo(10.4,2.6,13,5,12.2,9);g.bezierCurveTo(11.6,12.2,3,12.4,2,8.6);g.fill();[[4.6,6],[8,4.8],[10,7.6],[6,9.4],[8.6,10]].forEach(([x,y])=>circ(g,x,y,.8,'rgba(210,190,170,.55)'));shine(g,4.4,4.8,.7)});
+IT.berry=()=>paint(14,14,10,g=>{[[4.6,9.4,3.1],[9.4,9,3.1],[7,5.6,3.1]].forEach(([x,y,r])=>{circ(g,x,y,r,rad(g,x-1,y-1,.3,x,y,r,[[0,'#e0a0ff'],[.5,'#8a38d0'],[1,'#3a1470']]));shine(g,x-1,y-1,.55)});poly(g,[[7,3],[9.6,1],[10.6,2.8]],'#3fd060');poly(g,[[7,3],[4.8,1.2],[4,3]],'#2fb050')});
+IT.lotus=()=>paint(14,14,10,g=>{circ(g,7,7.4,6.2,rad(g,5,5.4,.5,7,7.4,6.4,[[0,'#fff8f4'],[.6,'#f4d4dc'],[1,'#d89aac']]));[[7,4],[4.2,6.2],[9.8,6.2],[5.2,9.6],[8.8,9.6]].forEach(([x,y])=>circ(g,x,y,1.25,'#c06a88'));circ(g,7,7.2,.8,'#c06a88')});
+IT.mango=()=>paint(14,14,10,g=>{g.save();g.translate(7,8);g.rotate(-.5);elli(g,0,0,4.4,5.6,rad(g,-1.4,-2,.4,0,0,6,[[0,'#ffe27a'],[.45,'#ff9a3a'],[1,'#d83a18']]));g.restore();g.strokeStyle='rgba(255,230,80,.9)';g.lineWidth=.4;g.beginPath();g.moveTo(6,6);g.lineTo(7.4,8);g.lineTo(6.6,10);g.moveTo(8.6,6.6);g.lineTo(9.4,8.4);g.stroke();poly(g,[[8.4,2.6],[11.4,1.2],[10.4,3.8]],'#3fd060');shine(g,5.2,5.4,.7)});
+IT.moon=()=>paint(14,14,10,g=>{g.globalAlpha=.28;circ(g,7,7.2,6.8,'#cfe4ff');g.globalAlpha=1;circ(g,7,7.2,5.2,rad(g,5.4,5.4,.5,7,7.2,5.6,[[0,'#ffffff'],[.6,'#d8e8ff'],[1,'#8aa8e8']]));[[8.6,5.4,1.1],[5.6,9,.9],[9.2,9.2,.7]].forEach(([x,y,r])=>circ(g,x,y,r,'rgba(120,150,220,.45)'));[[2,2],[12,3],[11.6,11.6]].forEach(([x,y])=>circ(g,x,y,.6,'#fff'))});
+IT.honey=()=>paint(14,14,10,g=>{const p=[];for(let i=0;i<6;i++){const a=Math.PI/6+i*Math.PI/3;p.push([7+Math.cos(a)*5.8,7+Math.sin(a)*5.8])}poly(g,p,lin(g,2,2,12,12,[[0,'#fff0a0'],[.5,'#ffc030'],[1,'#c87a10']]));poly(g,[[7,7],[p[0][0],p[0][1]],[p[1][0],p[1][1]]],'rgba(255,255,220,.5)');poly(g,[[7,7],[p[3][0],p[3][1]],[p[4][0],p[4][1]]],'rgba(160,90,10,.4)');g.strokeStyle='rgba(120,60,0,.4)';g.lineWidth=.4;p.forEach(([x,y])=>{g.beginPath();g.moveTo(7,7);g.lineTo(x,y);g.stroke()});shine(g,4.6,4.8,.8)});
+/* ===== 介面小圖示（16×16 像素風）：整個遊戲共用 ===== */
+const UI={};
+UI.coin=()=>paint(16,16,8,g=>{circ(g,8,8,6.6,rad(g,6,5.4,.5,8,8,7,[[0,'#fff3a0'],[.5,'#ffc830'],[1,'#c07a10']]));circ(g,8,8,4,'rgba(200,120,10,.5)');g.fillStyle='#fff0a0';g.fillRect(7.2,5,1.6,6)});
+UI.depth=()=>paint(16,16,8,g=>{poly(g,[[8,14.4],[2.4,7.6],[6.2,7.6],[6.2,1.6],[9.8,1.6],[9.8,7.6],[13.6,7.6]],lin(g,0,0,0,15,[[0,'#8ae0ff'],[1,'#2a78d0']]))});
+UI.bag=()=>paint(16,16,8,g=>{g.fillStyle=lin(g,3,5,13,15,[[0,'#d89a5a'],[1,'#8a5430']]);g.beginPath();g.moveTo(4,6);g.bezierCurveTo(.8,10,2,14.6,8,14.6);g.bezierCurveTo(14,14.6,15.2,10,12,6);g.closePath();g.fill();rr(g,5,3.4,6,3.4,1.4,'#b87a42');g.strokeStyle='#ffe0a0';g.lineWidth=1;g.beginPath();g.moveTo(4.6,6.2);g.lineTo(11.4,6.2);g.stroke();circ(g,8,10.4,1.4,'#ffe0a0')});
+UI.lamp=()=>paint(16,16,8,g=>{rr(g,5.6,1.4,4.8,2.4,1,'#8a5a30');rr(g,4.4,3.6,7.2,9,2.6,lin(g,4,4,12,12,[[0,'#fff3a0'],[.6,'#ffb830'],[1,'#e0701a']]));rr(g,4.4,12,7.2,2,.8,'#8a5a30');g.strokeStyle='rgba(120,60,10,.6)';g.lineWidth=.6;g.beginPath();g.moveTo(8,4);g.lineTo(8,12);g.stroke()});
+UI.book=()=>paint(16,16,8,g=>{rr(g,2.4,2,11.4,12.4,1.4,'#d8503a');rr(g,3.8,2.8,9.4,10.6,1,'#fff2d0');g.fillStyle='#d8503a';g.fillRect(2.4,2,2.6,12.4);g.fillStyle='#c08a5a';[5.4,7.6,9.8].forEach(y=>g.fillRect(6,y,5.6,.9));circ(g,12,3,1.2,'#ffd030')});
+UI.pot=()=>paint(16,16,8,g=>{rr(g,2.4,6,11.2,7.6,3,lin(g,0,6,0,14,[[0,'#8a96aa'],[1,'#4a566a']]));elli(g,8,6.2,5.8,1.7,'#2e3648');rr(g,.8,7.6,2.4,1.6,.8,'#4a566a');rr(g,12.8,7.6,2.4,1.6,.8,'#4a566a');g.fillStyle='rgba(255,255,255,.5)';[[5,3.4],[8.6,2.2],[11,3.8]].forEach(([x,y])=>g.fillRect(x,y,1.2,1.2))});
+UI.pick=()=>paint(16,16,8,g=>{g.strokeStyle='#8a5a30';g.lineWidth=1.8;g.lineCap='round';g.beginPath();g.moveTo(3.2,13.4);g.lineTo(11.4,5.2);g.stroke();g.strokeStyle='#c8d4e8';g.lineWidth=2.4;g.beginPath();g.moveTo(4.4,4.6);g.quadraticCurveTo(10,1.6,14,6);g.stroke()});
+UI.up=()=>paint(16,16,8,g=>{poly(g,[[8,1.6],[14.2,8.4],[10,8.4],[10,14.4],[6,14.4],[6,8.4],[1.8,8.4]],lin(g,0,0,0,15,[[0,'#fff3a0'],[1,'#f0a020']]))});
+UI.tent=()=>paint(16,16,8,g=>{poly(g,[[8,2],[15,13.6],[1,13.6]],lin(g,0,2,0,14,[[0,'#ff9a6a'],[1,'#d85a30']]));poly(g,[[8,6.6],[11,13.6],[5,13.6]],'#6a2a18');g.fillStyle='#ffd030';g.fillRect(7.6,1,.8,2)});
+UI.gem=()=>paint(16,16,8,g=>{poly(g,[[8,2],[13.6,6],[8,14.4],[2.4,6]],lin(g,0,2,0,14,[[0,'#d8ffff'],[.5,'#5ad8f0'],[1,'#2a78d0']]));poly(g,[[2.4,6],[8,6.6],[13.6,6]],'rgba(255,255,255,.4)')});
+UI.rope=()=>paint(16,16,8,g=>{g.strokeStyle='#d8b070';g.lineWidth=1.8;[[8,9,5.4],[8,9,3.4]].forEach(([x,y,r])=>{g.beginPath();g.arc(x,y,r,0,7);g.stroke()});g.beginPath();g.moveTo(8,3.6);g.lineTo(8,1);g.stroke()});
+UI.snd=()=>paint(16,16,8,g=>{poly(g,[[2,6],[5.4,6],[9,2.8],[9,13.2],[5.4,10],[2,10]],'#fff');g.strokeStyle='#fff';g.lineWidth=1.2;g.lineCap='round';g.beginPath();g.arc(9.6,8,3,-1,1);g.stroke();g.beginPath();g.arc(9.6,8,5.4,-.9,.9);g.stroke()},{ol:[46,42,58]});
+UI.mute=()=>paint(16,16,8,g=>{poly(g,[[2,6],[5.4,6],[9,2.8],[9,13.2],[5.4,10],[2,10]],'#c8c0d8');g.strokeStyle='#ff7a6a';g.lineWidth=1.6;g.lineCap='round';g.beginPath();g.moveTo(11,5.4);g.lineTo(14.6,10.6);g.moveTo(14.6,5.4);g.lineTo(11,10.6);g.stroke()},{ol:[46,42,58]});
+UI.back=()=>paint(16,16,8,g=>{poly(g,[[1.6,8],[8,2],[8,5.6],[14,5.6],[14,10.4],[8,10.4],[8,14]],'#fff')},{ol:[46,42,58]});
+UI.star=()=>paint(16,16,8,g=>{const p=[];for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?3.4:7.2;p.push([8+Math.cos(a)*r,8.4+Math.sin(a)*r])}poly(g,p,lin(g,0,1,0,15,[[0,'#fffbb8'],[1,'#f0a010']]))});
+const UIU={};const ic=(k,px=24)=>{if(!UI[k])return'';const c=UIU[k]||(UIU[k]=UI[k]().toDataURL());return`<img class="px" src="${c}" width="${px}" height="${px}" alt="" draggable="false">`};
+/* ===== 地形：自動接邊、環境光遮蔽、各層質感（16×16 地磚逐像素生成） ===== */
+const TS=16,COLS=20,R_ROWS=50;
+const LP=[
+ {n:'草根洞穴',sh:28,ss:46,rh:255,rs:10,ah:20,as:30,acc:[105,60]},
+ {n:'蘑菇森林',sh:285,ss:30,rh:270,rs:14,ah:290,as:34,acc:[320,70]},
+ {n:'地下湖',sh:205,ss:38,rh:215,rs:16,ah:208,as:42,acc:[190,70]},
+ {n:'熔岩層',sh:8,ss:48,rh:10,rs:14,ah:8,as:44,acc:[28,90]},
+ {n:'水晶深淵',sh:250,ss:36,rh:255,rs:22,ah:255,as:46,acc:[200,80]}];
+const ramp=(h,s,ls)=>ls.map((l,i)=>hsl2rgb(h+(i<2?-10:i>3?8:0),Math.min(90,s+(i>3?-6:i<2?6:0)),l));
+LP.forEach(p=>{p.soil=ramp(p.sh,p.ss,[20,30,42,54,66,80]);p.rock=ramp(p.rh,p.rs,[22,32,44,56,68,80]);p.air=ramp(p.ah,p.as,[8,12,17,23,30,38]);p.acc=ramp(p.acc[0],p.acc[1],[16,28,42,56,70,82])});
+const H2=(x,y,s=0)=>{let h=(Math.imul(x|0,374761393)+Math.imul(y|0,668265263)+Math.imul(s,982451653))>>>0;h=Math.imul(h^(h>>>13),1274126177)>>>0;return((h^(h>>>16))>>>0)/4294967296};
+const vn=(x,y,sc,s)=>{const gx=Math.floor(x/sc),gy=Math.floor(y/sc),fx=x/sc-gx,fy=y/sc-gy,a=H2(gx,gy,s),b=H2(gx+1,gy,s),c=H2(gx,gy+1,s),d=H2(gx+1,gy+1,s),u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v};
+const isSolid=(w,x,y)=>{if(x<0||x>=COLS||y>=R_ROWS)return true;if(y<0)return false;const t=w[y][x].t;return t==='soft'||t==='rock'||t==='ore'||t==='food'||t==='heart'};
+const Terrain={cv:null,ctx:null,w:null,build(w){this.w=w;this.cv=document.createElement('canvas');this.cv.width=COLS*TS;this.cv.height=R_ROWS*TS;this.ctx=this.cv.getContext('2d');for(let y=0;y<R_ROWS;y++)for(let x=0;x<COLS;x++)this.cell(x,y)},
+ refresh(x,y){for(const[dx,dy]of[[0,0],[1,0],[-1,0],[0,1],[0,-1]]){const a=x+dx,b=y+dy;if(a>=0&&a<COLS&&b>=0&&b<R_ROWS)this.cell(a,b)}},
+ cell(gx,gy){const w=this.w,ctx=this.ctx;ctx.clearRect(gx*TS,gy*TS,TS,TS);if(gy===0)return;const L=Math.min(4,Math.floor(gy/10)),P=LP[L],c=w[gy][gx],solid=isSolid(w,gx,gy),img=ctx.createImageData(TS,TS),d=img.data;
+  const sN=isSolid(w,gx,gy-1),sS=isSolid(w,gx,gy+1),sW=isSolid(w,gx-1,gy),sE=isSolid(w,gx+1,gy),rock=c.t==='rock';
+  const put=(i,j,col)=>{const k=(j*TS+i)*4;d[k]=col[0];d[k+1]=col[1];d[k+2]=col[2];d[k+3]=255};
+  for(let j=0;j<TS;j++)for(let i=0;i<TS;i++){const X=gx*TS+i,Y=gy*TS+j;
+   if(solid){const ramp=rock?P.rock:P.soil,n=vn(X,Y,7,L)*.6+vn(X,Y,3,L+9)*.4;let idx=2+(n>.66?1:0)-(n<.3?1:0);
+    if(rock){if(j===7||j===15)idx-=1;const bi=(j<7?i:(i+8)%16);if(bi===0||bi===8&&j<7)idx-=1;if(j===8&&i%8!==0)idx+=1}
+    else{const sx=Math.floor(H2(gx,gy,3)*10)+2,sy=Math.floor(H2(gx,gy,4)*9)+3;if(i>=sx&&i<=sx+2&&j===sy)idx=5;else if(i>=sx&&i<=sx+2&&j===sy+1)idx=Math.max(0,idx-2);else if(i===sx+3&&j===sy)idx=1;
+     const sx2=Math.floor(H2(gx,gy,5)*10)+2,sy2=Math.floor(H2(gx,gy,6)*9)+3;if(H2(gx,gy,7)>.5&&i===sx2&&(j===sy2||j===sy2+1))idx=Math.min(5,idx+2)}
+    const top=sN?-1:(1+(H2(X,gy,1)>.55?1:0)+(H2(X,gy,2)>.8?1:0));
+    if(!sN&&j<=1+(H2(X,gy,1)>.55?1:0)){idx=j===0?5:4}
+    if(!sS&&j>=14)idx-=2;else if(!sS&&j>=13)idx-=1;
+    if(!sW&&i===0)idx+=1;if(!sE&&i>=15)idx-=2;else if(!sE&&i>=14)idx-=1;
+    if(!sN&&!sW&&i+j<2||!sN&&!sE&&(15-i)+j<2||!sS&&!sW&&i+(15-j)<2||!sS&&!sE&&(15-i)+(15-j)<2){put(i,j,P.air[1]);continue}
+    idx=Math.max(0,Math.min(5,idx));let col=ramp[idx];
+    // 表面裝飾：頂端苔蘚／草根／水光／岩漿光／晶體
+    if(!sN&&j<=2&&!rock){const tt=H2(X,gy,8);if(j===0||tt>.5&&j===1){col=P.acc[j===0?4:3]}else if(tt>.78&&j===2)col=P.acc[2]}
+    if(rock&&L===3&&vn(X,Y,5,22)>.7&&i>2&&i<13)col=P.acc[4];
+    if(rock&&L===4&&H2(X,Y,23)>.97)col=P.acc[5];
+    put(i,j,col)}
+   else{let idx=1+(vn(X,Y,6,L+3)>.6?1:0)+(vn(X,Y,2,L+5)>.8?1:0);const dN=sN?j:99,dS=sS?15-j:99,dW=sW?i:99,dE=sE?15-i:99,m=Math.min(dN,dS,dW,dE);if(m<3)idx-=(3-m)>1?1:0;if(m===0)idx-=1;
+    if(vn(X,Y,9,L+40)>.62&&idx>0)idx-=1;if(H2(X,Y,31)>.985)idx+=1;
+    // 鐘乳石
+    if(sN&&j<2+Math.floor(H2(X,gy,9)*3)&&H2(X,gy,10)>.78){put(i,j,P.soil[Math.max(0,idx+1)]);continue}
+    put(i,j,P.air[Math.max(0,Math.min(5,idx))])}}
+  ctx.putImageData(img,gx*TS,gy*TS)}};
+const HEROES={
+ puff:{n:'噗噗',d:'圓滾滾的雲朵團',t:'燈油消耗少 20%',oilMult:.8},
+ worm:{n:'長長',d:'長條條的蚯蚓',t:'挖一格，旁邊那格也一起挖開',twin:1},
+ mole:{n:'方方',d:'方塊鼴鼠',t:'挖石頭更省油，背包多 4 格',rockOff:.6,bag:4},
+ shroom:{n:'菇菇',d:'發光小蘑菇',t:'照得更遠，料理回復多 30%',light:1,cook:1.3}};
+const DISH={
+ soup:{n:'暖暖蔥湯',oil:14,d:'燈油 +14'},
+ mush:{n:'香菇濃湯',oil:10,buff:['strong',10],d:'燈油 +10，接下來 10 次挖石頭更輕鬆'},
+ glowm:{n:'發光烤菇',oil:4,buff:['light',1],d:'燈油 +4，這趟照得更遠'},
+ jelly:{n:'清涼果凍',oil:6,buff:['swim',1],d:'燈油 +6，這趟不怕積水'},
+ chilip:{n:'岩漿辣地瓜',oil:8,buff:['cool',1],d:'燈油 +8，這趟不怕熱氣'},
+ starj:{n:'星光果凍',oil:6,buff:['lucky',12],d:'燈油 +6，接下來 12 次礦物變雙倍'},
+ spicy:{n:'辣味海藻湯',oil:6,buff:['cool',1],buff2:['swim',1],d:'燈油 +6，不怕熱氣也不怕積水'},
+ herbroot:{n:'香草烤地瓜',oil:12,buff:['walk', 20],d:'燈油 +12，接下來 20 步更省油',v:['plate','#ffe8c8','#c0508c']},
+ nutsoup:{n:'栗子濃湯',oil:12,buff:['strong', 8],d:'燈油 +12，接下來 8 次挖石頭更輕鬆',v:['bowl','#d8a868','#e8c0a0','#c8905a']},
+ nutroot:{n:'栗子地瓜球',oil:10,buff:['bag', 3],d:'燈油 +10，這趟背包多 3 格',v:['plate','#ffe8c8','#e0a060']},
+ herbonion:{n:'香草蔥捲',oil:8,buff:['walk', 25],d:'燈油 +8，接下來 25 步更省油',v:['plate','#fff4d8','#3fc060']},
+ trufflemush:{n:'松露菇菇燉飯',oil:16,buff:['lucky', 10],d:'燈油 +16，接下來 10 次礦物變雙倍',v:['bowl','#f0dcc0','#4a3a30','#c8a878']},
+ berryjelly:{n:'莓果果凍',oil:8,buff:['light', 1],d:'燈油 +8，這趟照得更遠',v:['bowl','#c070e8','#e0b0f8','#bcd8f0']},
+ berryherb:{n:'莓果沙拉',oil:9,buff:['walk', 20],d:'燈油 +9，接下來 20 步更省油',v:['plate','#c8f0b0','#a040d0']},
+ truffleglow:{n:'夜光松露',oil:10,buff:['light', 1],buff2:['lucky', 8],d:'燈油 +10，照得更遠，還有 8 次雙倍礦物',v:['plate','#2a2a48','#6ff0ff']},
+ lotuskelp:{n:'涼拌蓮藕',oil:10,buff:['swim', 1],d:'燈油 +10，這趟不怕積水',v:['plate','#fff0f0','#3fc060']},
+ lotusjelly:{n:'蓮藕果凍',oil:8,buff:['bag', 3],d:'燈油 +8，這趟背包多 3 格',v:['bowl','#a8e0ff','#f0b0c8','#bcd8f0']},
+ lotusonion:{n:'蓮藕炒蔥',oil:12,buff:['strong', 10],d:'燈油 +12，接下來 10 次挖石頭更輕鬆',v:['plate','#fff0e0','#58d878']},
+ mangochili:{n:'熔岩芒果醬',oil:12,buff:['cool', 1],buff2:['walk', 15],d:'燈油 +12，不怕熱氣，還有 15 步更省油',v:['bowl','#ff7a3a','#ffd030','#e05030']},
+ mangoroot:{n:'芒果地瓜甜點',oil:16,d:'燈油 +16，單純好吃',v:['plate','#ffe0a0','#ff9a3a']},
+ mangoberry:{n:'芒果莓果冰',oil:10,buff:['cool', 1],d:'燈油 +10，這趟不怕熱氣',v:['bowl','#ffe8f8','#ff9a3a','#f0c0e8']},
+ moonstar:{n:'月光星果盤',oil:12,buff:['lucky', 14],d:'燈油 +12，接下來 14 次礦物變雙倍',v:['plate','#e8f0ff','#ffd030']},
+ moonglow:{n:'月光發光湯',oil:10,buff:['light', 1],buff2:['walk', 20],d:'燈油 +10，照得更遠，還有 20 步更省油',v:['bowl','#bfe8ff','#6ff0ff','#8ac0f0']},
+ honeynut:{n:'蜜栗子',oil:14,buff:['bag', 2],d:'燈油 +14，這趟背包多 2 格',v:['plate','#ffe8b0','#8a5430']},
+ honeymoon:{n:'水晶蜜月餅',oil:18,buff:['lucky', 6],d:'燈油 +18，接下來 6 次礦物變雙倍',v:['plate','#fff8d0','#ffd030']},
+ honeyberry:{n:'蜜漿莓果',oil:12,buff:['walk', 20],d:'燈油 +12，接下來 20 步更省油',v:['bowl','#ffd860','#a040d0','#f0c868']},
+ honeyroot:{n:'蜜烤地瓜',oil:16,buff:['strong', 6],d:'燈油 +16，接下來 6 次挖石頭更輕鬆',v:['plate','#ffc860','#c0508c']},
+ herbmush:{n:'香草蘑菇',oil:10,buff:['strong', 8],d:'燈油 +10，接下來 8 次挖石頭更輕鬆',v:['plate','#e8d8b8','#3fc060']},
+ chilinut:{n:'辣栗子',oil:8,buff:['cool', 1],buff2:['strong', 6],d:'燈油 +8，不怕熱氣，還有 6 次省力',v:['plate','#ffd8c0','#ff4a3a']},
+ trufflenut:{n:'松露栗子',oil:16,buff:['lucky', 12],d:'燈油 +16，接下來 12 次礦物變雙倍',v:['bowl','#6a4a3a','#e8c8a0','#a07850']},
+ kelpherb:{n:'海草香草捲',oil:9,buff:['swim', 1],d:'燈油 +9，這趟不怕積水',v:['plate','#c8f0b8','#2f9a46']},
+ odd:{n:'怪怪料理',oil:3,d:'燈油 +3，味道有點奇怪…'}};
+const RECIPE={'onion+root':'soup','onion+shiitake':'mush','glow+shiitake':'glowm','jelly+kelp':'jelly','chili+root':'chilip','jelly+star':'starj','chili+kelp':'spicy'};
+const RECIPE2={'herb+root':'herbroot','nut+onion':'nutsoup','nut+root':'nutroot','herb+onion':'herbonion','shiitake+truffle':'trufflemush','berry+jelly':'berryjelly','berry+herb':'berryherb','glow+truffle':'truffleglow','kelp+lotus':'lotuskelp','jelly+lotus':'lotusjelly','lotus+onion':'lotusonion','chili+mango':'mangochili','mango+root':'mangoroot','berry+mango':'mangoberry','moon+star':'moonstar','glow+moon':'moonglow','honey+nut':'honeynut','honey+moon':'honeymoon','berry+honey':'honeyberry','honey+root':'honeyroot','herb+shiitake':'herbmush','chili+nut':'chilinut','nut+truffle':'trufflenut','herb+kelp':'kelpherb',};
+Object.assign(RECIPE,RECIPE2);
+const recipeOf=(a,b)=>RECIPE[[a,b].sort().join('+')]||'odd';
+const hintOf=id=>{const p=Object.keys(RECIPE).find(k=>RECIPE[k]===id);return p?p.split('+'):['','']};
+const UP={
+ pick:{n:'鎬子',d:'挖土和石頭更省燈油',cost:[40,90]},
+ oil:{n:'油壺',d:'燈油上限變大',cost:[30,70,130],cap:[30,40,55,75]},
+ bag:{n:'背包',d:'可以多帶幾樣東西',cost:[30,80],cap:[8,12,16]},
+ bento:{n:'便當盒',d:'出發時可以多帶幾個便當',cost:[45,100],cap:[2,3,4]},
+ lamp:{n:'燈籠',d:'照得更遠，看得到更多寶物',cost:[40,100]}};
+const STORY=[
+ ['鍋鍋老闆','歡迎來到地底食堂！村子的燈油快用完了，大家都在等一鍋「大水晶燉鍋」。'],
+ ['螢螢','傳說在最深的地方，有一顆會發光的大水晶。我來幫你照路！'],
+ ['礦礦','挖到的礦石都交給我收購，換成錢就能升級裝備。'],
+ ['鍋鍋老闆','路上遇到好吃的食材，也記得帶回來。不同食材一起煮，會有不一樣的效果喔！']];
+const FIN=[
+ ['鍋鍋老闆','大水晶、星光果、發光菇……下鍋！咕嚕咕嚕～'],
+ ['螢螢','哇！整個村子的燈都亮起來了！'],
+ ['旁白','地底食堂的燉鍋香味飄滿了整座山。你完成了任務，但地底還有很多沒發現的食譜和寶物，繼續探險吧！']];
+const TIPS={
+ dive:'方向鍵／WASD 或下面的按鈕可以挖掘和移動。燈油不夠時，記得按「拉繩子回營地」！',
+ rope:'拉繩子回營地要花一點燈油，越深越多。'};
+
+
+const ORE={copper:{n:'銅塊',v:3},silver:{n:'銀塊',v:6},amber:{n:'琥珀',v:10},ruby:{n:'紅寶石',v:18},crystal:{n:'水晶',v:30}};
+const FOOD={root:'地瓜',onion:'野蔥',shiitake:'香菇',glow:'發光菇',jelly:'藍果凍',kelp:'水草',chili:'岩漿辣椒',star:'星光果',herb:'香草葉',nut:'栗子',truffle:'松露',berry:'紫莓',lotus:'蓮藕',mango:'熔岩芒果',moon:'月光果',honey:'水晶蜜'};
+const LAYERS=[
+ {n:'草根洞穴',sp:'#d9b377',food:['root','onion','herb','nut'],ore:['copper'],haz:null},
+ {n:'蘑菇森林',sp:'#c8a0e0',food:['shiitake','onion','glow','truffle','berry'],ore:['copper','silver'],haz:'spore'},
+ {n:'地下湖',sp:'#86bde0',food:['jelly','kelp','lotus','berry'],ore:['silver','amber'],haz:'water'},
+ {n:'熔岩層',sp:'#f08a3a',food:['chili','root','mango','nut'],ore:['amber','ruby'],haz:'heat'},
+ {n:'水晶深淵',sp:'#9aa0ff',food:['star','glow','moon','honey','mango'],ore:['ruby','crystal'],haz:'spore'}];
+/* ===== 狀態與規則 ===== */
+let G=null;const KEY='undergr-kitchen-v1';
+function newGame(hero){return{hero,money:0,up:{pick:0,oil:0,bag:0,lamp:0,bento:0},pantry:{},ore:{},bento:[],bentoQ:[],recipes:[],codex:[],camps:[0],best:0,trips:0,heart:false,fin:false,stage:'camp',sub:'',seen:false}}
+const saveG=()=>{try{localStorage.setItem(KEY,JSON.stringify(G))}catch(e){}},loadG=()=>{try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null}catch(e){return null}},clearG=()=>{try{localStorage.removeItem(KEY)}catch(e){}};
+const H=()=>HEROES[G.hero];
+const bentoCap=()=>UP.bento.cap[G.up.bento||0];
+const oilCap=()=>UP.oil.cap[G.up.oil],bagCap=()=>UP.bag.cap[G.up.bag]+(H().bag||0)+((typeof T!=='undefined'&&T&&T.buff&&T.buff.bag)||0);
+const lampR=(T)=>3.4+G.up.lamp*1.2+(H().light||0)*1.2+(T&&T.buff.light?1.2:0);
+let T=null;
+function setCell(x,y,c){T.w[y][x]=c;Terrain.refresh(x,y)}
+function genWorld(startRow){const rows=[];for(let y=0;y<R_ROWS;y++){const L=Math.floor(y/10),LY=LAYERS[L],row=[];
+  for(let x=0;x<COLS;x++){const r=Math.random();let c={t:'soft',v:Math.floor(Math.random()*4)};
+   if(y===0)c={t:'air',v:0};
+   else if(r<.12+L*.025)c={t:'rock',v:Math.floor(Math.random()*4)};
+   else if(r<.2+L*.025)c={t:'ore',k:pick(LY.ore),v:Math.floor(Math.random()*4)};
+   else if(r<.27+L*.025)c={t:'food',k:pick(LY.food),v:Math.floor(Math.random()*4)};
+   else if(r<.31+L*.025&&LY.haz&&y%10>0)c={t:'haz',v:0};
+   else if(r<.325&&y%10>1)c={t:'air',v:0};
+   row.push(c)}
+  rows.push(row)}
+ for(let L=1;L<5;L++){const cx=2+Math.floor(Math.random()*16),y=L*10;rows[y][cx]={t:'fire',v:0,L};rows[y][cx].c=cx}
+ rows[R_ROWS-1]=rows[R_ROWS-1].map(()=>({t:'rock',v:Math.floor(Math.random()*4)}));rows[R_ROWS-1][10]={t:'heart',v:0};
+ // 讓各層的食材有保障：每層至少 3 個該層食物
+ for(let L=0;L<5;L++){let n=0;rows.slice(L*10,L*10+10).forEach(r=>r.forEach(c=>{if(c.t==='food')n++}));for(;n<3;n++){const y=L*10+1+Math.floor(Math.random()*9),x=Math.floor(Math.random()*COLS);if(rows[y][x].t==='soft')rows[y][x]={t:'food',k:pick(LAYERS[L].food),v:0}}}
+ return rows}
+function startTrip(fromRow){const world=genWorld(fromRow);let px=10;if(fromRow>0){const fx=world[fromRow].findIndex(c=>c.t==='fire');px=fx>=0?fx:4}
+ T={w:world,px,py:fromRow,oil:oilCap(),bag:[],buff:{light:0,swim:0,cool:0,strong:0,lucky:0,walk:0,bag:0},seen:world.map(r=>r.map(()=>false)),log:'',menu:null,pending:null,msg:'',dead:false,camY:Math.max(0,fromRow-2),startRow:fromRow,eaten:0};
+ if(fromRow>0)T.w[fromRow][px]={t:'fire',v:0,L:fromRow/10,lit:true};Terrain.build(T.w);reveal();G.trips++}
+function reveal(){const R=lampR(T);for(let y=Math.max(0,Math.floor(T.py-R-1));y<=Math.min(R_ROWS-1,Math.ceil(T.py+R+1));y++)for(let x=0;x<COLS;x++)if(Math.hypot(x-T.px,y-T.py)<=R+.3)T.seen[y][x]=true}
+const mult=()=>(H().oilMult||1);
+const bagN=()=>T.bag.length;
+function digCost(c,row){const pk=G.up.pick,lm=1+.2*Math.floor(row/10);let b=1.4;if(c.t==='soft')b=[1.4,1.25,1.1][pk];else if(c.t==='rock'){b=[2.8,2.2,1.6][pk];if(T.buff.strong>0)b-=.9;if(H().rockOff)b-=H().rockOff*1.2}else b=[1.4,1.25,1.1][pk];return Math.max(.4,b)*lm*mult()}
+const returnCost=()=>Math.round(T.py*.45*mult()*10)/10;
+function spend(n){T.oil=Math.max(0,T.oil-n)}
+function move(dx,dy){if(!T||T.menu||T.dead)return null;const nx=T.px+dx,ny=T.py+dy,res={ok:false,fx:[]};
+ if(ny<0){if(T.py===0){res.leave=true;return res}return res}
+ if(nx<0||nx>=COLS||ny>=R_ROWS)return res;const c=T.w[ny][nx];let cost=.3*mult();
+ const take=(cell)=>{if(bagN()>=bagCap()){res.msg='背包滿了！回營地放一放吧。';return false}
+  const n=(cell.t==='ore'&&T.buff.lucky>0)?2:1;for(let i=0;i<n&&bagN()<bagCap();i++)T.bag.push(cell.k);if(cell.t==='ore'&&T.buff.lucky>0)T.buff.lucky--;
+  if(!G.codex.includes(cell.k)){G.codex.push(cell.k);G.money+=3;res.fresh=cell.k}res.got=cell.k;return true};
+ if(c.t==='soft'||c.t==='rock'){cost=digCost(c,ny);if(c.t==='rock'&&T.buff.strong>0)T.buff.strong--;res.dug=c.t;setCell(nx,ny,{t:'air',v:0})}
+ else if(c.t==='ore'||c.t==='food'){cost=digCost(c,ny);if(!take(c))return res;setCell(nx,ny,{t:'air',v:0})}
+ else if(c.t==='haz'){const hz=LAYERS[Math.floor(ny/10)].haz;cost=hz==='water'?(T.buff.swim?.3:2):hz==='heat'?(T.buff.cool?.3:3):3;res.haz=hz;setCell(nx,ny,{t:'air',v:0})}
+ else if(c.t==='heart'){cost=1;G.heart=true;res.heart=true;setCell(nx,ny,{t:'air',v:0})}
+ else if(c.t==='fire'){res.fire=true}
+ // 長長：旁邊那格也一起挖開
+ if(H().twin&&(res.dug||res.got)){const tx=nx+dx,ty=ny+dy;if(tx>=0&&tx<COLS&&ty<R_ROWS&&ty>=0){const d=T.w[ty][tx];if(d.t==='soft'||d.t==='rock')setCell(tx,ty,{t:'air',v:0});else if((d.t==='ore'||d.t==='food')&&bagN()<bagCap()&&take(d))setCell(tx,ty,{t:'air',v:0})}}
+ if(T.buff.walk>0){cost*=.6;T.buff.walk--}T.px=nx;T.py=ny;spend(cost);res.ok=true;res.cost=cost;if(ny>G.best)G.best=ny;reveal();
+ if(c.t==='fire'){G.camps.includes(c.L)||G.camps.push(c.L);T.menu='fire';T.w[ny][nx].lit=true}
+ if(T.oil<=0)res.out=true;return res}
+function endTrip(lost){const keep=lost?Math.floor(T.bag.length/2):T.bag.length,items=lost?sh(T.bag).slice(0,keep):T.bag;
+ items.forEach(k=>{if(ORE[k])G.ore[k]=(G.ore[k]||0)+1;else G.pantry[k]=(G.pantry[k]||0)+1});const n=T.bag.length;T.dead=true;const out={kept:items.length,all:n};T=null;return out}
+function eatDish(id,q=0){const d=DISH[id];const ck=(G.cooked&&G.cooked[id])||0;let oil=d.oil*(H().cook||1)*QMUL[q]*(ck>=8?1.2:ck>=3?1.1:1);T.oil=Math.min(oilCap(),T.oil+oil);if(d.buff){T.buff[d.buff[0]]=Math.max(T.buff[d.buff[0]],d.buff[1])}if(d.buff2)T.buff[d.buff2[0]]=Math.max(T.buff[d.buff2[0]]||0,d.buff2[1]??1)}
+function cook(a,b){const id=recipeOf(a,b),isNew=id!=='odd'&&!G.recipes.includes(id);if(isNew){G.recipes.push(id);G.money+=15}return{id,isNew}}
+/* ===== 聲音：海浪、輕音樂、音效（可開關） ===== */
+const Aud={ctx:null,on:true,master:null,
+ init(){if(this.ctx)return;try{const A=window.AudioContext||window.webkitAudioContext;this.ctx=new A();this.master=this.ctx.createGain();this.master.gain.value=this.on?1:0;this.master.connect(this.ctx.destination);this.music()}catch(e){this.ctx=null}},
+ set(on){this.on=on;if(this.master)this.master.gain.value=on?1:0;try{localStorage.setItem('undergr-snd',on?'1':'0')}catch(e){}},
+ tone(f,d=.12,type='square',v=.05,w=0,f2){if(!this.ctx||!this.on)return;const c=this.ctx,o=c.createOscillator(),g=c.createGain(),t=c.currentTime+w;o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.01);g.gain.exponentialRampToValueAtTime(.0008,t+d);o.connect(g);g.connect(this.master);o.start(t);o.stop(t+d+.05)},
+ sfx(n){const T=(...a)=>this.tone(...a);({click:()=>T(620,.06,'square',.04),dig:()=>T(160+Math.random()*50,.09,'square',.05,0,90),warn:()=>{T(880,.1,'square',.04);T(660,.12,'square',.04,.12)},cook:()=>[392,494,587].forEach((f,i)=>T(f,.2,'triangle',.06,i*.08)),pop:()=>T(300,.12,'triangle',.08,0,120),find:()=>[660,880,1175].forEach((f,i)=>T(f,.14,'square',.04,i*.07)),
+  scrub:()=>T(200+Math.random()*120,.07,'sawtooth',.03),clean:()=>[880,1320].forEach((f,i)=>T(f,.12,'triangle',.06,i*.08)),coin:()=>{T(988,.08,'square',.04);T(1319,.18,'square',.04,.08)},
+  good:()=>[523,659,784,1047].forEach((f,i)=>T(f,.18,'triangle',.07,i*.09)),no:()=>T(240,.22,'sawtooth',.04,0,150),step:()=>T(420,.05,'triangle',.04),bell:()=>[1047,1568].forEach((f,i)=>T(f,.5,'sine',.05,i*.12)),
+  lamp:()=>[392,523,659,784,1047,1319].forEach((f,i)=>T(f,.5,'triangle',.07,i*.14))}[n]||(()=>{}))()},
+ waves(){const c=this.ctx,len=c.sampleRate*3,b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);let l=0;for(let i=0;i<len;i++){l=l*.97+(Math.random()*2-1)*.03;d[i]=l*6}
+  const s=c.createBufferSource();s.buffer=b;s.loop=true;const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=700;const g=c.createGain();g.gain.value=.05;const lfo=c.createOscillator(),lg=c.createGain();lfo.frequency.value=.11;lg.gain.value=.035;lfo.connect(lg);lg.connect(g.gain);s.connect(f);f.connect(g);g.connect(this.master);s.start();lfo.start()},
+ music(){const sc=[261.6,293.7,329.6,392,440,523.3,587.3],m=this;let i=2;setInterval(()=>{if(!m.on||!m.ctx||document.hidden)return;i=Math.max(0,Math.min(sc.length-1,i+pick([-2,-1,-1,0,1,1,2])));if(Math.random()<.78)m.tone(sc[i],.9,'triangle',.028);if(Math.random()<.2)m.tone(sc[i]/2,1.2,'sine',.03)},560)}
+};
+try{Aud.on=localStorage.getItem('undergr-snd')!=='0'}catch(e){}
+/* ===== 繪製：營地與地底（320×180 內部解析度，柔和光影） ===== */
+const VW=320,VH=180;
+const HC={},HU={};
+const heroC=k=>HC[k]||(HC[k]=CH[k]()),heroU=k=>HU[k]||(HU[k]=heroC(k).toDataURL());
+const himg=(k,px=64)=>`<img class="px" src="${heroU(k)}" width="${px*heroC(k).width/28}" height="${px}" alt="" draggable="false">`;
+const NU={};const nimg=(k,px=48)=>{const c=heroC(k);return`<img class="px" src="${NU[k]||(NU[k]=c.toDataURL())}" width="${px*c.width/c.height}" height="${px}" alt="" draggable="false">`};
+const iimg=(k,px=32)=>{if(!IT[k])return'';const c=igc(k),u=c._u||(c._u=c.toDataURL());return`<img class="px" src="${u}" width="${px*c.width/c.height}" height="${px}" alt="" draggable="false">`};
+const V={t:0,camY:0,parts:[],motes:[],mode:'camp'};
+function dust(tx,ty,col,n=7){const x=tx*TS+8,y=ty*TS+8;for(let i=0;i<n;i++)V.parts.push({x:x+(Math.random()-.5)*10,y:y+(Math.random()-.5)*8,vx:(Math.random()-.5)*.9,vy:-.5-Math.random()*.7,col,life:.45+Math.random()*.4,age:0,s:Math.random()<.4?2:1})}
+function drawParts(c,dt,camPx){V.parts=V.parts.filter(p=>{p.age+=dt;if(p.age>p.life)return false;p.x+=p.vx;p.y+=p.vy;p.vy+=.06;c.globalAlpha=1-p.age/p.life;c.fillStyle=p.col;c.fillRect(Math.round(p.x),Math.round(p.y-camPx),p.s,p.s);c.globalAlpha=1;return true})}
+const glow=(c,x,y,r,col,a)=>{const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,col.replace('A',a));g.addColorStop(1,col.replace('A',0));c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2)};
+/* --- 營地背景（只畫一次） --- */
+let CAMPBG=null,CAMPFG=null,SKYSTRIP=null,VIG=null;
+const sr=(a)=>{let s=a;return()=>(s=(s*16807)%2147483647)/2147483647};
+function buildCamp(){const rnd=sr(11);
+ CAMPBG=paint(VW,VH,3,g=>{g.fillStyle=lin(g,0,0,0,130,[[0,'#4f9cff'],[.45,'#9ad2ff'],[.8,'#ffe6bd'],[1,'#ffd2a2']]);g.fillRect(0,0,VW,VH);
+  circ(g,256,36,34,'rgba(255,244,190,.35)');circ(g,256,36,24,'rgba(255,240,170,.5)');circ(g,256,36,14,'#fff6c8');
+  const mtn=(base,pk,col,col2)=>{g.fillStyle=lin(g,0,base-pk,0,base+30,[[0,col],[1,col2]]);g.beginPath();g.moveTo(0,base+40);let x=0;g.lineTo(0,base);while(x<VW){const hh=pk*(.45+rnd()*.55);g.lineTo(x+14,base-hh);g.lineTo(x+30,base-hh*.4);x+=32}g.lineTo(VW,base+40);g.closePath();g.fill()};
+  mtn(104,46,'#c9d4ff','#9db0ee');mtn(116,34,'#9bb0ec','#7a92d8');
+  // 遠方小山丘＋樹
+  g.fillStyle=lin(g,0,100,0,130,[[0,'#58b878'],[1,'#2f8458']]);g.beginPath();g.moveTo(0,130);for(let x=0;x<=VW;x+=8)g.lineTo(x,108+Math.sin(x*.035)*6+Math.sin(x*.11)*2);g.lineTo(VW,130);g.fill();
+  for(let x=-4;x<VW;x+=11){const y=106+Math.sin(x*.035)*6+rnd()*4,r=6+rnd()*5;circ(g,x,y,r,rad(g,x-r*.3,y-r*.4,1,x,y,r,[[0,'#9cf0a0'],[.5,'#3aa860'],[1,'#1a6a40']]))}
+  // 地面
+  g.fillStyle=lin(g,0,118,0,180,[[0,'#6fcf4a'],[.08,'#3f9e36'],[.1,'#b98250'],[1,'#5a3a24']]);g.beginPath();g.moveTo(0,122);for(let x=0;x<=VW;x+=6)g.lineTo(x,121+Math.sin(x*.05)*1.5);g.lineTo(VW,180);g.lineTo(0,180);g.fill();
+  g.fillStyle=lin(g,0,118,0,130,[[0,'#a8f06a'],[1,'#4aa83a']]);g.beginPath();g.moveTo(0,119);for(let x=0;x<=VW;x+=4)g.lineTo(x,119+Math.sin(x*.07)*1.2+(x%8?0:1));g.lineTo(VW,127);g.lineTo(0,127);g.fill();
+  for(let i=0;i<46;i++){const x=rnd()*VW,y=132+rnd()*44;elli(g,x,y,1.4+rnd()*2.6,1+rnd()*1.6,rad(g,x-1,y-1,.2,x,y,3,[[0,'#d8b088'],[1,'#7a5234']]))}
+  // 營地小徑
+  g.fillStyle=lin(g,0,124,0,150,[[0,'rgba(236,206,150,.9)'],[1,'rgba(200,160,110,.55)']]);g.beginPath();g.moveTo(40,126);g.bezierCurveTo(110,121,210,121,300,128);g.lineTo(300,138);g.bezierCurveTo(210,134,110,136,40,140);g.fill();
+  // 廚房帳篷（背牆＋棚頂）
+  g.fillStyle=lin(g,0,60,0,124,[[0,'#8a5a3a'],[1,'#5a3a24']]);g.fillRect(14,64,3.4,62);g.fillRect(104,64,3.4,62);rr(g,16,84,90,38,0,lin(g,0,84,0,122,[[0,'#f6e6c4'],[1,'#d8bd8a']]));
+  g.fillStyle='rgba(120,70,30,.25)';for(let x=22;x<100;x+=12)g.fillRect(x,86,1,34);
+  // 招牌
+  rr(g,40,70,40,12,2,lin(g,0,70,0,82,[[0,'#d8a068'],[1,'#8a5a30']]));g.fillStyle='#5a3a24';g.fillRect(44,66,1,5);g.fillRect(75,66,1,5);
+  for(let i=0;i<9;i++){const x=10+i*11;g.fillStyle=lin(g,0,50,0,76,[[0,i%2?'#fff8e8':'#ff6a4a'],[1,i%2?'#e8d8b8':'#c8381c']]);g.beginPath();g.moveTo(x,52+Math.abs(i-4)*-.8);g.lineTo(x+11,52+Math.abs(i-3.5)*-.8);g.lineTo(x+11,70);g.arc(x+5.5,70,5.5,0,Math.PI);g.lineTo(x,52);g.fill()}
+  g.fillStyle='rgba(0,0,0,.18)';g.fillRect(14,72,94,3);
+  // 商店攤位
+  g.fillStyle='#7a4a2a';g.fillRect(126,76,3,50);g.fillRect(180,76,3,50);rr(g,129,92,51,30,0,lin(g,0,92,0,122,[[0,'#e8d4a8'],[1,'#c0a070']]));
+  for(let i=0;i<5;i++){const x=122+i*12;g.fillStyle=lin(g,0,66,0,86,[[0,i%2?'#e8f4ff':'#3a9ae8'],[1,i%2?'#bcd4ec':'#1a5cb0']]);g.beginPath();g.moveTo(x,68);g.lineTo(x+12,68);g.lineTo(x+12,84);g.arc(x+6,84,6,0,Math.PI);g.lineTo(x,68);g.fill()}
+  // 洞口
+  const cx=272,cy=116;elli(g,cx,cy+2,42,12,'rgba(0,0,0,.25)');g.fillStyle=lin(g,0,cy-40,0,cy+12,[[0,'#9a96b4'],[1,'#5a5678']]);g.beginPath();g.moveTo(cx-44,cy+10);g.bezierCurveTo(cx-48,cy-30,cx-20,cy-48,cx,cy-48);g.bezierCurveTo(cx+24,cy-48,cx+50,cy-28,cx+44,cy+10);g.closePath();g.fill();
+  for(let i=0;i<14;i++){const a=Math.PI+i/13*Math.PI,x=cx+Math.cos(a)*40,y=cy+8+Math.sin(a)*52;circ(g,x,y,3+rnd()*3,rad(g,x-1,y-1,.4,x,y,6,[[0,'#d8d4ec'],[1,'#6a6690']]))}
+  g.fillStyle=rad(g,cx,cy,2,cx,cy,34,[[0,'#1a1030'],[1,'#07040f']]);g.beginPath();g.moveTo(cx-32,cy+10);g.bezierCurveTo(cx-34,cy-24,cx-14,cy-36,cx,cy-36);g.bezierCurveTo(cx+16,cy-36,cx+36,cy-22,cx+32,cy+10);g.closePath();g.fill();
+  [[cx-10,cy-4,'#6ff0ff'],[cx+12,cy-14,'#ff9ae0'],[cx+4,cy+2,'#ffe27a']].forEach(([x,y,c2])=>{glow(g,x,y,10,'rgba(255,255,255,A)'.replace('255,255,255',c2==='#6ff0ff'?'111,240,255':c2==='#ff9ae0'?'255,154,224':'255,226,122'),.7);circ(g,x,y,1.4,c2)});
+  g.fillStyle='#6a4228';g.fillRect(cx-40,cy-30,4,42);g.fillRect(cx+36,cy-30,4,42);g.fillRect(cx-44,cy-34,88,5);
+  // 小物：木桶、箱子、燈籠繩
+  [[112,112],[198,114]].forEach(([x,y])=>{rr(g,x,y,10,12,3,lin(g,x,y,x+10,y,[[0,'#b07a46'],[1,'#6a4220']]));g.fillStyle='#4a2c18';g.fillRect(x,y+3,10,1);g.fillRect(x,y+8,10,1)});
+  g.strokeStyle='#3a2a20';g.lineWidth=.6;g.beginPath();g.moveTo(10,46);g.quadraticCurveTo(100,62,190,44);g.stroke();
+ },{outline:false,dither:0});
+ CAMPFG=paint(VW,VH,3,g=>{
+  // 廚房檯面
+  rr(g,16,106,90,20,1,lin(g,0,106,0,126,[[0,'#d8a468'],[.2,'#b07a46'],[1,'#6a4220']]));g.fillStyle='rgba(60,30,10,.35)';for(let x=24;x<104;x+=14)g.fillRect(x,110,1,15);g.fillStyle='#f0c890';g.fillRect(16,106,90,2);
+  [[28,100,'#e8e0f4'],[90,101,'#ffd8a0']].forEach(([x,y,c2])=>{elli(g,x,y+4,6,3,c2);rr(g,x-6,y+1,12,4,2,c2)});rr(g,80,96,6,10,2,lin(g,80,96,86,96,[[0,'#8ae0ff'],[1,'#3a8ac8']]));
+  // 攤位檯面
+  rr(g,126,106,56,20,1,lin(g,0,106,0,126,[[0,'#7ab4ff'],[.2,'#4a84d8'],[1,'#26468a']]));g.fillStyle='#a8d0ff';g.fillRect(126,106,56,2);
+  [[134,'#ff5a7a'],[142,'#ffd23a'],[150,'#6ff0ff'],[158,'#ff9a3a'],[166,'#c8d0e8'],[174,'#7aff9a']].forEach(([x,c2],i)=>{circ(g,x+2,101,3.2,rad(g,x+1,100,.3,x+2,101,3.6,[[0,'#fff'],[.4,c2],[1,'rgba(0,0,0,.4)']]))});
+  // 前景花草與蘑菇
+  for(let i=0;i<30;i++){const x=(i*37)%VW,y=150+((i*53)%28);g.strokeStyle=['#4aa83a','#6fcf4a','#2f8458'][i%3];g.lineWidth=.8;g.beginPath();g.moveTo(x,y);g.lineTo(x-1.5,y-4-(i%3));g.moveTo(x,y);g.lineTo(x+1.5,y-4);g.stroke();if(i%4===0)circ(g,x,y-5,1.5,['#ff7ab0','#ffe27a','#ffffff','#9ad0ff'][i%4]===undefined?'#fff':['#ff7ab0','#ffe27a','#ffffff','#9ad0ff'][(i>>2)%4])}
+  // 路標
+  g.fillStyle='#6a4228';g.fillRect(212,104,3,22);rr(g,206,100,22,8,1,lin(g,0,100,0,108,[[0,'#e8b878'],[1,'#a8703a']]));g.fillStyle='#5a3a24';g.beginPath();g.moveTo(228,104);g.lineTo(233,104);g.lineTo(228,100);g.fill();g.fillRect(210,103,12,1.4)
+ },{outline:false,cut:.3});
+ SKYSTRIP=paint(VW,16,4,g=>{g.fillStyle=lin(g,0,0,0,16,[[0,'#6fb4ff'],[.7,'#c8e8ff'],[1,'#ffe8c8']]);g.fillRect(0,0,VW,16);g.fillStyle=lin(g,0,6,0,16,[[0,'#6fbf7a'],[1,'#3a8a5a']]);g.beginPath();g.moveTo(0,16);for(let x=0;x<=VW;x+=6)g.lineTo(x,8+Math.sin(x*.05)*2);g.lineTo(VW,16);g.fill();
+  g.fillStyle=lin(g,0,12,0,16,[[0,'#8ae05a'],[1,'#4aa83a']]);g.fillRect(0,13,VW,3);for(let x=0;x<VW;x+=3){g.fillStyle='#8ae05a';g.fillRect(x,12+(x%9?0:-1),1,2)}},{outline:false});
+ VIG=document.createElement('canvas');VIG.width=VW;VIG.height=VH;const v=VIG.getContext('2d'),gr=v.createRadialGradient(VW/2,VH/2,VH*.35,VW/2,VH/2,VW*.62);gr.addColorStop(0,'rgba(10,6,30,0)');gr.addColorStop(1,'rgba(10,6,30,.5)');v.fillStyle=gr;v.fillRect(0,0,VW,VH)}
+const CLOUDS=[[30,18,1],[150,10,.8],[230,26,1.2],[90,32,.7]];
+function cloudSpr(){return paint(40,16,6,g=>{[[10,10,6],[18,7,7],[27,10,6],[20,11,7]].forEach(([x,y,r])=>circ(g,x,y,r,rad(g,x-2,y-3,1,x,y,r,[[0,'#ffffff'],[1,'#dbe8ff']])))},{outline:false,cut:.3})}
+let CLOUD=null;
+function drawCamp(c,dt){if(!CAMPBG)buildCamp();if(!CLOUD)CLOUD=cloudSpr();V.t+=dt;const t=V.t;c.drawImage(CAMPBG,0,0);
+ CLOUDS.forEach(([x,y,s])=>{const xx=((x+t*3*s)%400)-50;c.globalAlpha=.9;c.drawImage(CLOUD,Math.round(xx),y,Math.round(40*s),Math.round(16*s));c.globalAlpha=1});
+ // 旗子飄動
+ for(let i=0;i<12;i++){const x=12+i*15,y=47+Math.sin(i/11*Math.PI)*8+Math.sin(t*3+i)*.5;c.fillStyle=['#ff6a4a','#ffd23a','#5ae0a0','#6ab4ff'][i%4];c.fillRect(Math.round(x),Math.round(y),5,5);c.fillRect(Math.round(x)+1,Math.round(y)+5,3,1)}
+ // NPC
+ c.drawImage(heroC('pot'),43,80+Math.round(Math.sin(t*2)*.8));c.drawImage(heroC('rock'),138,82+Math.round(Math.sin(t*1.6+1)*.6));
+ // 蒸氣
+ for(let i=0;i<4;i++){const p=((t*.5+i*.25)%1),x=52+Math.sin(p*6+i)*3+i*4,y=82-p*22;c.globalAlpha=(1-p)*.55;circ2(c,x,y,2+p*3,'#fff')}c.globalAlpha=1;
+ c.drawImage(CAMPFG,0,0);
+ if(G){const hy=112+Math.round(Math.abs(Math.sin(t*3))*-1);c.fillStyle='rgba(0,0,0,.25)';c.beginPath();c.ellipse(206,128,9,2.4,0,0,7);c.fill();c.drawImage(heroC(G.hero),194,hy)}
+ const fx=232+Math.sin(t*1.1)*10,fy=92+Math.sin(t*2)*6;glow(c,fx+11,fy+10,30,'rgba(255,240,120,A)',.55);c.drawImage(heroC('fly'),Math.round(fx),Math.round(fy));
+ // 洞口與提燈的暖光
+ 
+ drawParts(c,dt,0);c.drawImage(VIG,0,0)}
+function circ2(c,x,y,r,col){c.fillStyle=col;c.beginPath();c.arc(x,y,r,0,7);c.fill()}
+/* --- 地底 --- */
+const FW=160,FH=90,fogC=document.createElement('canvas');fogC.width=FW;fogC.height=FH;const fogX=fogC.getContext('2d');const memC=document.createElement('canvas');memC.width=COLS;memC.height=14;const memX=memC.getContext('2d');
+function lampGlow(cx,cy,r,a){cx/=2;cy/=2;r/=2;const g=fogX.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,`rgba(0,0,0,${a})`);g.addColorStop(.55,`rgba(0,0,0,${a*.82})`);g.addColorStop(1,'rgba(0,0,0,0)');fogX.fillStyle=g;fogX.fillRect(cx-r,cy-r,r*2,r*2)}
+function drawDive(c,dt){if(!CAMPBG)buildCamp();V.t+=dt;const t=V.t;if(!T)return;const camT=Math.max(0,Math.min(R_ROWS-VH/TS,T.py-4));V.camY+=(camT-V.camY)*Math.min(1,dt*14);if(Math.abs(camT-V.camY)<.01)V.camY=camT;
+ const camPx=Math.round(V.camY*TS),y0=Math.floor(camPx/TS),L0=Math.min(4,Math.floor((y0+5)/10));c.fillStyle='#07040f';c.fillRect(0,0,VW,VH);
+ if(camPx<TS)c.drawImage(SKYSTRIP,0,-camPx);
+ c.drawImage(Terrain.cv,0,camPx,VW,VH,0,0,VW,VH);
+ const rows=Math.ceil(VH/TS)+1,lights=[];
+ for(let ry=0;ry<rows;ry++){const row=y0+ry;if(row>=R_ROWS||row<1)continue;for(let rx=0;rx<COLS;rx++){if(!T.seen[row][rx])continue;const cell=T.w[row][rx],X=rx*TS,Y=row*TS-camPx;
+  if(cell.t==='ore'||cell.t==='food'){const ic=igc(cell.k);c.drawImage(ic,X+1,Y+1);if(cell.t==='ore'||cell.k==='glow'){const ph=(t*1.4+rx*.7+row*1.3)%3;if(ph<.35){c.globalAlpha=1-Math.abs(ph-.17)/.18;c.drawImage(igc('spark'),X+8+((rx*5)%4),Y+1+((row*3)%5));c.globalAlpha=1}}if(cell.k==='glow'||cell.k==='crystal')lights.push([X+8,Y+8,26,[111,240,255],.5]);if(cell.k==='amber'||cell.k==='ruby')lights.push([X+8,Y+8,14,[255,200,120],.25])}
+  else if(cell.t==='heart'){c.drawImage(igc('heart'),X-3,Y-10);lights.push([X+8,Y,60,[111,240,255],.7+.15*Math.sin(t*3)])}
+  else if(cell.t==='fire'){c.drawImage(igc(Math.floor(t*4)%2?'fire1':'fire0'),X,Y-2);lights.push([X+8,Y+6,64,[255,170,80],.85])}
+  else if(cell.t==='haz'){const hz=LAYERS[Math.min(4,Math.floor(row/10))].haz;if(hz==='water'){c.fillStyle='#1f64d8';c.beginPath();c.ellipse(X+8,Y+11,7.4,3.4,0,0,7);c.fill();c.fillStyle='#5ab4ff';c.beginPath();c.ellipse(X+7,Y+10,5,1.8,0,0,7);c.fill();c.fillStyle='#fff';c.fillRect(X+4+Math.floor(t*3)%4,Y+10,3,1);lights.push([X+8,Y+10,18,[100,180,255],.3])}else if(hz==='spore'){c.drawImage(igc('spore'),X,Y+Math.round(Math.sin(t*2+rx)*.6));lights.push([X+8,Y+8,22,[230,140,255],.35])}else{c.drawImage(heatC(Math.floor(t*3)%2),X,Y);lights.push([X+8,Y+8,30,[255,140,40],.6])}}}}
+ // 玩家
+ const hx=T.px*TS+8-12,hy=T.py*TS+TS-28+2-camPx,bob=Math.round(Math.sin(t*5)*.6);c.fillStyle='rgba(0,0,0,.28)';c.beginPath();c.ellipse(T.px*TS+8,T.py*TS+15-camPx,6,1.8,0,0,7);c.fill();c.drawImage(heroC(G.hero),hx,hy+bob);
+ // 漂浮微光
+ if(Math.random()<dt*10){const a=lampR(T)*TS*.9;V.motes.push({x:T.px*TS+8+(Math.random()-.5)*a*2,y:T.py*TS+(Math.random()-.5)*a*2,vx:(Math.random()-.5)*.1,vy:-.08-Math.random()*.1,life:3+Math.random()*2,age:0})}
+ c.globalCompositeOperation='lighter';V.motes=V.motes.filter(m=>{m.age+=dt;if(m.age>m.life)return false;m.x+=m.vx;m.y+=m.vy;const a=Math.sin(m.age/m.life*Math.PI)*.7;c.globalAlpha=a;c.fillStyle='#ffe9a0';c.fillRect(Math.round(m.x),Math.round(m.y-camPx),1,1);return true});c.globalAlpha=1;c.globalCompositeOperation='source-over';
+ drawParts(c,dt,camPx);
+ // 霧與光
+ const off=camPx-y0*TS;fogX.globalCompositeOperation='source-over';fogX.clearRect(0,0,FW,FH);fogX.fillStyle='rgba(5,3,18,.97)';fogX.fillRect(0,0,FW,FH);fogX.globalCompositeOperation='destination-out';
+ memX.clearRect(0,0,COLS,14);memX.fillStyle='rgba(0,0,0,.66)';for(let ry=0;ry<14;ry++){const row=y0+ry;if(row>=R_ROWS)break;for(let rx=0;rx<COLS;rx++)if(T.seen[row][rx])memX.fillRect(rx,ry,1,1)}
+ fogX.imageSmoothingEnabled=true;fogX.drawImage(memC,0,0,COLS,14,0,-off/2,FW,14*TS/2);
+ if(camPx<TS){fogX.fillStyle='#000';fogX.fillRect(0,0,FW,(TS-camPx)/2)}
+ const pr=lampR(T)*TS,pcx=T.px*TS+8,pcy=T.py*TS+8-camPx;lampGlow(pcx,pcy,pr*1.25,1);
+ lights.forEach(([x,y,r,col,a])=>lampGlow(Math.round(x),Math.round(y),r,Math.min(1,a)));
+ fogX.globalCompositeOperation='source-over';{const im=fogX.getImageData(0,0,FW,FH),dd=im.data;for(let k=3;k<dd.length;k+=4){const a=dd[k]/255,q=a>.93?.95:a>.7?.78:a>.45?.58:a>.2?.34:0;dd[k]=q*255;dd[k-1]=18;dd[k-2]=8;dd[k-3]=12}fogX.putImageData(im,0,0)}c.imageSmoothingEnabled=false;c.drawImage(fogC,0,0,VW,VH);
+ 
+ // 深度色調與暈影
+ c.fillStyle=['rgba(60,40,10,.04)','rgba(120,40,160,.05)','rgba(20,80,200,.06)','rgba(220,60,10,.07)','rgba(60,40,200,.07)'][L0];c.fillRect(0,0,VW,VH);if(T.oil<=returnCost()+4&&Math.floor(t*3)%2){c.strokeStyle='rgba(255,70,60,.8)';c.lineWidth=2;c.strokeRect(1,1,VW-2,VH-2)}}
+const HEATC=[null,null];function heatC(f){return HEATC[f]||(HEATC[f]=IT.vent(f))}
+function drawFrame(c,dt){if(typeof U!=='undefined'&&U.cook&&G){drawCook(c,dt);return}if(G&&G.stage==='dive'&&T)drawDive(c,dt);else drawCamp(c,dt)}
+/* ===== 介面與流程 ===== */
+const ACT={},RN={};const U={screen:'title',sel:[],modal:null,cn:false,dlg:null,rep:null,sayK:null};
+const btn=(a,l,c='',d='',dis=false)=>`<button class="b ${c}" data-a="${a}" ${d} ${dis?'disabled':''}>${l}</button>`;
+const FACEN={鍋鍋老闆:['n','pot'],螢螢:['n','fly'],礦礦:['n','rock'],旁白:['i','crystal'],探險家:['h']};
+function face(who){const f=FACEN[who]||['h'];return f[0]==='n'?nimg(f[1],48):f[0]==='i'?iimg(f[1],48):G?himg(G.hero,48):nimg('fly',48)}
+function say(who,text){LASTSAY=[who,text];$('#say').innerHTML=`<div class="face">${face(who)}</div><div class="nm">${who==='探險家'&&G?HEROES[G.hero].n:who}</div><div class="tx">${text}</div>`}
+const layerOf=y=>Math.min(4,Math.floor(y/10));
+const sndBtn=()=>`<button class="chip btn ico" data-a="lang" title="Language / 語言">${LANG==='zh'?'EN':'中文'}</button><button class="chip btn ico" data-a="snd" title="音樂">${ic(Aud.on?'snd':'mute',20)}</button>`;ACT.lang=()=>setLang(LANG==='zh'?'en':'zh');
+function renderHud(){const h=$('#hud');
+ if(!G){h.innerHTML=`<span class="tt">地底小廚房</span>${sndBtn()}`;return}
+ if(T){const rc=returnCost(),max=oilCap(),low=T.oil<=rc+4;h.innerHTML=`<div class="oil"><i style="width:${T.oil/max*100}%"></i><u style="left:${Math.min(100,rc/max*100)}%"></u><span>${ic('lamp',18)} 燈油 ${Math.ceil(T.oil)} / ${max}　回程 ${rc}</span></div><span class="chip ${low?'warn':''}">${ic('depth',20)} ${LAYERS[layerOf(T.py)].n} ${T.py}m</span><span class="chip">${ic('bag',20)} ${bagN()}/${bagCap()}</span>${sndBtn()}`;return}
+ h.innerHTML=`<span class="tt">地底小廚房</span><span class="chip">${ic('coin',20)} ${G.money}</span><span class="chip">${ic('depth',20)} 最深 ${G.best}m</span><button class="chip btn" data-a="dex">${ic('book',20)} 圖鑑</button>${sndBtn()}`}
+function render(){renderHud();$('#panel').innerHTML=U.cook?cookPanel():(G?RN[G.stage]:RN[U.screen])();renderModal()}
+/* --- 標題與選角 --- */
+RN.title=()=>{const has=!!loadG();return`<div class="title"><h1>地底小廚房</h1><p>往地底深處挖掘，採集食材、做成料理，<br>找到傳說中的大水晶，點亮整個村子！</p><div class="row" style="justify-content:center">${has?btn('cont','繼續遊戲','go big'):''}${btn('new',has&&U.cn?'確定要重新開始？':'開始新遊戲',has?'':'go big')}</div><p style="font-size:14px;color:#8a8296">電腦、手機、平板都能玩</p></div>`};
+RN.select=()=>`<h2>選擇你的探險家</h2><div class="heroes">${Object.keys(HEROES).map(k=>`<button class="card hero" data-a="hero" data-h="${k}">${himg(k,104)}<b>${HEROES[k].n}</b><small>${HEROES[k].d}</small><small style="color:#c43a1c">${HEROES[k].t}</small></button>`).join('')}</div>`;
+ACT.new=()=>{if(loadG()&&!U.cn){U.cn=true;render();return}U.cn=false;clearG();U.screen='select';Aud.sfx('bell');say('螢螢','嗨！選一位探險家，我們要一起去地底囉。');render()};
+ACT.hero=d=>{G=newGame(d.h);G.stage='dlg';Aud.sfx('good');dlg(STORY,()=>{G.stage='camp';G.seen=true;campSay();saveG();render()});saveG();render()};
+ACT.cont=()=>{const s=loadG();if(!s)return;G=s;G.up.bento=G.up.bento||0;if(G.stage==='dive'||G.stage==='dlg')G.stage='camp';G.sub='';Aud.sfx('bell');if(!G.seen){G.stage='dlg';dlg(STORY,()=>{G.stage='camp';G.seen=true;campSay();saveG();render()})}else campSay();render()};
+function dlg(lines,done){U.dlg={lines,i:0,done};const l=lines[0];say(l[0],l[1])}
+RN.dlg=()=>`<h2>${U.dlg.i+1} / ${U.dlg.lines.length}</h2><div class="row">${btn('next','下一句','go big')}</div>`;
+ACT.next=()=>{Aud.sfx('click');const d=U.dlg;d.i++;if(d.i>=d.lines.length){d.done();return}const l=d.lines[d.i];say(l[0],l[1]);render()};
+function campSay(){const g=G.fin?'大水晶燉鍋完成了！想收集更多食譜和寶物嗎？':G.heart?'你帶回大水晶了！快去煮飯，用大水晶＋星光果＋發光菇做燉鍋！':G.best<8?'先到第 2 層試試看吧。記得燈油不夠就拉繩子回來！':G.best<30?'升級裝備可以走得更深。也別忘了食材，煮來吃能補燈油。':'最深處正中間，有傳說中的大水晶在發光！';say('螢螢',g)}
+/* --- 營地 --- */
+RN.camp=()=>{const s=G.sub;
+ if(s==='go')return`<h2>${ic('pick',24)} 出發</h2><p class="tip">燈油會加滿。點亮過的營火，之後可以直接從那裡出發。</p><div class="row">${btn('go','從地面出發','go big','data-r="0"')}${G.camps.filter(L=>L>0).sort().map(L=>btn('go',`第 ${L+1} 層營火`,'sea','data-r="'+L*10+'"')).join('')}</div>${backBtn()}`;
+ if(s==='cook'){const has=Object.keys(FOOD).filter(k=>(G.pantry[k]||0)>0),can=G.heart&&(G.pantry.star||0)>0&&(G.pantry.glow||0)>0;
+  return`<h2>${ic('pot',24)} 煮飯（做便當）</h2><p class="tip">選 2 種食材做成便當，出發時最多帶 ${bentoCap()} 個。不同組合有不同效果，試試看！</p><div class="cards">${has.map(k=>`<button class="card" data-a="cadd" data-k="${k}">${iimg(k,40)}<span>${FOOD[k]}</span><small>×${G.pantry[k]}</small></button>`).join('')||'<div class="empty">倉庫沒有食材，先去探險吧。</div>'}</div>
+  <div class="row"><span class="chip">${U.sel.map(k=>iimg(k,24)).join('')||'選食材…'}</span>${btn('cmake','做便當','go',"",U.sel.length<2||G.bento.length>=bentoCap())}${btn('cclr','清除','')}</div>
+  <div class="kv"><span>已有便當 ${G.bento.length}/${bentoCap()}</span><span>${G.bento.map((i,j)=>DISH[i].n+qstar((G.bentoQ||[])[j]||0)).join('、')||'—'}</span></div>
+  ${can?`<div class="row">${btn('final','做「大水晶燉鍋」','sun big')}</div>`:G.heart?'<p class="tip">有大水晶了！再帶 1 個星光果和 1 個發光菇回來，就能做大水晶燉鍋。</p>':''}${backBtn()}`}
+ if(s==='shop'){const ks=Object.keys(ORE).filter(k=>G.ore[k]>0),tot=ks.reduce((a,k)=>a+G.ore[k]*ORE[k].v,0);return`<h2>${ic('gem',24)} 礦礦的收購站</h2>${ks.map(k=>`<div class="deco"><span>${iimg(k,32)} ${ORE[k].n} ×${G.ore[k]}<small>每個 ${ORE[k].v} 貝幣</small></span><b>${G.ore[k]*ORE[k].v}</b></div>`).join('')||'<div class="empty">沒有礦物可以賣。</div>'}<div class="row">${btn('sell',`全部賣掉 +${tot}`,'sun big','',!tot)}${btn('sub',`${ic('back',18)} 返回`,'','data-s=""')}</div>`}
+ if(s==='up')return`<h2>${ic('up',24)} 升級裝備</h2>${Object.keys(UP).map(k=>{const lv=G.up[k],mx=UP[k].cost.length,c=UP[k].cost[lv];return`<div class="deco"><span>${UP[k].n} Lv${lv+1}${lv<mx?` → Lv${lv+2}`:'（滿）'}<small>${UP[k].d}${UP[k].cap?`　${UP[k].cap[lv]}${lv<mx?'→'+UP[k].cap[lv+1]:''}`:''}</small></span>${lv<mx?btn('buy',`${c}`,'sea',`data-k="${k}"`,G.money<c):''}</div>`}).join('')}${backBtn()}`;
+
+if(s==='book'){const ids=Object.keys(DISH).filter(k=>k!=='odd'),found=ids.filter(k=>G.recipes.includes(k));G.cooked=G.cooked||{};
+ return`<h2>${ic('book',24)} 食譜書 ${found.length}/${ids.length}</h2><p class="tip">做出新料理就會記進書裡。還沒發現的食譜會給你一點提示：只要見過那種食材，就能看到它的名字。</p><div class="bk">${ids.map(k=>{const ok=G.recipes.includes(k),[a,b]=hintOf(k),sa=G.codex.includes(a),sb=G.codex.includes(b),ck=G.cooked[k]||0,mast=ck>=8?'拿手 +20%':ck>=3?'熟練 +10%':'';
+  return`<div class="rc ${ok?'':'lock'}"><div class="rcimg">${ok?dishImg(k,56):`<span style="filter:brightness(0) opacity(.3)">${dishImg(k,56)}</span>`}</div><div class="rctx"><b>${ok?DISH[k].n:'？？？'}</b><small>${ok?DISH[k].d:'還沒發現'}</small>${ok?`<small>${[a,b].map(x=>FOOD[x]).join(' + ')}　已做 ${ck} 次${mast?'　'+mast:''}</small>`:`<small>提示：${sa?FOOD[a]:'？'} + ${sb?FOOD[b]:'？'}</small>`}</div></div>`}).join('')}</div>${backBtn()}`}
+ const n=Object.values(G.ore).reduce((a,b)=>a+b,0);
+ return`<h2>${ic('tent',24)} 營地</h2><div class="kv"><span>最深到過</span><span>${G.best}m（${LAYERS[layerOf(G.best)].n}）</span></div><div class="kv"><span>便當</span><span>${G.bento.length}/${bentoCap()}</span></div><div class="kv"><span>食譜</span><span>${G.recipes.length}/${Object.keys(DISH).length-1}</span></div>
+ <div class="row">${btn('sub',`${ic('pick',28)} 出發探險`,'go huge','data-s="go"')}</div>
+ <div class="tiles">${tile('sub','pot','煮飯','data-s="cook"')}${tile('sub','book','食譜書','data-s="book"')}${tile('sub','gem',`賣礦${n?'（'+n+'）':''}`,'data-s="shop"')}${tile('sub','up','升級','data-s="up"')}</div>`};
+const dishImg=(k,px)=>{const c=dishSpr(k);return`<img class="px" src="${c._u||(c._u=c.toDataURL())}" width="${px*4/3}" height="${px}" alt="" draggable="false">`};
+const tile=(a,i,l,d='')=>`<button class="tile" data-a="${a}" ${d}>${ic(i,32)}<span>${l}</span></button>`;
+const backBtn=()=>`<div class="row">${btn('sub',`${ic('back',18)} 返回營地`,'','data-s=""')}</div>`;
+ACT.sub=d=>{G.sub=d.s;U.sel=[];Aud.sfx('click');render()};
+ACT.go=d=>{startTrip(+d.r);G.stage='dive';V.camY=Math.max(0,T.py-4);Aud.sfx('bell');say('螢螢',TIPS.dive);render()};
+ACT.cadd=d=>{const k=d.k;if(U.sel.length>=2||(G.pantry[k]||0)-U.sel.filter(x=>x===k).length<=0)return;U.sel.push(k);Aud.sfx('click');render()};
+ACT.cclr=()=>{U.sel=[];render()};
+ACT.cmake=()=>{if(U.sel.length<2||G.bento.length>=bentoCap())return;const[a,b]=U.sel;Aud.sfx('click');startCook(a,b)};
+ACT.sell=()=>{let t=0;Object.keys(G.ore).forEach(k=>{t+=G.ore[k]*ORE[k].v;G.ore[k]=0});G.money+=t;Aud.sfx('coin');say('礦礦',`收購完成，一共 ${t} 貝幣！`);saveG();render()};
+ACT.buy=d=>{const k=d.k,lv=G.up[k],c=UP[k].cost[lv];if(G.money<c)return;G.money-=c;G.up[k]++;Aud.sfx('good');say('礦礦',`${UP[k].n}升級了！`);saveG();render()};
+ACT.final=()=>{if(!(G.heart&&G.pantry.star>0&&G.pantry.glow>0))return;G.pantry.star--;G.pantry.glow--;G.heart=false;G.fin=true;G.money+=100;G.stage='dlg';Aud.sfx('lamp');dlg(FIN,()=>{G.stage='camp';G.sub='';campSay();saveG();render()});saveG();render()};
+/* --- 地底 --- */
+function arrive(lost){const had=T.bag.length,out=endTrip(lost);G.stage='camp';G.sub='';U.sel=[];Aud.sfx(lost?'no':'good');
+ say('螢螢',lost?`燈滅了！我把你拉回來了，不過弄掉了一半的東西，帶回 ${out.kept}/${had} 樣。`:`平安回到營地！帶回 ${out.kept} 樣東西。${G.heart&&!G.fin?'還有大水晶！快去煮飯！':''}`);saveG();render()}
+RN.dive=()=>{if(T.menu==='fire')return fireMenu();const bg=Object.keys(T.buff).filter(k=>T.buff[k]>0).map(k=>`<span class="buff">${{light:'照遠',swim:'防水',cool:'防熱',strong:'力氣',lucky:'幸運',walk:'輕盈',bag:'大背包'}[k]}${T.buff[k]>1?' '+T.buff[k]:''}</span>`).join('');
+ return`<div>${bg||'<span style="color:#8a8296;font-size:14px">沒有加成</span>'}</div><div class="bag">${Array.from({length:bagCap()},(_,i)=>`<span class="${T.bag[i]?'':'e'}">${T.bag[i]?iimg(T.bag[i],26):''}</span>`).join('')}</div>
+ <div class="dp"><button class="u" data-d="0,-1">▲</button><button class="l" data-d="-1,0">◀</button><button class="d" data-d="0,1">▼</button><button class="r" data-d="1,0">▶</button></div>
+ <div class="row" style="justify-content:center">${btn('rope',`拉繩子回營地（${returnCost()}）`,'sea')}${G.bento.map((id,i)=>btn('bento',`吃：${DISH[id].n}${qstar((G.bentoQ||[])[i]||0)}`,'mint',`data-i="${i}"`)).join('')}</div><p class="tip" style="margin-top:12px">${TIPS.rope}</p>`};
+function fireMenu(){const k=Object.keys(FOOD).filter(x=>T.bag.includes(x));return`<h2>營火</h2><p class="tip">營火點亮了！選 2 種食材，現煮現吃，補充燈油。</p><div class="cards">${k.map(x=>`<button class="card" data-a="fadd" data-k="${x}">${iimg(x,40)}<span>${FOOD[x]}</span><small>×${T.bag.filter(z=>z===x).length}</small></button>`).join('')||'<div class="empty">背包裡沒有食材。</div>'}</div><div class="row"><span class="chip">${U.sel.map(x=>iimg(x,24)).join('')||'選食材…'}</span>${btn('feat','煮來吃','go','',U.sel.length<2)}${btn('cclr','清除','')}</div><div class="row">${G.bento.map((id,i)=>btn('bento',`吃：${DISH[id].n}${qstar((G.bentoQ||[])[i]||0)}`,'mint',`data-i="${i}"`)).join('')}${btn('fclose','繼續探險','sea big')}</div><div class="row">${btn('fcamp',T.rested&&T.rested[T.py]?'已紮營休息過':'紮營休息（燈油 +10）','mint','',!!(T.rested&&T.rested[T.py]))}${btn('fhome','從營火回營地（免費）','sun')}</div><p class="tip">紮營每座營火每趟只能休息一次；從營火回營地不用花燈油，東西也都帶得走。</p>`}
+ACT.fadd=d=>{const k=d.k;if(U.sel.length>=2||T.bag.filter(x=>x===k).length-U.sel.filter(x=>x===k).length<=0)return;U.sel.push(k);Aud.sfx('click');render()};
+ACT.feat=()=>{if(U.sel.length<2)return;const[a,b]=U.sel;[a,b].forEach(k=>T.bag.splice(T.bag.indexOf(k),1));const r=cook(a,b);eatDish(r.id);U.sel=[];Aud.sfx('cook');V.parts=[];say('探險家',`吃了「${DISH[r.id].n}」！${DISH[r.id].d}${r.isNew?'　（新食譜！獎金 +15）':''}`);saveG();render()};
+ACT.fcamp=()=>{T.rested=T.rested||{};if(T.rested[T.py])return;T.rested[T.py]=1;T.oil=Math.min(oilCap(),T.oil+10);Aud.sfx('cook');say('螢螢','在營火邊休息了一下，燈油回復了 10 點！');render()};
+ACT.fhome=()=>{T.menu=null;arrive(false)};
+ACT.fclose=()=>{T.menu=null;U.sel=[];render()};
+ACT.bento=d=>{const i=+d.i,id=G.bento[i];if(!id)return;G.bento.splice(i,1);const q=((G.bentoQ=G.bentoQ||[]).splice(i,1)[0])||0;eatDish(id,q);Aud.sfx('cook');say('探險家',`吃了便當「${DISH[id].n}${qstar(q)}」！${DISH[id].d}`);saveG();render()};
+ACT.rope=()=>{const c=returnCost();if(T.py>0&&T.oil<c){say('螢螢','燈油不夠拉繩子了！只能一格一格爬回去，或用料理補油。');Aud.sfx('no');return}spend(c);arrive(false)};
+function doMove(dx,dy){if(!T||T.menu||G.stage!=='dive')return;const r=move(dx,dy);if(!r)return;
+ if(r.leave){arrive(false);return}
+ if(!r.ok){if(r.msg){say('螢螢',r.msg);Aud.sfx('no')}return}
+ const tx=T.px,ty=T.py,L=layerOf(T.py);
+ if(r.dug){Aud.sfx('dig');dust(tx,ty,LAYERS[L].sp)}
+ if(r.got){Aud.sfx('find');dust(tx,ty,'#ffd400',8);if(r.fresh)say('螢螢',`新發現：${FOOD[r.fresh]||ORE[r.fresh].n}！`);}
+ if(r.haz){Aud.sfx('no');dust(tx,ty,r.haz==='water'?'#6fc0ff':r.haz==='heat'?'#ff7a1a':'#e0a0ff',8);say('螢螢',{water:'咕嚕！踩進積水了，浪費了一些燈油。',heat:'好燙！熱氣讓燈油蒸發了。',spore:'咳咳！蘑菇孢子噴出來了。'}[r.haz])}
+ if(r.heart){Aud.sfx('lamp');say('螢螢','這是……大水晶！快帶回營地，煮成燉鍋！');dust(tx,ty,'#6ff0ff',16)}
+ if(r.fire){Aud.sfx('cook');say('螢螢','營火點亮了！下次可以直接從這一層出發。');U.sel=[]}
+ if(T.oil<=0){arrive(true);return}
+ if(T.oil<=returnCost()+4){if(!T.warned){T.warned=true;Aud.sfx('warn');say('螢螢','燈油快不夠了！趕快拉繩子回營地，或煮點東西補油！')}}else T.warned=false;
+ render()}
+/* --- 圖鑑 --- */
+ACT.dex=()=>{U.modal='dex';Aud.sfx('click');render()};ACT.close=()=>{U.modal=null;render()};ACT.snd=()=>{Aud.init();Aud.set(!Aud.on);render()};
+function renderModal(){const m=$('#modal');if(U.modal!=='dex'||!G){m.hidden=true;m.innerHTML='';return}m.hidden=false;
+ const f=k=>G.codex.includes(k),cell=(k,n)=>`<div class="card">${f(k)?iimg(k,40):`<span style="filter:brightness(0) opacity(.25)">${iimg(k,40)}</span>`}<span>${f(k)?n:'？？？'}</span></div>`;
+ m.innerHTML=`<div class="mb box"><h2>圖鑑</h2><div class="kv"><span>最深</span><span>${G.best}m</span></div><div class="kv"><span>探險次數</span><span>${G.trips}</span></div><h2 style="margin-top:10px">食材</h2><div class="cards">${Object.keys(FOOD).map(k=>cell(k,FOOD[k])).join('')}</div><h2 style="margin-top:10px">礦物</h2><div class="cards">${Object.keys(ORE).map(k=>cell(k,ORE[k].n)).join('')}</div><h2 style="margin-top:10px">食譜 ${G.recipes.length}/${Object.keys(DISH).length-1}</h2>${Object.keys(DISH).filter(k=>k!=='odd').map(k=>`<div class="deco"><span>${G.recipes.includes(k)?DISH[k].n:'？？？'}<small>${G.recipes.includes(k)?DISH[k].d:'還沒發現'}</small></span></div>`).join('')}<div class="row">${btn('close','關閉','go')}</div></div>`}
+/* ===== 料理小遊戲：去皮、切、川燙、調味，最後上菜動畫 ===== */
+const STEPS_OF={root:['peel','cut','blanch'],onion:['peel','cut'],shiitake:['cut','blanch'],glow:['blanch'],jelly:['cut'],kelp:['blanch'],chili:['cut'],star:['cut'],herb:['cut'],nut:['peel','blanch'],truffle:['cut'],berry:['blanch'],lotus:['peel','cut'],mango:['peel','cut'],moon:['peel'],honey:['blanch']};
+const STEP_N={peel:'去皮',cut:'切一切',blanch:'川燙',season:'調味'};
+const STEP_T={peel:'連續點「刮刮刮」把外皮刮乾淨，越快越好！',cut:'刀子會左右移動，在黃線附近按「切！」，一共切 3 刀。',blanch:'按住「放進滾水」，溫度到綠色區間時放開撈起來。',season:'照著目標數量撒調味料，不多不少最美味。'};
+const SEAS={soup:'#ffffff',mush:'#3a2a20',glowm:'#9af0ff',jelly:'#ffffff',chilip:'#ff4a3a',starj:'#ffe27a',spicy:'#ff4a3a',odd:'#c07aff'};
+const QN=['普通','美味','絕品'],QMUL=[1,1.2,1.5];
+const qstar=q=>q>0?' '+'★'.repeat(q):'';
+let COOKBG=null;const DSP={};
+function txt(c,s,x,y,col='#fff',size=12,al='center'){s=tr(s);c.font=size+"px DotGothic16,'PingFang TC',sans-serif";c.textAlign=al;c.textBaseline='middle';c.fillStyle='#2e2a3a';[[1,0],[-1,0],[0,1],[0,-1],[1,1]].forEach(([dx,dy])=>c.fillText(s,x+dx,y+dy));c.fillStyle=col;c.fillText(s,x,y)}
+const ease=t=>1-Math.pow(1-Math.min(1,t),3),back=t=>{t=Math.min(1,t);const s=1.7;return 1+(s+1)*Math.pow(t-1,3)+s*Math.pow(t-1,2)};
+function dishSpr(id){if(DSP[id])return DSP[id];
+ return DSP[id]=paint(40,30,6,g=>{const bowl=(rim,inner,body)=>{elli(g,20,25,16,3.5,'rgba(0,0,0,.2)');g.fillStyle=lin(g,0,16,0,27,[[0,body],[1,rim]]);g.beginPath();g.moveTo(4,16);g.quadraticCurveTo(6,28,20,28);g.quadraticCurveTo(34,28,36,16);g.fill();elli(g,20,16,16,5,rim);elli(g,20,16.4,14,3.8,inner)};
+  const plate=(inner)=>{elli(g,20,25,17,3.5,'rgba(0,0,0,.2)');elli(g,20,22,18,6,'#e8e4f0');elli(g,20,21,16,4.8,'#fff');elli(g,20,21,11,3,inner)};
+  const star=(x,y,r,col)=>{g.fillStyle=col;g.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr2=i%2?r*.45:r;g.lineTo(x+Math.cos(a)*rr2,y+Math.sin(a)*rr2)}g.fill()};
+  if(id==='soup'){bowl('#f4f0ff','#f0c85a','#8ac0f0');[[14,16],[22,15],[27,17],[18,17.5]].forEach(([x,y])=>{g.strokeStyle='#fff';g.lineWidth=1.3;g.beginPath();g.ellipse(x,y,2.4,1.1,0,0,7);g.stroke()});circ(g,24,16.5,1,'#5ac85a');circ(g,12,17,1,'#5ac85a')}
+  else if(id==='mush'){bowl('#f4f0ff','#a8683a','#e8a0a0');[[13,14],[21,13.5],[27,15]].forEach(([x,y])=>{elli(g,x,y,3.4,2.2,'#d89a5a');elli(g,x,y+2,1,1.8,'#f4e4c4')})}
+  else if(id==='glowm'){plate('#ffe8c8');[[13,17],[20,15],[27,17]].forEach(([x,y])=>{circ(g,x,y,5,'rgba(150,240,255,.35)');elli(g,x,y-1,3.2,2.2,'#6ff0ff');elli(g,x,y+1.6,1,1.6,'#e8ffff')})}
+  else if(id==='jelly'){bowl('#e8f4ff','#9ad8ff','#bcd8f0');g.fillStyle='#7ac8ff';g.beginPath();g.moveTo(8,16);g.quadraticCurveTo(20,0,32,16);g.fill();elli(g,15,10,3,1.4,'rgba(255,255,255,.8)',-.5)}
+  else if(id==='chilip'){plate('#ffe8c8');[[13,19],[19,17],[25,19]].forEach(([x,y])=>{elli(g,x,y,4,2.8,'#ff9a3a');elli(g,x,y-.6,2.6,1.6,'#ffc860')});g.strokeStyle='#e03a2a';g.lineWidth=2.4;g.lineCap='round';g.beginPath();g.moveTo(14,12);g.quadraticCurveTo(22,8,29,13);g.stroke()}
+  else if(id==='starj'){bowl('#fff4d0','#ffe27a','#f0c860');g.fillStyle='#ffd23a';g.beginPath();g.moveTo(8,16);g.quadraticCurveTo(20,0,32,16);g.fill();star(20,10,5,'#fff6b0')}
+  else if(id==='spicy'){bowl('#fff0e0','#e8402a','#d86a4a');g.strokeStyle='#3aa85a';g.lineWidth=2;g.lineCap='round';[[12,16,17,18],[19,15,26,17],[24,18,29,16]].forEach(([a,b,c2,d])=>{g.beginPath();g.moveTo(a,b);g.quadraticCurveTo((a+c2)/2,b-3,c2,d);g.stroke()})}
+  else if(DISH[id]&&DISH[id].v){const[ty,inn,acc,body]=DISH[id].v;if(ty==='bowl')bowl('#f4f0ff',inn,body||'#c8c0e0');else plate(inn);[[13,17],[20,15],[27,17]].forEach(([x,y],i)=>{const yy=ty==='bowl'?y-1:y+1;circ(g,x,yy,2.8,acc);circ(g,x-.9,yy-.9,.9,'rgba(255,255,255,.8)')})}
+  else{bowl('#e8e0f0','#8a4ac8','#6a3a98');[[14,15,2],[21,13,2.6],[27,16,1.8]].forEach(([x,y,r])=>circ(g,x,y,r,'#c88aff'));g.fillStyle='#fff';g.fillRect(19,8,2,2.6);g.fillRect(19,11.4,2,1.4)}
+ },{cut:.4})}
+function buildCookBG(){COOKBG=paint(320,180,3,g=>{
+ g.fillStyle='#a8e0cc';g.fillRect(0,0,320,116);g.fillStyle='#8ccbb4';for(let x=0;x<320;x+=26)g.fillRect(x,0,1.5,116);for(let y=0;y<116;y+=26)g.fillRect(0,y,320,1.5);
+ rr(g,14,40,292,6,1,'#b87a48');g.fillStyle='#8a5a30';g.fillRect(14,44,292,2);
+ [[30,'#ff7a6a',18],[56,'#ffd45a',14],[80,'#7ad8ff',16],[250,'#c0a0ff',16],[280,'#7ae0a0',18]].forEach(([x,c2,h])=>{rr(g,x,40-h,13,h,3,c2);rr(g,x+1,40-h-3,11,4,1,'#fff4d8');g.fillStyle='rgba(255,255,255,.4)';g.fillRect(x+2,40-h+3,2,h-6)});
+ [[130,'#d8d4e8'],[170,'#ffb870']].forEach(([x,c2])=>{elli(g,x+10,34,12,5,c2);rr(g,x,22,20,14,3,c2);g.fillStyle='rgba(0,0,0,.12)';g.fillRect(x+3,28,14,1)});
+ for(let i=0;i<5;i++){g.strokeStyle='#5a3a24';g.lineWidth=1;g.beginPath();g.moveTo(40+i*54,0);g.lineTo(40+i*54,10);g.stroke();elli(g,40+i*54,16,5,5,['#c8c4d8','#e8b068','#a8c0d8','#d89a8a','#b8d8a8'][i])}
+ g.fillStyle=lin(g,0,112,0,128,[[0,'#f0c488'],[1,'#d8a468']]);g.fillRect(0,112,320,16);g.fillStyle='rgba(90,50,20,.25)';for(let x=0;x<320;x+=40)g.fillRect(x,112,1.5,16);g.fillStyle='#fff0c8';g.fillRect(0,112,320,2);
+ g.fillStyle='#b87a48';g.fillRect(0,128,320,52);g.fillStyle='#8a5a30';for(let x=0;x<320;x+=32)g.fillRect(x,128,2,52);g.fillStyle='#9a6a3a';g.fillRect(0,128,320,3);
+},{outline:false})}
+function startCook(a,b){const steps=[];[a,b].forEach(k=>(STEPS_OF[k]||['cut']).forEach(t=>steps.push({t,k})));steps.push({t:'season',k:null});
+ U.cook={a,b,id:recipeOf(a,b),steps,i:0,stars:[],ph:'step',t:0,s:null,parts:[],q:0,fin:0};initStep()}
+function initStep(){const C=U.cook,st=C.steps[C.i];C.t=0;C.fin=0;C.parts=[];
+ C.s=st.t==='cut'?{X:105,dir:1,cuts:[],pts:0,tg:[132,160,188]}:st.t==='peel'?{p:0,tgt:12}:st.t==='blanch'?{h:0,ht:0,hold:false}:{n:0,tgt:2+Math.floor(Math.random()*3)};render()}
+function stepDone(n){const C=U.cook;C.stars.push(n);C.fin=1;C.s.done=true;Aud.sfx(n>=3?'good':'clean');if(n>=3)for(let i=0;i<14;i++)C.parts.push({x:160,y:84,vx:(Math.random()-.5)*3,vy:-Math.random()*2.5-.5,life:.8,age:0,col:pick(['#ffe27a','#fff','#ff9ae0']),s:2,g:.08})}
+function cookInput(t,down){const C=U.cook;if(!C||C.ph!=='step'||C.fin>0)return;const st=C.steps[C.i],s=C.s;
+ if(t==='cut'&&st.t==='cut'&&down&&s.cuts.length<3){const k=s.cuts.length,e=Math.abs(s.X-s.tg[k]);s.cuts.push(Math.round(s.X));s.pts+=e<=5?1:e<=11?.6:.25;Aud.tone(170,.07,'square',.06,0,80);for(let i=0;i<5;i++)C.parts.push({x:s.X,y:100,vx:(Math.random()-.5)*2,vy:-Math.random()*1.8,life:.4,age:0,col:'#fff',s:1,g:.1});if(s.cuts.length===3){const r=s.pts/3;stepDone(r>=.85?3:r>=.55?2:1)}}
+ else if(t==='peel'&&st.t==='peel'&&down){s.p++;Aud.sfx('scrub');for(let i=0;i<3;i++)C.parts.push({x:160+(Math.random()-.5)*30,y:80,vx:(Math.random()-.5)*2.4,vy:-Math.random()*2,life:.6,age:0,col:pick(['#c8924a','#a8703a','#e8c07a']),s:2,g:.1});if(s.p>=s.tgt)stepDone(C.t<3.5?3:C.t<6?2:1)}
+ else if(t==='hold'&&st.t==='blanch'){if(down&&!s.hold){s.hold=true;s.ht=0}else if(!down&&s.hold){s.hold=false;if(s.h<.15){s.h=0;s.ht=0;return}const d=Math.abs(s.h-.65);Aud.sfx('pop');stepDone(d<=.06?3:d<=.1?2:1)}}
+ else if(t==='sprinkle'&&st.t==='season'&&down&&s.n<9){s.n++;Aud.tone(900,.05,'triangle',.04);for(let i=0;i<8;i++)C.parts.push({x:150+Math.random()*20,y:48,vx:(Math.random()-.5)*.8,vy:.6+Math.random(),life:.6,age:0,col:SEAS[C.id]||'#fff',s:1,g:.12})}
+ else if(t==='seasdone'&&st.t==='season'&&down){const d=Math.abs(s.n-s.tgt);stepDone(d===0?3:d===1?2:1)}}
+function cookPanel(){const C=U.cook;if(!C)return'';
+ if(C.ph==='serve')return`<h2>上菜！</h2><p class="tip">料理端上桌了…</p>`;
+ if(C.ph==='done'){const d=DISH[C.id];return`<h2>${d.n}</h2><div class="kv"><span>評價</span><span>${QN[C.q]}${qstar(C.q+1)}</span></div><div class="kv"><span>效果</span><span>${d.d}${C.q?`（${QN[C.q]}加成 ×${QMUL[C.q]}）`:''}</span></div><div class="row">${btn('ctake','收下便當','go huge')}</div>`}
+ const st=C.steps[C.i],dots=C.steps.map((x,i)=>`<span class="dot ${i<C.i?'ok':i===C.i?'cur':''}">${i<C.i?'★'.repeat(C.stars[i]):'·'}</span>`).join('');
+ const bt={cut:`<button class="b go huge" data-c="cut">切！</button>`,peel:`<button class="b go huge" data-c="peel">刮刮刮！</button>`,blanch:`<button class="b sea huge" data-c="hold">按住：放進滾水</button>`,season:`<button class="b sun huge" data-c="sprinkle">撒！</button><button class="b mint huge" data-c="seasdone">好了！</button>`}[st.t];
+ return`<h2>料理：${STEP_N[st.t]}</h2><div class="dots">${dots}</div><p class="tip">${STEP_T[st.t]}（空白鍵也可以操作）</p><div class="cbtns">${bt}</div><div class="row">${btn('cskip','快速做完（普通）','')}</div>`}
+ACT.cskip=()=>{const C=U.cook;if(!C||C.ph!=='step')return;C.stars=C.steps.map(()=>1);C.q=0;C.ph='serve';C.t=0;C.sv={};render()};
+ACT.ctake=()=>{const C=U.cook;if(!C||C.ph!=='done')return;const{a,b}=C;G.pantry[a]--;G.pantry[b]--;const r=cook(a,b);G.cooked=G.cooked||{};G.cooked[r.id]=(G.cooked[r.id]||0)+1;G.bento.push(r.id);(G.bentoQ=G.bentoQ||[]).push(C.q);U.sel=[];U.cook=null;Aud.sfx('cook');say('鍋鍋老闆',`收好「${DISH[r.id].n}」${qstar(C.q)}了！${DISH[r.id].d}${r.isNew?'　（新食譜！獎金 +15）':''}`);saveG();render()};
+document.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-c]');if(!b)return;Aud.init();cookInput(b.dataset.c,true);e.preventDefault()});
+['pointerup','pointercancel','pointerleave'].forEach(k=>document.addEventListener(k,e=>{if(U.cook&&U.cook.s&&U.cook.s.hold)cookInput('hold',false)}));
+document.addEventListener('keydown',e=>{const C=U.cook;if(!C||e.repeat)return;if(e.key===' '||e.key==='Enter'){e.preventDefault();if(C.ph==='step'){const t=C.steps[C.i].t;if(t==='season'&&e.key==='Enter')cookInput('seasdone',true);else cookInput({cut:'cut',peel:'peel',blanch:'hold',season:'sprinkle'}[t],true)}else if(C.ph==='done')ACT.ctake()}});
+document.addEventListener('keyup',e=>{if(U.cook&&e.key===' ')cookInput('hold',false)});
+/* --- 繪製 --- */
+function partsUpd(c,L,dt){for(let i=L.length-1;i>=0;i--){const p=L[i];p.age+=dt;if(p.age>p.life){L.splice(i,1);continue}p.x+=p.vx;p.y+=p.vy;p.vy+=p.g||0;c.globalAlpha=1-p.age/p.life;c.fillStyle=p.col;c.fillRect(Math.round(p.x),Math.round(p.y),p.s,p.s)}c.globalAlpha=1}
+function ing(c,k,cx,by,sc,o={}){const ic=igc(k),w=ic.width*sc,h=ic.height*sc,x0=Math.round(cx-w/2+(o.dx||0)),y0=Math.round(by-h+(o.dy||0));c.imageSmoothingEnabled=false;
+ let src=ic;if(o.tint){const t=document.createElement('canvas');t.width=ic.width;t.height=ic.height;const g=t.getContext('2d');g.drawImage(ic,0,0);g.globalCompositeOperation='source-atop';g.fillStyle=o.tint;g.globalAlpha=o.ta;g.fillRect(0,0,t.width,t.height);src=t}
+ if(o.cuts&&o.cuts.length){const xs=[x0,...o.cuts.filter(x=>x>x0&&x<x0+w).sort((a,b)=>a-b),x0+w],n=xs.length-1;for(let i=0;i<n;i++){const a=xs[i],b=xs[i+1];if(b-a<=0)continue;const off=Math.round((i-(n-1)/2)*(o.spread||0));c.drawImage(src,(a-x0)/sc,0,(b-a)/sc,ic.height,a+off,y0,b-a,h)}}
+ else c.drawImage(src,x0,y0,w,h);return{x0,y0,w,h}}
+function drawCook(c,dt){if(!COOKBG)buildCookBG();const C=U.cook;C.t+=dt;c.imageSmoothingEnabled=false;c.drawImage(COOKBG,0,0);const st=C.steps[Math.min(C.i,C.steps.length-1)],s=C.s,t=C.t;
+ if(C.ph==='step'){
+  rr(c,118,4,84,20,4,'rgba(30,16,50,.7)');txt(c,STEP_N[st.t],160,14,'#fff6c8',16);for(let i=0;i<C.steps.length;i++){c.fillStyle=i<C.i?'#ffd45a':i===C.i?'#fff':'rgba(255,255,255,.35)';c.fillRect(160-C.steps.length*7+i*14,24,10,4)}
+  if(st.t==='cut'||st.t==='peel'){rr(c,86,106,148,10,3,'#f6dca0');c.fillStyle='#c8984a';c.fillRect(86,114,148,3)}
+  if(st.t==='cut'){if(!s.done&&!(s.cuts.length>=3)){s.X+=s.dir*70*dt;if(s.X>=215){s.X=215;s.dir=-1}if(s.X<=105){s.X=105;s.dir=1}}
+   const k=ing(c,st.k,160,108,4,{cuts:s.cuts,spread:s.cuts.length?1+Math.min(2,C.fin?2:0):0});
+   if(!s.done)s.tg.forEach((x,i)=>{if(i>=s.cuts.length){c.fillStyle='#ffd45a';for(let y=k.y0-4;y<108;y+=6)c.fillRect(x,y,1,3)}});
+   s.cuts.forEach(x=>{c.fillStyle='rgba(60,30,10,.7)';c.fillRect(x,k.y0,1,k.h)});
+   if(!s.done){const X=Math.round(s.X);c.fillStyle='#e8eef8';c.fillRect(X-1,56,3,52);c.fillStyle='#8a96a8';c.fillRect(X+1,56,1,52);c.fillStyle='#8a5a30';c.fillRect(X-3,46,7,12);c.fillStyle='#5a3a24';c.fillRect(X-3,56,7,2)}}
+  else if(st.t==='peel'){const sh=Math.sin(t*40)*(s.p&&!s.done?1.2:0),pr=s.p/s.tgt;ing(c,st.k,160,108,4,{dx:sh,tint:'#8a5a2a',ta:Math.max(0,.55-pr*.55)});if(pr>0){c.globalAlpha=pr*.3;ing(c,st.k,160,108,4,{dx:sh,tint:'#ffffff',ta:.6});c.globalAlpha=1}
+   rr(c,100,128,120,8,3,'#2e2a3a');rr(c,101,129,Math.max(1,118*pr),6,2,'#ffd45a');
+   if(!s.done&&t>9){stepDone(1)}}
+  else if(st.t==='blanch'){if(s.hold&&!s.done){s.ht+=dt;s.h=s.ht*.38;if(s.h>=1){s.h=1;s.hold=false;stepDone(1)}}
+   rr(c,104,88,112,44,12,'#7a8a9c');rr(c,104,88,112,8,4,'#a8b6c8');rr(c,92,96,14,5,2,'#5a6a7c');rr(c,214,96,14,5,2,'#5a6a7c');elli(c,160,92,50,6,'#4a5a6c');elli(c,160,92,46,4.6,'#5ab8ff');
+   for(let i=0;i<5;i++){const p=((t*.8+i*.2)%1);c.fillStyle='rgba(255,255,255,.7)';c.fillRect(Math.round(130+i*15+Math.sin(t*3+i)*3),Math.round(93-p*5),2,2)}
+   for(let i=0;i<3;i++){const p=(t*.5+i*.33)%1;c.globalAlpha=(1-p)*.6;c.fillStyle='#fff';c.fillRect(Math.round(140+i*20+Math.sin(p*6)*4),Math.round(80-p*30),3,3)}c.globalAlpha=1;
+   const dip=s.hold?Math.min(1,s.ht*4):s.done?0:0;ing(c,st.k,160,64+dip*30+(s.done?-Math.min(1,C.fin)*0:0),3.5,{});
+   rr(c,236,52,14,70,4,'#2e2a3a');rr(c,238,54,10,66,3,'#fff');c.fillStyle='#8ae0a0';c.fillRect(238,54+66*(1-.75),10,66*.2);c.fillStyle=s.h>.75?'#ff5a4a':'#ffb84a';const hh=66*Math.min(1,s.h);c.fillRect(238,120-hh,10,hh);txt(c,'溫度',243,44,'#fff',10);
+   const fl=Math.floor(t*6)%2;[[122,'#ff9a3a'],[150,'#ffd45a'],[178,'#ff9a3a']].forEach(([x,col],i)=>{c.fillStyle=col;c.beginPath();c.moveTo(x,148);c.lineTo(x+8,148);c.lineTo(x+4,136-((i+fl)%2)*4);c.fill()})}
+  else{ // 調味
+   elli(c,160,118,56,9,'#e8e4f0');elli(c,160,116,50,7,'#fff');ing(c,C.a,140,116,2.2);ing(c,C.b,180,116,2.2);
+   const sx=160+Math.sin(t*3)*0,sy=34;c.save();c.translate(sx,sy);c.rotate(.5+Math.sin(t*8)*.05*(C.parts.length?1:0));rr(c,-8,-6,16,22,4,'#e8eef8');rr(c,-8,-10,16,6,3,SEAS[C.id]||'#fff');c.fillStyle='rgba(0,0,0,.2)';c.fillRect(-8,2,16,2);c.restore();
+   for(let i=0;i<s.tgt;i++){c.fillStyle=i<s.n?'#ffd45a':'rgba(255,255,255,.35)';c.fillRect(160-s.tgt*6+i*12,62,8,8)}
+   txt(c,`目標 ${s.tgt} 下　已撒 ${s.n}`,160,82,'#fff',12)}
+  partsUpd(c,C.parts,dt);
+  if(C.fin>0){C.fin-=dt;const n=C.stars[C.stars.length-1];for(let i=0;i<n;i++){const p=Math.min(1,(1-C.fin)*3-i*.3);if(p>0)txt(c,'★',160+(i-(n-1)/2)*20,60-Math.sin(p*3)*6,'#ffe27a',20)}if(C.fin<=0){if(C.i<C.steps.length-1){C.i++;initStep()}else{const sum=C.stars.reduce((x,y)=>x+y,0)/(3*C.steps.length);C.q=sum>=.8?2:sum>=.55?1:0;C.ph='serve';C.t=0;C.sv={};render()}}}
+ }else drawServe(c,dt);
+ c.fillStyle='rgba(20,10,30,.0)'}
+function drawServe(c,dt){const C=U.cook,t=C.t,sv=C.sv||(C.sv={});c.fillStyle='rgba(30,16,50,.55)';c.fillRect(0,0,320,180);
+ const px=t<.7?400-ease(t/.7)*240:160,cy=92;
+ for(let i=0;i<14;i++){const a=t*.5+i*Math.PI*2/14;c.fillStyle=i%2?'rgba(255,240,170,.22)':'rgba(255,200,120,.14)';c.beginPath();c.moveTo(px,cy);c.lineTo(px+Math.cos(a)*260,cy+Math.sin(a)*260);c.lineTo(px+Math.cos(a+.2)*260,cy+Math.sin(a+.2)*260);c.fill()}
+ if(t>.6&&!sv.bell){sv.bell=1;Aud.sfx('bell');for(let i=0;i<30;i++)C.parts.push({x:160,y:100,vx:(Math.random()-.5)*5,vy:(Math.random()-.5)*5,life:.9,age:0,col:pick(['#ffe27a','#fff','#ff9ae0','#7af0ff']),s:2,g:.04})}
+ const bs=t<.7?1:1+Math.max(0,.14-(t-.7)*.4)*Math.sin((t-.7)*14);const spr=dishSpr(C.id),w=Math.round(40*3.5*bs),h=Math.round(30*3.5*bs);
+ c.fillStyle='rgba(0,0,0,.28)';c.beginPath();c.ellipse(px,cy+h/2-4,w*.45,8,0,0,7);c.fill();c.drawImage(spr,Math.round(px-w/2),Math.round(cy-h/2),w,h);
+ if(t>.7)for(let i=0;i<4;i++){const p=((t*.6+i*.25)%1);c.globalAlpha=(1-p)*.6;c.fillStyle='#fff';c.fillRect(Math.round(px-24+i*16+Math.sin(p*7+i)*4),Math.round(cy-30-p*34),4,4)}c.globalAlpha=1;
+ for(let i=0;i<=C.q;i++){const ts=1+i*.5,p=(t-ts)/.35;if(p>0){if(!sv['s'+i]){sv['s'+i]=1;Aud.sfx('good')}const sc=back(p);c.save();c.translate(160+(i-C.q/2)*30,24);c.scale(sc,sc);txt(c,'★',0,0,'#ffe27a',30);c.restore()}}
+ if(t>2.4){const p=ease((t-2.4)/.4);c.globalAlpha=p;txt(c,QN[C.q]+(C.q===2?'！！':C.q===1?'！':''),160,156-(1-p)*8,['#fff','#ffe27a','#ff9ae0'][C.q],24);txt(c,DISH[C.id].n,160,171,'#fff',12);c.globalAlpha=1}
+ partsUpd(c,C.parts,dt);
+ if(t>3.2&&C.ph==='serve'){C.ph='done';render()}}
+/* ===== 啟動 ===== */
+function fit(){const p=$('#stagewrap').parentElement,av=p.clientWidth-8;let s=av/320;const f=Math.floor(s);if(f>=2&&s-f<.3)s=f;const cv=$('#cv');cv.style.width=Math.floor(320*s)+'px';cv.style.height=Math.floor(180*s)+'px';cv.style.imageRendering='pixelated'}
+document.addEventListener('click',e=>{Aud.init();const el=e.target.closest('[data-a]');if(!el||el.disabled)return;const f=ACT[el.dataset.a];if(f)f(el.dataset,el)});
+const stopRep=()=>{if(U.rep){clearTimeout(U.rep);clearInterval(U.rep);U.rep=null}};
+document.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-d]');if(!b)return;Aud.init();const[dx,dy]=b.dataset.d.split(',').map(Number);doMove(dx,dy);stopRep();U.rep=setTimeout(()=>{U.rep=setInterval(()=>doMove(dx,dy),140)},320);e.preventDefault()});
+['pointerup','pointercancel','pointerleave'].forEach(k=>document.addEventListener(k,stopRep));
+document.addEventListener('keydown',e=>{const m={ArrowUp:[0,-1],w:[0,-1],W:[0,-1],ArrowDown:[0,1],s:[0,1],S:[0,1],ArrowLeft:[-1,0],a:[-1,0],A:[-1,0],ArrowRight:[1,0],d:[1,0],D:[1,0]}[e.key];if(m&&G&&G.stage==='dive'&&!U.modal){Aud.init();doMove(...m);e.preventDefault()}});
+$('#cv').addEventListener('pointerdown',e=>{if(!G||!T||G.stage!=='dive')return;const r=$('#cv').getBoundingClientRect(),fx=(e.clientX-r.left)/r.width*320,fy=(e.clientY-r.top)/r.height*180,col=Math.floor(fx/16),row=Math.floor((fy+Math.round(V.camY*16))/16);const dx=col-T.px,dy=row-T.py;if(Math.abs(dx)+Math.abs(dy)===1){Aud.init();doMove(dx,dy)}});
+window.addEventListener('resize',fit);if(window.ResizeObserver)new ResizeObserver(fit).observe(document.body);
+const ctx=$('#cv').getContext('2d');ctx.imageSmoothingEnabled=false;
+let last=performance.now();(function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;drawFrame(ctx,dt);requestAnimationFrame(loop)})(last);
+say('鍋鍋老闆','歡迎來到地底食堂！');render();fit();
+</script></body></html>
